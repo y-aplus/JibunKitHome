@@ -21,10 +21,12 @@
 - **自分で決めた内容**: 既存端末のJibunKitを上書き更新する形にするため、bundle ID / App Group は基盤のまま維持した。
 - **不足**: 派生側の初期設定で決める値（bundle id を変えるか、App Group を共有するか）の推奨。
 
-## F-003 公開基盤の workflow を派生側でそのまま使えるか未検証
+## F-003 公開基盤の workflow を派生側でそのまま使えるか
 
-- **症状**: `.github/workflows/build-ios.yml` はリリース公開・artifact公開・多数の検証入力を含む。派生側（非公開 or 別リポジトリ）で同じものが動くのか、secrets / permissions / 公開先の前提が読み取れない。
-- **状態**: CI 実行の段で実測する（未解決）。
+- **症状**: `.github/workflows/build-ios.yml` はリリース公開・artifact公開・多数の検証入力を含む。派生側で同じものが動くのか、secrets / permissions / 公開先の前提が読み取れない。
+- **実測（解決）**: 派生側の公開リポジトリで既定入力の実行が **成功**（run 35237198657、job `Xcode 26.6 (combined)`、IPA生成と検査まで通過）。`secrets.` は一切使われておらず、`permissions: contents: read` のみで動作した。固定SHA-256でのTuist導入も派生側で通った。
+- **影響を受ける人**: 派生host利用者（Windows中心の利用者全員）。
+- **残る不明点**: 既定以外の入力群（`simulator_tests` / `feature_validation` / native比較）を派生側で回したときの挙動、リリースや公開先に依存するstepがあるか。Simulator回帰は今回未実行。
 
 ## F-004 Feature の置き場所の選択基準が薄い
 
@@ -62,4 +64,6 @@
 - **症状**: 派生hostには remote が2つある（`origin`＝派生、`upstream`＝公開基盤）。`docs/build.md` の実行例は `gh workflow run build-ios.yml --ref YOUR_BRANCH -f ...` で、`--repo` も「既定リポジトリの設定」も書かれていない。
 - **実測**: `gh repo set-default --view` は "No default remote repository has been set" を返し、その状態で実行すると **ghは `upstream`（公開基盤＝y-aplus/JibunKit）側に run を作った**。気付いて取り消したが、取り消し前は `queued` で、そのまま進めば基盤リポジトリで実機用IPAのビルドが走っていた。`gh repo set-default y-aplus/JibunKitHome` で固定して解決。
 - **影響**: プラットフォーム側リポジトリに無関係なrunが作られ、Actions分数も消費する。派生側の作業が基盤側の履歴に現れる。
+- **影響範囲の切り分け（重要）**: workflow_dispatchは[対象リポジトリへのwrite権限（`repo` / `actions:write`）が必要](https://docs.github.com/rest/actions/workflows)。よって**実害が出るのは基盤リポジトリにwrite権限を持つ人＝メンテナーだけ**。権限の無い一般ユーザーはrunを作れず `Not Found` で失敗するだけ。一般ユーザー側に残るのは「対象が曖昧なまま失敗し、原因（既定リポジトリ未設定）がどこにも書かれていない」という軽い摩擦。
+- **仕分け**: 実害はメンテナー固有。ただし修正は1行（`gh repo set-default` を手順に足す、または例に `--repo` を明示）で一般ユーザーにも効くため、upstream提案の優先度は低〜中。派生側の手順には先に入れる。
 - **不足**: 派生側でworkflowを実行する手順に「`gh repo set-default`（または `--repo` の明示）」を追加する。
