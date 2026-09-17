@@ -26,11 +26,20 @@ CIを回す前に、ここで落とせるものは落とす。実測結果は次
 
 ## 未検証（CI／実機の担当）
 
-- Tuist生成とアプリtargetの組み立て（`Project.swift` に追加した `packages` / `dependencies` の解決）
-- IPA生成とZIP検査
-- SimulatorでのUI回帰
+- ~~Tuist生成とアプリtargetの組み立て~~ → CIで成功（下記）
+- ~~IPA生成とZIP検査~~ → CIで成功（下記）
+- SimulatorでのUI回帰（`simulator_tests=true` は今回未指定）
 - 実機での SideStore 上書き、JSON移行、通知タップ
+
+## CI（派生側のActions）
+
+- 実行: https://github.com/y-aplus/JibunKitHome/actions/runs/35237198657（workflow_dispatch、main、`9746838`）
+- 結果: **success**（jobは `Xcode 26.6 (combined)` のみ。native比較系は既定入力のためskipped）
+- 成果物: `JibunKit-ad-hoc`（`JibunKit.ipa`、3,685,328 bytes）
+- IPA検査: ZIPのCRCエラーなし、bundle `com.jibunkit.app`、`0.8.3` / build `13`、App Group `group.com.jibunkit.shared`（既存JibunKitの上書き更新になる）
+- **Zaikoが製品バイナリに入っていることの確認**: 本体実行ファイル `JibunKit_App`（6,419,040 bytes）に「在庫管理」1件、「補充タイミングです」1件、`ZaikoRootView` 4件を検出。Widget／Share Extension側には含まれない（ZaikoはWidgetを持たないため仕様どおり）
+- 配布用: prerelease `zaiko-check-20260918` にこのIPAを添付（SideStoreで導入するため）
 
 ## 摩擦として記録したもの
 
-`docs-local/friction-log.md`（F-001〜F-008）を参照。
+`docs-local/friction-log.md`（F-001〜F-009）を参照。

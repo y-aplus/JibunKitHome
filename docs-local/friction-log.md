@@ -56,3 +56,10 @@
 - **実測（TuistはLinuxでも動くのか）**: Tuist 4.207.0 は Mise 経由で Linux に**入る**（`tuist-linux-x86_64.tar.gz`、`tuist version` → `4.207.0`）。しかし**コマンド体系が別物で、ローカル生成のCLIではない**。`tuist generate` は `list` / `show` の2つのみ（＝サーバー側の生成記録を見るコマンド）で、文書が使う `tuist scaffold` は存在しない。プロジェクト生成・scaffoldは実行できない。
 - **結論**: 文書の「macOSで実行」「Windowsでは手動作成してActionsで検証」という記述は妥当。ただし「Linux版Tuistは入るのに生成はできない」という区別が文書に無いため、非macOS利用者が試して時間を使う余地がある（この作業では実際に試して往復1回分を使った）。
 - **不足**: ローカルでできること／できないことの一覧（と、できる場合に必要なツールと版）。
+
+## F-009 派生側でworkflowを回すと、既定ではupstream側のリポジトリで起動してしまう
+
+- **症状**: 派生hostには remote が2つある（`origin`＝派生、`upstream`＝公開基盤）。`docs/build.md` の実行例は `gh workflow run build-ios.yml --ref YOUR_BRANCH -f ...` で、`--repo` も「既定リポジトリの設定」も書かれていない。
+- **実測**: `gh repo set-default --view` は "No default remote repository has been set" を返し、その状態で実行すると **ghは `upstream`（公開基盤＝y-aplus/JibunKit）側に run を作った**。気付いて取り消したが、取り消し前は `queued` で、そのまま進めば基盤リポジトリで実機用IPAのビルドが走っていた。`gh repo set-default y-aplus/JibunKitHome` で固定して解決。
+- **影響**: プラットフォーム側リポジトリに無関係なrunが作られ、Actions分数も消費する。派生側の作業が基盤側の履歴に現れる。
+- **不足**: 派生側でworkflowを実行する手順に「`gh repo set-default`（または `--repo` の明示）」を追加する。
