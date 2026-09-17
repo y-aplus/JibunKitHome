@@ -14,12 +14,14 @@ let package = Package(
         .library(name: "JibunKitBackup", targets: ["JibunKitBackup"]),
         .library(name: "CounterIntegration", targets: ["CounterIntegration"]),
         .library(name: "ReminderIntegration", targets: ["ReminderIntegration"]),
+        .library(name: "ZaikoIntegration", targets: ["ZaikoIntegration"]),
         .library(name: "JibunKitCore", targets: ["JibunKitCore"]),
         .library(name: "CounterFeature", targets: ["CounterFeature"]),
         .library(name: "ReminderFeature", targets: ["ReminderFeature"]),
     ],
     dependencies: [
         .package(path: "Modules/Records"),
+        .package(path: "Modules/Zaiko"),
         .package(url: "https://github.com/weichsel/ZIPFoundation.git", exact: "0.9.20"),
     ],
     targets: [
@@ -43,6 +45,11 @@ let package = Package(
         .target(name: "CounterIntegration", dependencies: ["CounterFeature", "JibunKitCore"],
                 exclude: ["AppShortcuts.swift.fragment"]),
         .target(name: "ReminderIntegration", dependencies: ["ReminderFeature", "JibunKitCore"]),
+        .target(
+            name: "ZaikoIntegration",
+            dependencies: ["JibunKitCore", .product(name: "ZaikoFeature", package: "Zaiko")],
+            path: "Modules/Zaiko/Integration"
+        ),
         .target(
             name: "JibunKitCore"
         ),

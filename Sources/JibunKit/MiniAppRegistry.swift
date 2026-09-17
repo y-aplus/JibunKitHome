@@ -2,6 +2,7 @@
 import CounterIntegration
 import JibunKitCore
 import ReminderIntegration
+import ZaikoIntegration
 import Foundation
 import CoreSpotlight
 import WidgetKit
@@ -19,6 +20,7 @@ enum MiniAppRegistry {
     static let all = makeRegistry([
         CounterMiniApp.definition,
         ReminderMiniApp.definition,
+        ZaikoMiniApp.definition,
     ])
 
     static let consents = MiniAppConsentStore(defaults: .standard)
