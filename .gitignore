@@ -45,3 +45,6 @@ __pycache__/
 /Modules/*/*.xcworkspace/
 /Modules/*/Derived/
 /Modules/*/.build/
+
+# Derived-side personal data (never committed; see docs/updating.md)
+/docs-local/fixtures/
