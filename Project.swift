@@ -110,6 +110,7 @@ let project = Project(
             resources: ["GeneratedFeatureResources/App/**"],
             entitlements: .dictionary(appBuild.entitlements),
             dependencies: [.package(product: "JibunKitCore"), .package(product: "JibunKitBackup"), .package(product: "CounterFeature"),
+                           .package(product: "ReminderFeature"), .package(product: "CounterIntegration"),
                            .package(product: "ReminderIntegration"), .package(product: "ZaikoIntegration"), .package(product: "SpotAliasIntegration"),
                            .target(name: "JibunKitWidget-Extension"),
                            .target(name: "JibunKitShare-Extension")] + actionDependencies
