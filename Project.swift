@@ -80,7 +80,7 @@ if let actionBuild {
 
 let project = Project(
     name: "JibunKit",
-    packages: [.package(path: "."), .package(path: "Modules/Zaiko")],
+    packages: [.package(path: "."), .package(path: "Modules/Zaiko"), .package(path: "Modules/SpotAlias")],
     settings: .settings(base: ["SWIFT_VERSION": "6.0"]),
     targets: [
         .target(
@@ -110,7 +110,7 @@ let project = Project(
             resources: ["GeneratedFeatureResources/App/**"],
             entitlements: .dictionary(appBuild.entitlements),
             dependencies: [.package(product: "JibunKitCore"), .package(product: "JibunKitBackup"), .package(product: "CounterFeature"),
-                           .package(product: "ReminderIntegration"), .package(product: "ZaikoIntegration"),
+                           .package(product: "ReminderIntegration"), .package(product: "ZaikoIntegration"), .package(product: "SpotAliasIntegration"),
                            .target(name: "JibunKitWidget-Extension"),
                            .target(name: "JibunKitShare-Extension")] + actionDependencies
         ),

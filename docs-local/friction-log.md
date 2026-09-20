@@ -67,3 +67,15 @@
 - **影響範囲の切り分け（重要）**: workflow_dispatchは[対象リポジトリへのwrite権限（`repo` / `actions:write`）が必要](https://docs.github.com/rest/actions/workflows)。よって**実害が出るのは基盤リポジトリにwrite権限を持つ人＝メンテナーだけ**。権限の無い一般ユーザーはrunを作れず `Not Found` で失敗するだけ。一般ユーザー側に残るのは「対象が曖昧なまま失敗し、原因（既定リポジトリ未設定）がどこにも書かれていない」という軽い摩擦。
 - **仕分け**: 実害はメンテナー固有。ただし修正は1行（`gh repo set-default` を手順に足す、または例に `--repo` を明示）で一般ユーザーにも効くため、upstream提案の優先度は低〜中。派生側の手順には先に入れる。
 - **不足**: 派生側でworkflowを実行する手順に「`gh repo set-default`（または `--repo` の明示）」を追加する。
+
+## F-010 Core Spotlight Search Continuation (アプリで検索) のホスト基盤受け口がない
+
+- **症状**: Spotlight 最下部の「アプリで検索」からアプリへ検索クエリを渡す `CSQueryContinuationActionType` について、ホスト（`JibunKitApp` / `Project.swift` / `MiniAppSpotlight.swift`）に受け口やミニアプリへの配送ルートがない。
+- **派生側での対処**: 基盤本体への直接改変を避け、まずは個別アイテムの直接タップ（`CSSearchableItemActionType`）とアプリ内検索・ユーザー辞書機能で完結させ、Search Continuation は基盤改善提案として仕様書（`docs-local/spotlight-continuation-proposal.md`）にまとめた。
+- **影響**: Spotlight を活用した検索・ランチャー系ミニアプリを作ろうとするすべての開発者。
+
+## F-011 外部アプリ起動 (URL Scheme open) の共通ポリシー・支援がJibunKitCoreにない
+
+- **症状**: Feature から他のアプリ（URL Scheme）を起動する際、Feature 側で直接 `UIApplication.shared.open` を呼ぶ必要があり、JibunKit 共通での URL Scheme 遷移確認や安全性チェック（不正な URL の排除）の仕組みがない。
+- **派生側での対処**: Feature 側の `appendDestination` で対象の URL Scheme を安全にパースして起動。
+
