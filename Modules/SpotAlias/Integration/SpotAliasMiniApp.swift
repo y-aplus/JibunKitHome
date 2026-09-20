@@ -3,6 +3,7 @@ import Foundation
 import UIKit
 import SwiftUI
 import CoreSpotlight
+import OSLog
 import JibunKitCore
 import SpotAliasFeature
 
@@ -18,8 +19,9 @@ public enum SpotAliasMiniApp {
 
     private static let context = MiniAppContext(id: id)
     private static let namespace = MiniAppSpotlightNamespace(context: context)
+    private static let logger = Logger(subsystem: "com.jibunkit.app", category: "SpotAlias")
 
-    private static let store: SpotAliasStore = makeStore()
+    public static let store: SpotAliasStore = makeStore()
 
     private static func makeStore() -> SpotAliasStore {
         let keys = SpotAliasStorageKeys(items: context.storageKey("items"))
@@ -27,13 +29,20 @@ public enum SpotAliasMiniApp {
 
         let adapter = SpotAliasSpotlightAdapter(
             indexItems: { items in
+                guard CSSearchableIndex.isIndexingAvailable() else {
+                    logger.warning("Core Spotlight indexing is not available on this device.")
+                    return
+                }
                 let index = CSSearchableIndex.default()
                 var searchableItems: [CSSearchableItem] = []
                 for item in items {
                     let attributes = CSSearchableItemAttributeSet(contentType: .text)
                     attributes.title = item.title
+                    attributes.displayName = item.title
+                    attributes.alternateNames = item.aliases
                     attributes.keywords = item.allKeywords
-                    attributes.contentDescription = "タップして \(item.title) を起動"
+                    attributes.textContent = "\(item.title) \(item.aliases.joined(separator: " ")) \(item.note)"
+                    attributes.contentDescription = "\(item.title) を起動"
                     if !item.note.isEmpty {
                         attributes.comment = item.note
                     }
@@ -41,10 +50,17 @@ public enum SpotAliasMiniApp {
                         localIdentifier: item.id.uuidString,
                         attributes: attributes
                     )
+                    sItem.expirationDate = Date.distantFuture
                     searchableItems.append(sItem)
                 }
                 guard !searchableItems.isEmpty else { return }
-                try await index.indexSearchableItems(searchableItems)
+                do {
+                    try await index.indexSearchableItems(searchableItems)
+                    logger.notice("Spotlight successfully indexed \(searchableItems.count) items.")
+                } catch {
+                    logger.error("Spotlight indexing failed: \(error.localizedDescription)")
+                    throw error
+                }
             },
             deleteItems: { ids in
                 let index = CSSearchableIndex.default()
@@ -58,19 +74,12 @@ public enum SpotAliasMiniApp {
             }
         )
 
-        do {
-            return SpotAliasStore(
-                defaults: try MiniAppStorage.sharedDefaults(),
-                keys: keys,
-                spotlight: adapter
-            )
-        } catch {
-            return SpotAliasStore(
-                defaults: nil,
-                keys: keys,
-                spotlight: adapter
-            )
-        }
+        let resolvedDefaults = (try? MiniAppStorage.sharedDefaults()) ?? .standard
+        return SpotAliasStore(
+            defaults: resolvedDefaults,
+            keys: keys,
+            spotlight: adapter
+        )
     }
 
     private static let backup: MiniAppBackupProvider = {
@@ -113,6 +122,18 @@ public enum SpotAliasMiniApp {
         return true
     }
 
+    /// Eagerly evaluates the store and ensures Spotlight indexing on host launch
+    public static func onLaunch() throws {
+        _ = store
+        Task {
+            do {
+                try await store.syncAllSpotlightImmediately()
+            } catch {
+                logger.error("Startup Spotlight sync failed: \(error.localizedDescription)")
+            }
+        }
+    }
+
     public static let definition = MiniAppDefinition(
         id: id,
         title: "SpotAlias",
@@ -122,6 +143,16 @@ public enum SpotAliasMiniApp {
         removal: removal,
         appendDestination: { destination, _ in
             handleDestination(destination)
+        },
+        onHostLaunch: {
+            try onLaunch()
+        },
+        onHostPhaseChange: { phase in
+            if phase == .active {
+                Task {
+                    try? await store.syncAllSpotlightImmediately()
+                }
+            }
         }
     ) { _ in
         SpotAliasRootView(store: store)

@@ -37,16 +37,16 @@ public final class SpotAliasStore: ObservableObject {
     @Published public var statusMessage: String?
     @Published public var isIndexing: Bool = false
 
-    private let defaults: UserDefaults?
+    private let defaults: UserDefaults
     private let keys: SpotAliasStorageKeys
     private let spotlight: SpotAliasSpotlightAdapter
 
     public init(
-        defaults: UserDefaults?,
+        defaults: UserDefaults? = nil,
         keys: SpotAliasStorageKeys,
         spotlight: SpotAliasSpotlightAdapter = .init()
     ) {
-        self.defaults = defaults
+        self.defaults = defaults ?? .standard
         self.keys = keys
         self.spotlight = spotlight
         load()
@@ -125,11 +125,17 @@ public final class SpotAliasStore: ObservableObject {
 
     // MARK: - Spotlight Sync
 
+    public func syncAllSpotlightImmediately() async throws {
+        let activeItems = items.filter(\.isEnabled)
+        guard !activeItems.isEmpty else { return }
+        try await spotlight.indexItems(activeItems)
+    }
+
     public func resyncAllSpotlight() {
         isIndexing = true
         statusMessage = "Spotlight インデックスを同期中..."
-        let activeItems = items.filter(\.isEnabled)
         let adapter = spotlight
+        let activeItems = items.filter(\.isEnabled)
         Task {
             do {
                 try await adapter.deleteAll()
@@ -167,12 +173,10 @@ public final class SpotAliasStore: ObservableObject {
     // MARK: - Persistence
 
     private func load() {
-        guard let defaults else { return }
         guard let data = defaults.data(forKey: keys.items) else {
-            // First launch: initialize with a few helpful presets if completely empty
+            // First launch: initialize with all builtin presets
             if items.isEmpty {
-                let initial = SpotAliasPresets.builtin.prefix(3).map { $0.toItem() }
-                self.items = Array(initial)
+                self.items = SpotAliasPresets.builtin.map { $0.toItem() }
                 save()
                 syncSpotlight(items: items)
             }
@@ -180,14 +184,22 @@ public final class SpotAliasStore: ObservableObject {
         }
         do {
             let decoded = try JSONDecoder().decode([AppAliasItem].self, from: data)
-            self.items = decoded
+            if decoded.isEmpty {
+                // Populate builtins if stored data was empty
+                self.items = SpotAliasPresets.builtin.map { $0.toItem() }
+                save()
+                syncSpotlight(items: items)
+            } else {
+                self.items = decoded
+            }
         } catch {
-            self.items = []
+            self.items = SpotAliasPresets.builtin.map { $0.toItem() }
+            save()
+            syncSpotlight(items: items)
         }
     }
 
     private func save() {
-        guard let defaults else { return }
         do {
             let data = try JSONEncoder().encode(items)
             defaults.set(data, forKey: keys.items)
@@ -217,7 +229,7 @@ public final class SpotAliasStore: ObservableObject {
 
     public func removeOwnedData() {
         items = []
-        defaults?.removeObject(forKey: keys.items)
+        defaults.removeObject(forKey: keys.items)
         let adapter = spotlight
         Task {
             try? await adapter.deleteAll()

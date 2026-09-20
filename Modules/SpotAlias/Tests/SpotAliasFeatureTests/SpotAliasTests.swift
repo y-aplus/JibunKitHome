@@ -82,4 +82,50 @@ struct SpotAliasTests {
         #expect(decoded[0].title == "ロピア")
         #expect(decoded[1].title == "LINE")
     }
+
+    @Test("Lopia preset contains ropia and lopia in aliases")
+    func lopiaPresetAliases() {
+        let lopia = SpotAliasPresets.builtin.first { $0.title == "ロピア" }
+        #expect(lopia != nil)
+        guard let lopia else { return }
+        #expect(lopia.aliases.contains("ropia"))
+        #expect(lopia.aliases.contains("lopia"))
+        let item = lopia.toItem()
+        #expect(item.allKeywords.contains("ropia"))
+        #expect(item.allKeywords.contains("lopia"))
+        #expect(item.matches(query: "ropia"))
+        #expect(item.matches(query: "lopia"))
+    }
+
+    #if os(iOS)
+    @Test("SpotAliasStore initializes with all builtin presets on first launch")
+    @MainActor
+    func storeInitialPresets() async throws {
+        let suiteName = "test.spotalias.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        var indexedItems: [AppAliasItem] = []
+        let adapter = SpotAliasSpotlightAdapter(
+            indexItems: { items in
+                indexedItems.append(contentsOf: items)
+            }
+        )
+
+        let store = SpotAliasStore(
+            defaults: defaults,
+            keys: SpotAliasStorageKeys(items: "test.items"),
+            spotlight: adapter
+        )
+
+        #expect(store.items.count == SpotAliasPresets.builtin.count)
+        let titles = Set(store.items.map(\.title))
+        #expect(titles.contains("ロピア"))
+        #expect(titles.contains("PayPay"))
+        #expect(titles.contains("マクドナルド"))
+
+        try await store.syncAllSpotlightImmediately()
+        #expect(!indexedItems.isEmpty)
+    }
+    #endif
 }
