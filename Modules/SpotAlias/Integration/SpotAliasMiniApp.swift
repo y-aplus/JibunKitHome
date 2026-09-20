@@ -19,7 +19,7 @@ public enum SpotAliasMiniApp {
 
     private static let context = MiniAppContext(id: id)
     private static let namespace = MiniAppSpotlightNamespace(context: context)
-    private static let logger = Logger(subsystem: "com.jibunkit.app", category: "SpotAlias")
+    nonisolated private static let logger = Logger(subsystem: "com.jibunkit.app", category: "SpotAlias")
 
     public static let store: SpotAliasStore = makeStore()
 
