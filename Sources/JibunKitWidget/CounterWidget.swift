@@ -1,5 +1,6 @@
 #if os(iOS)
 import CounterFeature
+import Foundation
 import JibunKitCore
 import SwiftUI
 import WidgetKit
@@ -17,25 +18,52 @@ struct CounterWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: Self.kind, provider: CounterProvider()) { entry in
             VStack(spacing: 4) {
-                Text("カウンター")
+                Text(verbatim: CounterWidgetCopy.string(.title))
                     .font(.caption)
                 if let status = entry.status, status != .enabled {
-                    Text(status == .removed ? "削除済み" : status == .disabled ? "無効" : "停止中")
+                    Text(verbatim: CounterWidgetCopy.status(status))
                         .font(.caption)
                 } else if let value = entry.value {
                     Text(value, format: .number)
                         .font(.title)
                         .monospacedDigit()
                 } else {
-                    Text("読取不可")
+                    Text(verbatim: CounterWidgetCopy.string(.unavailable))
                         .font(.caption)
                 }
             }
             .containerBackground(.fill.tertiary, for: .widget)
             .widgetURL(MiniAppLink.url(for: MiniAppID("counter")))
         }
-        .configurationDisplayName("カウンター")
-        .description("アプリとショートカットが更新した値を表示します。")
+        .configurationDisplayName(LocalizedStringKey(CounterWidgetCopy.string(.galleryName)))
+        .description(LocalizedStringKey(CounterWidgetCopy.string(.galleryDescription)))
+    }
+}
+
+/// `Bundle.main` is the Widget extension bundle while this code executes in
+/// WidgetKit. Tests must inspect the built `.appex`; substituting a test bundle
+/// here would not verify the resources shipped with the extension.
+enum CounterWidgetCopy {
+    enum Key: String, CaseIterable {
+        case title = "counter.title"
+        case removed = "counter.status.removed"
+        case disabled = "counter.status.disabled"
+        case stopped = "counter.status.stopped"
+        case unavailable = "counter.status.unavailable"
+        case galleryName = "counter.gallery.name"
+        case galleryDescription = "counter.gallery.description"
+    }
+
+    static func string(_ key: Key) -> String {
+        Bundle.main.localizedString(forKey: key.rawValue, value: nil, table: nil)
+    }
+
+    static func status(_ status: MiniAppManagement.Status) -> String {
+        switch status {
+        case .removed: string(.removed)
+        case .disabled: string(.disabled)
+        case .enabled, .disabling, .removing: string(.stopped)
+        }
     }
 }
 

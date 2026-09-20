@@ -1,5 +1,7 @@
 # P2-1 AudioSession / Now Playing 設計提案
 
+> 履歴注記: 本文は実装前の設計提案であり、compile未確認や実機予定は当時の状態である。現在の採用範囲・証拠は[plan.json](plan.json)、[status](../status.md)、[音声ガイド](../guides/audio.md)を優先する。
+
 ## 結論と境界
 
 対象は iOS のプロセス共有 `AVAudioSession` の調停と、Feature ごとの `MPNowPlayingSession` / remote command 所有である。player、recorder、録音ファイル、再生位置、業務上の再開判断は Feature が所有する。JibunKit は native object を共通の一個へ置換せず、要求の共存判定、明示切替、世代付き lease、OS event 配送、停止完了後の再構成だけを担う。

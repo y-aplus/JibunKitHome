@@ -45,10 +45,22 @@ def prepare(host):
         FeatureBuildRequirement(owner: "media-audio-probe", infoPlist: [
             "NSMicrophoneUsageDescription": "音声と撮影の検証でマイクを使用します。",
             "UIBackgroundModes": ["audio"],
+        ], localizedInfoPlist: [
+            "en": ["NSMicrophoneUsageDescription": "Uses the microphone to verify audio and capture behavior."],
+            "ja": ["NSMicrophoneUsageDescription": "音声と撮影の検証でマイクを使用します。"],
         ]),
         FeatureBuildRequirement(owner: "media-capture-probe", infoPlist: [
             "NSCameraUsageDescription": "撮影と文書・コード読取りの検証でカメラを使用します。",
             "NSMicrophoneUsageDescription": "音声と撮影の検証でマイクを使用します。",
+        ], localizedInfoPlist: [
+            "en": [
+                "NSCameraUsageDescription": "Uses the camera to verify capture, document scanning, and code scanning.",
+                "NSMicrophoneUsageDescription": "Uses the microphone to verify audio and capture behavior.",
+            ],
+            "ja": [
+                "NSCameraUsageDescription": "撮影と文書・コード読取りの検証でカメラを使用します。",
+                "NSMicrophoneUsageDescription": "音声と撮影の検証でマイクを使用します。",
+            ],
         ]),
     ])''')
 

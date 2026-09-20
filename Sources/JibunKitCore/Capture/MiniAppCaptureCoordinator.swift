@@ -10,6 +10,14 @@ public enum MiniAppCaptureSwitch: Sendable, Equatable {
     case stopCurrent
 }
 
+/// Chooses which host scene keeps a capture operation eligible to run.
+/// Existing capture integrations retain aggregate visibility by default;
+/// scene-bound surfaces such as AR explicitly pass their originating scene ID.
+public enum MiniAppCaptureSceneScope: Sendable, Equatable {
+    case anyVisible
+    case scene(UUID)
+}
+
 public enum MiniAppCaptureStopReason: Sendable, Equatable {
     case user
     case sceneInactive

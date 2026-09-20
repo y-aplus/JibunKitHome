@@ -1,4 +1,18 @@
-# Featureが所有するApp Shortcut定義
+# Feature-owned App Shortcut definitions
+
+## Current integration contract
+
+Define each feature's App Intents, entities, queries, phrases, and shortcut provider in the feature package. The host composes the package products and metadata but does not duplicate feature definitions. Keep persistent entity identifiers stable and route execution through the feature's normal admission and storage boundaries.
+
+Verify both standalone and integrated metadata, including removal of a feature contribution. Metadata discovery is a build/runtime contract; invocation phrasing, system indexing, and device behavior require OS-level verification.
+
+Keep each shortcut expression in the feature's `AppShortcuts.swift.fragment`, with no imports or provider declaration. From `Project.swift`, call `FeatureAppShortcuts.writeProvider` with a unique nonempty owner, required imports, and the fragment path, then add the generated Swift file to the app target. The normal package dependency and `AppIntentsPackage` registration are still required. An app has exactly one generated or handwritten provider; migrate handwritten shortcuts into fragments when combining them. Exclude a fragment stored inside a package target from compilation.
+
+Generation places the unchanged Swift expressions in one standard provider, preserves diagnostics with `#sourceLocation`, reads all inputs before replacing output, and rejects duplicate owners, empty owners/files, and unreadable inputs. Removing an entry and regenerating removes its expressions; an empty list emits no provider. Do not edit generated output or treat this helper as a Swift parser/DSL—the compiler and metadata extractor validate phrases, parameters, and availability.
+
+Keep fragment ownership aligned with the intent's definition, management owner, and store-access owner. Removing a build contribution differs from disabling/removing at runtime: a previously saved OS shortcut may remain, so `perform()` must reject through normal management and store admission. Removing A must not change B's expressions, entities, or stored values. Metadata comparison proves extraction and stable definitions, not gallery discovery, picker behavior, saved workflow execution, cancellation UI, or Siri voice invocation.
+
+## Japanese source notes and historical evidence
 
 状態: 単独/統合のnative metadata比較と寄与削除をCI 34550748042で検証済み。通常Counterの定義元をFeature側へ移す接続は[互換性検証](../verification/2026-09-11-host-shortcut-composition.md)をCI 34553604092で完了した。
 

@@ -32,7 +32,7 @@ class InteractiveHostTests(unittest.TestCase):
             self.assertIn(f"        Feature{owner}Control()", widget)
             self.assertIn(f"        Feature{owner}Widget()", widget)
         registry = (root / "Sources/JibunKit/MiniAppRegistry.swift").read_text(encoding="utf-8")
-        self.assertIn("externalAccess: definition.effectiveExternalAccess", registry)
+        self.assertIn("externalAccess: MiniAppWindowOwnership.externalAccess(for: definition)", registry)
         self.assertIn("CounterMiniApp.definition", registry)
         self.assertIn("ReminderMiniApp.definition", registry)
         project = (root / "Project.swift").read_text(encoding="utf-8")

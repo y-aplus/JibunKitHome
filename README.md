@@ -1,92 +1,69 @@
-> [0.8.3](https://github.com/y-aplus/JibunKit/releases/tag/0.8.3)を公開しました。音声・撮影・文書/QRの接続基盤と全画面表示時のscene修正を含みます。対象別実機と出荷CI・公開IPA/ZIP検査を完了。1.0は未達です。
-
-公開VERSIONは0.8.3/build13、PREVIOUSは0.8.2/build12。[今回の出荷照合](docs/verification/2026-09-17-0.8.3-release.md)と[変更・観測限界](release-notes-0.8.3.md)を参照してください。
 # JibunKit
 
-SideStoreで使う、**自作ミニアプリを束ねるスーパーアプリ**の基盤。
+JibunKit is a native iOS host for combining your own Swift and SwiftUI features in one app. It preserves normal Swift packages and Apple frameworks while adding explicit boundaries for feature identity, storage, lifecycle, permissions, navigation, system integrations, backup, and shared resources.
 
-自分の用途に合わせて開発する利用者（ゆる開発者）が、ミニアプリを追加し、使いながら育てられることを目指します。1本のネイティブiOSアプリとして構成し、ミニアプリはビルド時に組み込みます。
+It is intended for people who own the source of the features they add. JibunKit is not a runtime plug-in loader, an IPA store, or an automatic converter for existing apps.
 
-## 現在の状態
+English is the primary language for current user and contributor documentation. Historical evidence and issue discussions may remain in Japanese when translating them would obscure their original context.
 
-公開版は[0.8.3](https://github.com/y-aplus/JibunKit/releases/tag/0.8.3)。公開版とmainの差分・開発状態は[現在状態](docs/status.md)にまとめています。[0.8.3の変更と検証範囲](release-notes-0.8.3.md)を参照してください。現在のビルドはTuist／Swift PackageとGitHub ActionsのmacOS／Xcode経路を使います。App IntentsメタデータとWidgetを含むIPAを生成します。
+## Release status
 
-独立Featureの雛形・単独実行・ホスト共存、選択バックアップ、添付を含む復旧を実装しています。参照Featureの[Records](Modules/Records/README.md)では、添付の取込み・プレビュー・再起動後保持・削除を2026-09-09の中間実機確認で確認しました。前回の出荷検証は[0.8.1公開記録](docs/verification/2026-09-16-0.8.1-release.md)を参照してください。P0は0.7.0、P1は0.8.0で完了しました。[優先実装と版の到達条件](docs/implementation-priorities.md)、[統合差分台帳](docs/coexistence-ledger.md)に残る条件をまとめています。
+- **Stable:** [1.0.0](https://github.com/y-aplus/JibunKit/releases/tag/1.0.0), build 16. See the [1.0.0 release notes](docs/releases/release-notes-1.0.0.md) and [release verification](docs/verification/2026-09-19-1.0-release.md).
+- Previous stable release: [0.8.5](https://github.com/y-aplus/JibunKit/releases/tag/0.8.5), build 15. Historical records retain the earlier release boundary.
 
-本体 `com.jibunkit.app`、Widget `com.jibunkit.app.Widget`、App Group `group.com.jibunkit.shared`を維持します。0.1.0公開時の実機実績は[導入・更新](docs/sidestore.md)に記録しています。過去の確認結果を現在の出荷候補の確認済み扱いにはしません。
+CloudKit and APNs integrations are optional and depend on paid signing and Apple services. Their live service paths have not been verified. Other unobserved device or radio conditions remain listed in the status and verification documents; absence of a measurement is not reported as success.
 
-0.8.1/build11は操作Widget/Controlと共有状態の実機確認、版変更後CI、公開IPA/ZIP再取得を完了しています。[出荷範囲と証拠](docs/verification/2026-09-16-0.8.1-release.md)。通常IPAへ診断A/Bは含めません。
+## Start with a feature
 
-## 公開版0.8.3とmain
+The standard path is:
 
-0.8.3では[音声](docs/guides/audio.md)と[撮影/scan](docs/guides/capture.md)のFeature接続を追加しました。通常IPAへ診断Featureは含めません。対象別実機、版変更後の通常IPA、公開後の取得確認まで完了しています。
+1. Create a private derived repository that keeps JibunKit as `upstream` and your private host as `origin`.
+2. Create or adapt a source-based Swift package that exposes a feature view and business APIs.
+3. Run the feature independently while developing it.
+4. Add a thin `MiniAppDefinition` integration and register it with the host.
+5. Generate and build the workspace with Tuist and Xcode, locally or through GitHub Actions.
+6. Sign and install the resulting app with a method appropriate for your Apple account and device.
 
-通常IPAはCounter/Reminderと汎用Share Extensionを含みます。独立Featureの組込み、選択JSON・添付ZIPバックアップ、
-通知・URL・Widget・Shortcutsの接続に加え、共有background refreshの永続要求/調停/復旧APIと
-Package翻訳のmixed localizationを提供します。静的Package Widgetのgallery・描画・他owner保持も検証済みです。
+Start with [Adding a feature](docs/mini-apps.md). The template command is:
 
-0.7.0にはP0-Aの寿命・保存・終了診断、P0-Bの管理・同意・提示、P0-Cの追加/更新診断と手順を含みます。ソースにはSDKのmodule alias比較とshared refresh診断fixtureも追加しています。P0はCI・実機を確認済みです。
-SDKはiOSで公開product名を分けるmanifest編集が必要です。refreshの実OS受付・起動・期限は未検証です。
-これらを0.6.0配布物へ含めたとは扱いません。[版別の状態と証拠](docs/status.md)を参照してください。
+```bash
+tuist scaffold feature --name Notes
+```
 
-0.7.0候補は[CI34705653297](https://github.com/y-aplus/JibunKit/actions/runs/34705653297)と[実機の一括確認](docs/verification/2026-09-13-0.7-device-check.md)を完了しました。[出荷記録](docs/verification/2026-09-13-0.7-release.md)で配布状態を区別します。
+The generated package includes an example app, so feature UI and business logic can be developed without first embedding it in JibunKit. The host integration remains explicit: add the package product, create one definition, and register that definition.
 
-0.8.0ではP1-Aの共有受信・Package Intents/静的Widgetの通常管理への接続と、P1-Bの通知添付・HTTP/Web接続をmainへ統合しました。実機確認は6beb877と[診断prerelease4e6a3f4](https://github.com/y-aplus/JibunKit/releases/tag/p1-device-check-20260915-r2)で対象別に行い、版のみを更新した71ef1ffのIPAを公開しています。[出荷照合と公開取得](docs/verification/2026-09-15-0.8-release.md)を完了しました。
+For a first feature, prefer an independent package under `Modules/`: it is easier to test in isolation, reuse in a standalone app, and validate from Windows/WSL than code added to the root package. See the feature and build guides for the exact platform limits.
 
-## 文書
+## Build and install
 
-| 文書 | 内容 |
-| --- | --- |
-| [公開版とmainの現在状態](docs/status.md) | 0.8.3の出荷範囲、開発状態 |
-| [共存の補完責任](docs/coexistence-boundaries.md) | 技術的な責任と未対応/不能の判定規則 |
-| [優先実装と版の到達条件](docs/implementation-priorities.md) | P0/P1、0.7/0.8境界と1.0の決定手順 |
-| [大きなCI単位の運用](docs/ci-boundaries.md) | 事前契約、証拠gate、minorごとの文書確認 |
-| [統合差分台帳](docs/coexistence-ledger.md) | 各領域の現在の実装・検証・残作業 |
-| [1.0完成計画](docs/superpowers/plans/2026-09-08-jibunkit-1.0.md) | 到達点と再開後の作業の枠組み |
-| [履歴: 0.1の設計・完成条件](docs/superpowers/specs/2026-08-28-jibunkit-foundation-design.md) | 製品像、必須機能、対象外、Git・OSS運用 |
-| [履歴: 初期技術確認](docs/superpowers/specs/2026-08-28-jibunkit-technical-review.md) | 一次資料・公開ソースの確認結果と、実機で確かめること |
-| [履歴: 1.0の目標案と設計原則](docs/superpowers/specs/2026-08-28-jibunkit-1.0-direction.md) | 継続利用の目標、共通基盤への先行投資、将来の検討候補 |
-| [履歴: 0.1の作業計画](docs/superpowers/plans/2026-08-28-jibunkit-0.1.md) | 技術検証から公開までの順序と完成条件の対応 |
-| [ビルド手順](docs/build.md) | Tuistによるローカル開発とGitHub ActionsによるIPA生成 |
-| [SideStore導入・更新](docs/sidestore.md) | IPAの導入、上書き、署名更新、確認済み条件と保証境界 |
-| [ミニアプリの追加](docs/mini-apps.md) | feature、画面、通知、Widget、App Intentを追加する手順と検証境界 |
-| [ミニアプリ組み込み簡素化の設計](docs/superpowers/specs/2026-09-04-mini-app-integration-simplification.md) | 0.1時点のRegistry、Context、互換性、受入条件、外部エージェントへの引継ぎ |
-| [互換性方針](docs/compatibility.md) | 公開API、保存識別子、バックアップschema、Featureの責任境界 |
-| [基盤の更新](docs/updating.md) | 個人用ミニアプリとの編集境界、更新取り込み、競合解消後の検証 |
-| [貢献手順](CONTRIBUTING.md) | 変更の範囲、確認方法、通常の問題報告、Pull request |
-| [Security Policy](SECURITY.md) | 脆弱性の非公開報告と公開前の安全境界 |
-| [変更履歴](CHANGELOG.md) | 利用者に影響する変更とrelease状態 |
-| [第三者notice](THIRD_PARTY_NOTICES.md) | 外部tool・SDK・導入toolの条件と非同梱の境界 |
-| [通信状態の接続](docs/network-integration.md) | Feature/profile別Cookie・HTTP認証・cacheと終了待ち |
-| [Runtimeと復元](docs/runtime-restore-integration.md) | タスク停止・非同期解放・選択復元の接続 |
-| [Sceneと画面状態](docs/scene-navigation.md) | window別navigationと通知先の選択 |
-| [公開・release](docs/releasing.md) | 公開前check、tag、公開切替、release後の対応確認 |
-| [元の検討メモ](personal-swiftui-superapp-plan.md) | ChatGPTが作成した参考資料。現在の判定は共存の完成基準と統合差分台帳を優先 |
+JibunKit currently targets iOS 26 and uses Swift 6, Tuist 4.207.0, and Xcode 26.6 on the verified build path. See [Build, sign, and install](docs/build.md) for local and GitHub Actions commands.
 
-## 1.0に向けた作業
+The general delivery path is **source configuration → Tuist/Xcode build → signing → installation**. SideStore is one verified installation example, not a requirement of JibunKit itself. Apple account capabilities, entitlements, App Groups, extensions, and OS services must match the signing method you choose.
 
-目標はJibunKit v1.0の完成です。Issue #5のP0/P1を確認し、0.8.0を公開済みです。需要調査[Issue #6](https://github.com/y-aplus/JibunKit/issues/6)を受領し、1.0の正式境界は2026-09-15にIssue #6の推奨で確定しました。[完成基準](docs/coexistence-boundaries.md)と[台帳](docs/coexistence-ledger.md)を維持し、0.7/0.8の公開を1.0完成と扱いません。
+## What the host provides
 
-## 現在の開発基盤
+- Stable feature IDs and owner-scoped storage, files, notifications, routes, and system registrations.
+- Feature lifecycle and shutdown boundaries for tasks and shared native resources.
+- Per-feature management, consent, removal, backup, and restore integration.
+- Host composition for navigation, widgets, App Intents, incoming files, background work, media, location, Bluetooth, multiple windows, and other adopted system surfaces.
+- Tests and diagnostic fixtures that keep simulated, native, physical-device, and service-backed evidence distinct.
 
-TuistとSwift Packageを標準にする。Featureの単独開発・実行と、JibunKitへの薄い接続層を分ける。xtool生成・Ruby後加工・独自Python雛形生成は廃止した。手順は[ビルド](docs/build.md)と[ミニアプリ追加](docs/mini-apps.md)を参照する。0.1.0公開時の実機実績は、Tuist移行後の実機実績とは区別する。
+These are cooperative APIs, not a security sandbox for arbitrary Swift code. A feature remains responsible for its domain validation, data schema, migrations, and correct use of native APIs. Read [Compatibility and stable identities](docs/compatibility.md) before changing IDs, bundle identifiers, App Groups, storage keys, routes, or backup schemas.
 
-## 開発・導入の前提
+## Documentation
 
-無料のAppleアカウントとSideStoreを最低条件にします。Windows上のWSLは単体テストに使い、Shortcutsを含むSideStore向けIPAはGitHub Actionsが提供するmacOS／Xcode環境で作ります。Macの購入は前提にしません。
+- [Adding a feature](docs/mini-apps.md) — package, definition, registration, ownership, and validation.
+- [Build, sign, and install](docs/build.md) — local Xcode/Tuist and GitHub Actions paths.
+- [Current status](docs/status.md) — stable release, verified boundaries and explicitly unobserved conditions.
+- [Feature guides](docs/guides/) — focused integration contracts for Apple system surfaces.
+- [Compatibility](docs/compatibility.md) — public API and persisted identity rules.
+- [Updating a customized checkout](docs/updating.md) — keeping personal features separate from upstream changes.
+- [Contributing](CONTRIBUTING.md) — changes to JibunKit itself.
+- [Security policy](SECURITY.md) — private vulnerability reporting.
+- [Changelog](CHANGELOG.md) — user-visible history and release state.
 
-実機確認の履歴は[導入・更新](docs/sidestore.md)、配布物ごとの確認範囲は[0.7.0公開記録](docs/verification/2026-09-13-0.7-release.md)を参照してください。過去の別sourceの実機成功を現在版の実機成功へ読み替えません。
+Implementation plans, delivery contracts, and dated verification records are supporting evidence. They are not the first-use instructions and do not expand the claims of the current stable release.
 
-既存アプリの無修正移植、コンパイル済みIPAの動的実行、ミニアプリストアは提供しません。ソースのあるSwift／SwiftUIアプリをFeatureと薄いIntegrationへ分離する手順は[Recordsの接続例](Modules/Records/README.md)で説明しています。画面数や保存方式を固定せず、必要な共有資源の補完は台帳で追跡します。
+## License
 
-## 変更の扱い
-
-機能要求・完成条件・明示的な制約を維持し、変更の理由と影響を説明します。ミニアプリ基盤を継続して育て、ミニアプリの追加・変更・継続利用を容易にする共通基盤には先行投資します。個別アプリやサンプルの完成を着手条件にせず、目的への効果と複雑さ・保守負担から判断する原則に従います。
-
-Gitの既定ブランチは`main`です。エージェントによる作業は、作業環境で適用されるグローバルの指示を確認してください。新しい作業ブランチを作成する前に、利用者へ明示します。
-
-リポジトリは公開されています。認証情報、署名鍵、端末の識別情報、実データは、Issueやリポジトリへ投稿しないでください。通常の変更と問題報告は[CONTRIBUTING.md](CONTRIBUTING.md)、脆弱性は[SECURITY.md](SECURITY.md)に従って非公開で報告してください。
-
-## ライセンス
-
-[MIT License](LICENSE)。第三者のtoolやApple SDKには、それぞれの利用・配布条件が適用されます。現在の外部toolと非同梱の境界は[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)に記録しています。このリポジトリにApple SDKや署名鍵は含めません。
+JibunKit is available under the [MIT License](LICENSE). Apple SDKs, signing services, and third-party tools keep their own terms. See [third-party notices](THIRD_PARTY_NOTICES.md). This repository does not include Apple SDKs, signing keys, provisioning profiles, or device credentials.

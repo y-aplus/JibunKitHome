@@ -1,5 +1,7 @@
 # P2-L ActivityKit / Live Activities 契約案
 
+> 履歴注記: 本文は製品実装前のAPI提案であり、未実施表記は当時の状態である。現在の採用範囲・検証状態は[plan.json](plan.json)、[status](../status.md)、[Live Activitiesガイド](../guides/live-activities.md)を優先する。
+
 更新日: 2026-09-16。対象 baseline: `bcfde0d88c19a143620b16e71230e4fb404ae7f1`。これは API shape の提案であり、製品実装、Xcode build、署名、Simulator/実機確認は未実施である。この Windows 環境には Swift/Xcode がない。
 
 ## 結論と責任境界

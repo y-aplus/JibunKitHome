@@ -1,55 +1,117 @@
-# ビルドと検証
+# Build, sign, and install
 
-公開VERSIONは0.8.3/build13、PREVIOUSは0.8.2/build12。音声・撮影/scanの対象別実機、版変更後CIと公開IPA/ZIP検査を完了しました。[出荷照合](verification/2026-09-17-0.8.3-release.md)。
-開発中のCIは[事前に固定した大きな境界](ci-boundaries.md)で実行する。小commitや担当者の提出ごとに起動しない。以下の入力例は実行方法であり、全変更への一律実行指示ではない。
+The supported path is **source configuration → Tuist/Xcode build → signing → installation**. JibunKit does not depend on one installer.
 
-標準のiOSビルドはTuist 4.207.0とXcode 26.6を使う。WindowsからはGitHub Actionsを実行でき、Mac購入は前提にしない。SwiftのあるmacOS／Linux／WSLでは`swift test`でFoundationロジックを確認できる。xtoolによるIPA生成経路は廃止した。
+The verified build configuration uses Swift 6, Tuist 4.207.0, Xcode 26.6, and an iOS 26 deployment target. Generated Xcode projects, workspaces, and Derived Data are outputs; do not edit or commit them.
 
-## 構成の所有場所
+## Source ownership
 
-- `Package.swift`: 共通ロジック・Feature・Integrationのlibrary productsとテスト。
-- `Project.swift`: app・Widget・Share Extension・UI tests・CounterExample、Info.plist値、iOS build settings。
-- 本体・Widget・Share Extensionのentitlements: App Groupの宣言。
-- `Tuist/Templates/feature`: 独立Featureと単独appの標準雛形。
+- `Package.swift` defines shared libraries, feature products, integrations, and package tests.
+- `Project.swift` composes the app, extensions, examples, UI tests, Info.plist values, and build settings.
+- `Tuist/Templates/feature` contains the standalone feature template.
+- Entitlement files declare App Groups and capabilities for each executable target.
 
-生成されるxcodeproj・workspace・Derivedは編集・commitしない。旧Info.plistとxtool.ymlは削除済み。
+Read [Adding a feature](mini-apps.md) before changing package products or host registration.
 
-## macOSで実行
+## Create a private derived host
 
-Tuistの版をCIと揃え、Xcode 26.6を選択する。
+Keep personal features in a private repository with two explicit remotes: `upstream` for public JibunKit and `origin` for your private host. One initial setup is:
+
+```bash
+git clone https://github.com/y-aplus/JibunKit.git PRIVATE_HOST
+cd PRIVATE_HOST
+git remote rename origin upstream
+git remote add origin git@github.com:OWNER/PRIVATE_HOST.git
+git push -u origin main
+gh repo set-default OWNER/PRIVATE_HOST
+```
+
+Create `OWNER/PRIVATE_HOST` as a private repository before the push. Replace the example branch if your derived host uses another default branch. Do not use a public fork when the repository will contain private features or configuration.
+
+Before the first install, choose the identity strategy deliberately:
+
+- To update an existing JibunKit installation in place and retain its shared data, preserve its bundle IDs and App Group and use the same compatible signing account.
+- To install an independent app alongside it, assign new bundle IDs and a new App Group consistently to the app and every extension. It will not share the existing app's container.
+
+Changing these values later is a compatibility and data-migration decision, not cosmetic renaming.
+
+## Local macOS build
+
+Select the verified Xcode version and install the pinned Tuist version, then run:
 
 ```bash
 swift test
 tuist generate --no-open
-xcodebuild build -workspace JibunKit.xcworkspace -scheme JibunKit-App -configuration Release -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO
+xcodebuild build \
+  -workspace JibunKit.xcworkspace \
+  -scheme JibunKit-App \
+  -configuration Release \
+  -destination 'generic/platform=iOS' \
+  CODE_SIGNING_ALLOWED=NO
 ```
 
-単独カウンターは`CounterExample` schemeで起動できる。本体のApp Groupではなく単独appのstandard defaultsを使う。
+`CODE_SIGNING_ALLOWED=NO` verifies the unsigned build. To run on a device, configure a development team and valid capabilities in Xcode, build the app, and let Xcode sign and install it. App Groups, extensions, background modes, CloudKit, APNs, and similar services require matching identifiers, entitlements, profiles, and account capabilities.
 
-## WindowsからIPAを生成
+The `CounterExample` scheme is a small standalone reference. A generated feature has its own example workspace and scheme; develop there before integrating it into the host.
+
+## GitHub Actions build
+
+From any machine with Git and GitHub CLI access, push a branch and run:
 
 ```bash
-gh workflow run build-ios.yml --ref YOUR_BRANCH -f simulator_tests=true -f feature_validation=true
+gh workflow run build-ios.yml \
+  --repo OWNER/PRIVATE_HOST \
+  --ref YOUR_BRANCH \
+  -f simulator_tests=true \
+  -f feature_validation=true
 ```
 
-workflowは固定SHA-256でTuistを導入し、Swiftテスト、通常app／Widgetビルド、App Intents metadata、識別子・版・App Group・ad-hoc署名・IPAの整合性を検査する。`JibunKit-ad-hoc` artifactからIPAを取得する。SideStoreで最終署名して導入する。templateの検証用Notesは隔離checkoutだけに存在する。
+Always pass `--repo OWNER/PRIVATE_HOST` (or first set that repository with `gh repo set-default`). With both `origin` and `upstream`, an implicit selection can target the public upstream repository.
 
-上記は通常回帰と生成Feature検証の指定であり、個別のnative比較をすべて有効にする指定ではない。入力省略時は両フラグがfalseで、共有・Moduleテストと通常IPAの検査を実行する。`feature_validation=true`でRecords単独、Tuist templateの生成・単独ビルド・ホスト組込みを追加する。
+The workflow installs the pinned Tuist binary, runs the selected Swift and Simulator checks, builds the app and extensions with Xcode, validates metadata and identifiers, and packages an ad-hoc IPA. Download the `JibunKit-ad-hoc` artifact from that run.
 
-`simulator_tests=true`ではバックアップの選択復元・Files往復、本体の保存・通知と、単独Counterの加算・再起動・保存先分離をUIで検証する。両フラグがtrueなら生成Featureの単独起動・ホスト共存とRecordsの編集・添付も検証する。UI targetはTuistが生成する。Rubyによる後加工やmetadata手動コピーは行わない。結果・画面・診断ログは通常側の`JibunKit-simulator-evidence`と生成側の`JibunKit-simulator-evidence-generated`へ保存する。生成UIを分割した診断ではさらに`-network`/`-web-management`が付く。[分割条件と証拠再利用](ci-boundaries.md)を参照し、通常側のartifactだけで生成側の検証も完了したと扱わない。
+In one derived-host experiment, the default workflow inputs completed as run `35237198657` (`Xcode 26.6 (combined)`), including IPA packaging and inspection. That run used no repository secrets and only `permissions: contents: read`. It did **not** run the additional `simulator_tests`, `feature_validation`, or native-comparison inputs, so it is not evidence for those paths or for every derived repository.
 
-エージェントによる長時間CIの待機は、モデルを動かさないOS側のバックグラウンド監視と、完了時に一度だけ送る同じ会話への`codex queue`で行う。`gh run watch --interval`やモデルによる定期確認は使わない。具体的なローカル監視設定はリポジトリへ同梱せず、[並列運用](parallel-implementation.md)のCI前レビューと完了通知の契約に従う。
+The flags select additional work; they are not universal proof of every surface:
 
-PackageのIntents/Widget/resources、background/Web認証等のnative比較はworkflowの対応inputを明示する。`package_sdk_aliases_only=true`は通常IPA jobを省略し、`simulator_tests=false`ならmacOSの4比較、`true`ならSDK iOS hostの1比較を実行する。検証範囲はrunのinputs・実際に成功したstep・記録を正とする。
+- `feature_validation=true` checks the generated template, its standalone app, host composition, and, when `records_validation=true`, the Records reference feature.
+- `simulator_tests=true` enables the configured Simulator UI checks.
+- Focused and native-surface workflows are diagnostics for named boundaries. Their success does not imply that the full release suite ran.
 
-## 検証の境界
+Use the workflow inputs, completed steps, test summaries, and artifacts as the exact record of what was verified. The CI policy and evidence grouping are documented in [CI boundaries](ci-boundaries.md).
 
-ビルド・Simulator成功は実機の上書き更新、SideStore再署名、Widget・Shortcutsの保証ではない。公開版0.8.1は[出荷照合](verification/2026-09-16-0.8.1-release.md)、公開済み0.7.0は[当時の記録](verification/2026-09-13-0.7-release.md)、過去0.6.0の出荷検証は[公開記録](verification/2026-09-12-0.6-release.md)、公開後mainの追加は[現在状態](status.md)を参照する。Tuist移行時の記録は当時のsourceの履歴である。
+## What can run locally
 
-0.8.1/build11は[出荷照合](verification/2026-09-16-0.8.1-release.md)を参照。操作Widget/Controlの独立/統合比較は`native-surface.yml surface=interactive-widgets ios_major=26`でnativeと診断hostを並列実行する。これは通常IPAとは別の検証構成である。版だけを更新する0.8.1出荷runでは成功済みnative/UI/実機証拠をsource差分付きで再利用した。
+| Environment | Supported local work | Important limit |
+| --- | --- | --- |
+| macOS with Xcode and Tuist 4.207.0 | Root tests, feature tests, scaffold, project generation, Xcode build, Simulator, and local signing/install | Capabilities still depend on the signing account, profiles, device, and services. |
+| Windows | Source editing and Git/GitHub CLI operations | Use macOS or Actions for project generation, Xcode builds, and IPA packaging. |
+| Linux/WSL with Swift | Tests for a portable independent package, for example `swift test --package-path Modules/Notes` | The root package does not currently build on Linux/WSL. |
+| Linux/WSL with the tested Tuist 4.207.0 binary | Installation and `tuist version` worked in the reported experiment | In that experiment, its command set did not provide the local `tuist scaffold` or Xcode-project `tuist generate` path used by this repository. Do not generalize this result to other Tuist versions. |
 
-## UI失敗の限定再現
+An additional, environment-specific compile-only path was measured on WSL where a Darwin Swift SDK was already installed: `swift build --package-path Modules/Zaiko --swift-sdk arm64-apple-ios` compiled the feature's iOS-gated code. This can catch type errors, but it neither generates an Xcode project nor creates an IPA. JibunKit does not bundle or install that SDK, and this observation does not imply that a standard WSL Swift installation has it. Check `swift sdk list` first and treat SDK setup as outside the supported first-use path.
 
-診断時は`-f simulator_tests=true -f focused_ui_validation=true -f ui_test_filter=MigrationUITests/MigrationUITests/testNotificationDeliveryAndRouting`のように、単一test methodのXcode test identifierを指定できる。このfocused経路はpublication boundary、固定Xcode/Tuist、workspace生成、Simulator準備、指定UIテストと診断artifactだけを実行する。通常のSwift/Moduleテスト、Releaseビルド、IPA検査、Files往復は省略し、CounterExampleまたはBackupHarnessも指定テストが使う場合だけ準備する。
+## Sign and install
 
-focused時の`ui_test_filter`には`UITests`配下に実在する`MigrationUITests/<TestClass>/test<TestMethod>`を一件指定する。形式とsource上の存在をSimulator起動前に検査し、実行後もXCTest logでその一件の成功を検査する。`simulator_tests=true`が必須で、`feature_validation=true`または`feature_ui_test_filter`との併用は入力エラーになる。`focused_ui_validation=false`の既存経路では、`ui_test_filter`と`feature_validation`の併用を含む従来動作を維持する。通常の全検証ではfilterを空に戻す。focused成功は指定した一件の証拠であり、Swift/Moduleテスト、通常IPA、全Simulator回帰、生成Feature/Records検証の成功として扱わない。ログのみ先に読む場合はSimulator-text-diagnostics artifactを取得できる。
+An unsigned app cannot run on a normal device. Choose a signing and installation path that fits your Apple account and environment:
+
+- Xcode can sign and install a local build on a connected device.
+- An organization may use its own supported distribution process.
+- SideStore can sign and install a compatible IPA and is the path used for some JibunKit device checks. See the [SideStore example](sidestore.md).
+
+SideStore is an example, not part of JibunKit and not a prerequisite for the source project. Follow the installer's own current documentation. Do not commit signing material or account credentials to this repository.
+
+Free and paid Apple accounts expose different capabilities and provisioning lifetimes. A successful ad-hoc package, Xcode build, or Simulator run does not prove that every entitlement can be signed or used by a chosen account. CloudKit and APNs are optional in JibunKit 1.0 scope and their live service paths remain unverified.
+
+## Verification boundaries
+
+Keep these results separate:
+
+1. Swift/package tests.
+2. Xcode compilation and metadata generation.
+3. Simulator system behavior.
+4. Signing and installation.
+5. Physical-device behavior.
+6. Live radio, account, or Apple-service behavior.
+
+The current stable release is 1.0.0/build16. Consult [current status](status.md), the [remaining observation boundary](verification/2026-09-19-final-observation-boundary.md), and the relevant dated verification record before making a release claim.

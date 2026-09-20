@@ -1,5 +1,7 @@
 # P2-2 撮影・文書／コードscan設計提案
 
+> 履歴注記: 本文は実装前の設計提案であり、未確定接点と実機予定は当時の記録である。現在の採用範囲・証拠は[plan.json](plan.json)、[status](../status.md)、[captureガイド](../guides/capture.md)を優先する。
+
 対象は0.8.2（`52a29ff`）上のP2-2である。Featureが撮影構成・成果物・業務判断を所有し、JibunKitはowner別の利用受付、寿命、可視性、取消、解放だけを補う。高度な同時captureとAR world stateは対象外だが、全撮影を一律排他にせず、OSが許す別資源・別ownerの処理は保持する。
 
 ## 公開API候補

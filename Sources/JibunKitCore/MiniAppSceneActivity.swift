@@ -40,6 +40,13 @@ public final class MiniAppSceneActivityDispatcher {
     private var delivered: [MiniAppID: MiniAppSceneActivity] = [:]
     private var delivering = false
 
+    /// The current mounted connection used in this dispatcher's activity events.
+    /// This is ephemeral, unlike UISceneSession.persistentIdentifier.
+    public var connectionID: UUID? {
+        guard let requested, requested.phase != nil else { return nil }
+        return requested.id
+    }
+
     public init(handlers: [Registration]) {
         precondition(handlers.allSatisfy { $0.id.isValid })
         precondition(Set(handlers.map(\.id)).count == handlers.count)

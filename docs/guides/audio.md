@@ -1,5 +1,21 @@
 # AudioSession / Now Playing integration
 
+## Current integration contract
+
+Use one process-level audio coordinator and native driver. Each feature submits a typed playback/recording requirement; the coordinator computes a compatible effective session rather than allowing features to mutate `AVAudioSession` directly. Reject incompatible combinations, serialize activation changes, and close new admission before draining work during shutdown.
+
+The active owner supplies Now Playing metadata and remote-command handlers. Clear both when ownership ends, and reject stale callbacks by owner and generation. Microphone access requires the feature's consent declaration and host-composed usage description. Route interruptions and media-service resets through the coordinator, then reapply only still-valid requirements. Build fixtures do not replace real route, interruption, Bluetooth, lock-screen, or background testing.
+
+Compatibility is the intersection of every owner's explicit profile; never promote a category or union options implicitly. On `.conflict`, product UI either keeps the current owner or calls `resolve(_:as:)`. Start the replacement only after the old producer finishes stopping. Report `.partialStop` with stopped and surviving owners, and reject an old decision as `.staleConflict`. Preserve Apple category/mode strings and option raw bits so future native values pass through.
+
+`release` awaits the registered producer stop and must not be recursively called by that stop closure. External release joins the current transaction; competing starts/changes return busy. A profile-change failure reapplies and activates the old profile; distinguish driver failure from recovery failure. On deactivation failure, retain the stopped lease, retry with `recoverSession()`, and have lifetime wait through `waitForRelease` rather than claiming shutdown success or spinning retries.
+
+Update intent on play/record and on user stop, remote pause, or route loss. After interruption, the feature rechecks lifetime, scene, and producer state and explicitly calls `reactivate`; a new user action uses `activateForUserAction`. A media-services reset ends old player/Now Playing state and creates new native objects only after reactivation. `MiniAppNowPlayingOwner.invalidate()` closes admission, removes only its tokens, and joins in-flight delivery; a synchronous command result means enqueue success, with the actual Boolean result delivered separately. Shutdown order is producer stop, Now Playing invalidation, then lease release.
+
+Recording checks feature consent and `AVAudioApplication.requestRecordPermission()` separately, then revalidates generation after awaiting permission. Compose `NSMicrophoneUsageDescription`; request `UIBackgroundModes = ["audio"]` only when needed. No legacy permission fallback is claimed.
+
+## Japanese source notes and historical evidence
+
 `MiniAppAudioSessionCoordinator` は一つのhost processで一個を共有する。productionでは一個の`MiniAppNativeAudioSessionDriver`を作り、coordinatorへ注入して`connect(to:)`する。テストは独立driverを注入する。Featureはplayer/recorder、録音物、再生位置、再開判断を所有し、coordinatorは`AVAudioSession`構成だけを所有する。
 
 ```swift

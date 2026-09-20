@@ -35,8 +35,11 @@ final class MiniAppSceneActivityTests: XCTestCase {
         one.connect(phase: .active, selectedID: a)
         two.connect(phase: .active, selectedID: a)
         let originalID = first.last?.sceneID
+        XCTAssertEqual(one.connectionID, originalID)
+        XCTAssertEqual(two.connectionID, second.last?.sceneID)
         XCTAssertNotEqual(originalID, second.last?.sceneID)
         one.disconnect()
+        XCTAssertNil(one.connectionID)
         one.disconnect()
         one.update(phase: .background, selectedID: a)
         XCTAssertEqual(first.count, 2)
@@ -47,6 +50,7 @@ final class MiniAppSceneActivityTests: XCTestCase {
         XCTAssertEqual(second.last?.isConnected, true)
         one.connect(phase: .inactive, selectedID: nil)
         XCTAssertNotEqual(first.last?.sceneID, originalID)
+        XCTAssertEqual(one.connectionID, first.last?.sceneID)
     }
 
     @MainActor

@@ -1,77 +1,70 @@
-# SideStoreで導入・更新する
+# Installing and updating with SideStore
 
-更新日: 2026-09-15（公開版とmainの構成・検証sourceの整理。SideStore画面を再検証した日ではない）
+SideStore is an optional, verified installation example for JibunKit. It is not the only supported distribution concept, and this document does not claim that untested signing/install tools preserve the same identifiers, entitlements, data, or extensions.
 
-最新公開版は0.8.0/build10。直前の正式版は0.7.0/build8。0.8.0は6beb877/4e6a3f4の対象別実機証拠を製品差分と照合し、版のみを更新した71ef1ffのIPAを公開した。ビルド・署名構造・CRC・公開IPA/ZIP再取得は[出荷記録](verification/2026-09-15-0.8-release.md)を参照する。0.8.0 IPAそのものの新しい実機試験は行っていない。
+The currently documented stable release is 0.8.5/build15; candidate 1.0.0/build16 is unpublished and requires final publication approval. Release status is tracked in [status.md](status.md). Historical device observations below belong to their exact source and environment and must not be generalized.
 
-実機証拠はsourceごとに区別する。0.1.0 build 1→2の上書き・署名更新はiPhone 16e／iOS 26.6／SideStore 0.6.3で確認した[旧版の記録](verification/0.1.md)。2026-09-09にはRecords接続版`afbf4dc`で上書き・署名更新・Widget/Shortcuts/通知・選択復元を確認した[記録](verification/2026-09-09-v1-candidate.md)がある。後者の端末/OS/SideStore版は再報告されておらず、旧環境を転記して断定しない。
+Follow the [official SideStore installation instructions](https://docs.sidestore.io/docs/installation/install) to install SideStore and prepare its pairing file. Connect LocalDevVPN when installing, updating, or refreshing JibunKit.
 
-SideStore自体の導入とpairing fileの準備は[SideStore公式の導入手順](https://docs.sidestore.io/docs/installation/install)に従う。JibunKitのインストール、更新、署名更新を行うときはLocalDevVPNを接続する。
+## Obtain an IPA
 
-## IPAを用意する
+For a published release, download the IPA linked by that release rather than an outer Actions ZIP. For a custom feature build, follow [the build guide](build.md) and obtain `JibunKit.ipa` from the successful `JibunKit-ad-hoc` artifact.
 
-公開版は[0.8.0のIPA直リンク](https://github.com/y-aplus/JibunKit/releases/download/0.8.0/JibunKit.ipa)から取得でき、外側のActions ZIPの展開は不要。個人Featureを組み込む場合は[ビルド手順](build.md)に従い、成功runのartifact `JibunKit-ad-hoc`内の`JibunKit.ipa`を取得する。
+Use the current Tuist/Xcode path so the IPA contains native App Intents metadata. The old xtool IPA path is retired. Do not upload an Apple Account password, 2FA code, certificate, or provisioning profile to Actions for this build.
 
-現在はTuist/Xcodeのnative App Intents metadataを含むIPAを使う。旧xtoolのIPA生成経路は廃止済み。Apple Account、パスワード、2FA、証明書、provisioning profileをActionsへ渡す必要はない。
+## First installation
 
-## 初回導入
+1. Connect LocalDevVPN on the iPhone.
+2. Open `JibunKit.ipa` in SideStore and sign/install it with the intended Apple account.
+3. Launch JibunKit and verify the feature list.
+4. Verify Counter persistence and Shortcut/widget behavior plus Reminder notifications. In Backup, test export/import and selected restore; read the selected targets and confirmation before overwrite restore.
 
-1. iPhoneでLocalDevVPNを接続する。
-2. `JibunKit.ipa`をSideStoreで開き、同じAppleアカウントで署名・インストールする。
-3. JibunKitを開き、ミニアプリ一覧が表示されることを確認する。
-4. カウンターの保存・Shortcuts加算・Widget表示とリマインダー通知を確認する。バックアップ画面では必要なFeatureの書出し・読込み・復元対象選択を確認し、上書き復元は対象と確認内容を読んでから行う。
+When SideStore rewrites App Groups for a personal team, it adds `ALTAppGroups` to the app's `Info.plist`. JibunKit accepts exactly one candidate equal to logical `group.com.jibunkit.shared` or that ID plus SideStore's suffix. Never commit the device/account-specific Team ID.
 
-SideStoreがApp Groupを個人Team向けに書き換える場合、アプリの`Info.plist`に`ALTAppGroups`が追加される。JibunKitは、論理ID`group.com.jibunkit.shared`またはその末尾にSideStoreのsuffixが付いた候補を1件だけ選ぶ。Team IDそのものは端末・アカウント固有情報なので、リポジトリや検証記録へ保存しない。
+## Overwrite update
 
-## 更新インストール
+To preserve data, do not delete the current app. Install the new IPA over it and keep:
 
-保存値を維持したい場合は、既存アプリを削除せず、新しいIPAをSideStoreから上書きする。次の値を変えない。
-
-- 本体bundle ID: `com.jibunkit.app`
-- Widget bundle ID: `com.jibunkit.app.Widget`
+- app bundle ID: `com.jibunkit.app`
+- widget bundle ID: `com.jibunkit.app.Widget`
 - App Group: `group.com.jibunkit.shared`
-- 既存の保存キー: `counter.value`、`reminder.message`
+- existing keys: `counter.value` and `reminder.message`
 
-旧0.1.0の実機記録ではbuild 1からbuild 2へ上書きし、カウンター値、リマインダー文面、Widget、Shortcuts、通知を維持できることを確認済みである。
+An older differently named app with different bundle/App Group IDs is a separate app and does not migrate automatically into JibunKit.
 
-旧称のアプリとJibunKitはbundle IDとApp Groupが異なる別アプリである。旧アプリの保存値はJibunKitへ自動移行せず、JibunKitの更新確認にも旧アプリへの上書きを使わない。
+## Refresh signing
 
-## 署名を更新する
+1. Connect LocalDevVPN.
+2. Open SideStore's **My Apps**.
+3. Tap the remaining-days indicator beside JibunKit.
+4. Wait for SideStore to report success.
+5. Open JibunKit and recheck stored values and integrations.
 
-1. LocalDevVPNを接続する。
-2. SideStoreの`My Apps`を開く。
-3. JibunKitの右側にある残り日数をタップする。
-4. SideStoreが更新成功を表示するまで待つ。
-5. JibunKitを開き、保存値と各連携を再確認する。
+The official SideStore instructions describe the same manual refresh gesture. Recheck Counter/Reminder data, widget shared data, the Counter Shortcut, and notification routing after refresh.
 
-残り日数はアプリの有効期限を表し、その表示をタップすると対象アプリを手動更新できる。[SideStore公式手順](https://docs.sidestore.io/docs/installation/install)も同じ操作を案内している。
+## App slots, identifiers, and extensions
 
-旧0.1.0の署名更新後には次を確認した。2026-09-09の追加結果と0.6.0の未実機確認は冒頭のsource別区分に従う。
+JibunKit appears as one app in SideStore's **My Apps** and consumes one active-app slot; SideStore itself also consumes a slot. The [SideStore FAQ](https://docs.sidestore.io/docs/faq) currently explains free-account active-app and App ID limits; treat SideStore/account UI as authoritative because these policies and profile-reuse choices can change.
 
-- カウンター値とリマインダー内容が残る。
-- Widgetが共有値を表示する。
-- Shortcutsの「カウンターに追加」が動く。
-- 終了状態の通知をタップするとリマインダーが開く。
+The normal IPA includes the main app plus widget and Share extensions, with separate bundle IDs including `com.jibunkit.app.Share`. Extensions are not separate home-screen apps, and an App Group is not an app slot. Signing still processes app/extension IDs and profiles, so app-slot count, bundle-ID count, extension count, and App Group count are different concepts. SideStore may offer extension profile reuse; inspect its actual account display rather than deriving an App ID count from this repository.
 
-## アプリ枠・識別子・拡張
+## Boundaries and troubleshooting
 
-JibunKitはSideStoreの`My Apps`上では1つのアプリであり、無料Appleアカウントのactive app枠を1つ使う。SideStore自身もactive app枠を使う。公式FAQでは無料アカウントはSideStoreを含め同時に3アプリ、7日間に10個の異なるアプリ（App IDs）までと説明されている。[SideStore FAQ](https://docs.sidestore.io/docs/faq)
+Verified behavior is limited to the source, device, OS, SideStore version, account, and logical IDs recorded in the linked evidence. It does not guarantee every release's first install, overwrite, or refresh, and does not cover:
 
-公開版0.8.0のIPAには本体1つとWidget/Share Extensionが入り、本体/Widget/Shareの3つのbundle IDを持つ（Shareは`com.jibunkit.app.Share`）。通常IPAでの追加構成は[P1-A記録](verification/2026-09-13-p1-a.md)、配布済み診断IPAとsource別の実機結果は[P1実機手順](verification/2026-09-14-0.8-device-check.md)を参照する。
+- changing Apple account or Team;
+- changing bundle IDs or App Group;
+- deleting and reinstalling JibunKit;
+- replacing the device, updating iOS, or rebuilding the pairing file.
 
-WidgetやShare Extensionは別のホーム画面アプリではなく、App Groupもアプリ枠ではない。署名処理では本体とextensionのbundle ID・profileを扱うため、app枠・bundle ID数・extension数・App Group数を同一の数として扱わない。SideStore 0.6.2以降にはextensionへ本体のprofileを再利用する選択肢があるため、アカウント上の実際のApp ID表示はSideStoreの`My Apps`を正とする。4e6a3f4（0.7.1/build9）のiOS27.0実機でP1診断版の同IPA上書き・Refresh後のWidget/受信保持と、通常版復帰後のCounter/Reminder・通常Widget/Shortcutを確認済み。公開した0.8.0/build10のIPAはCI・版/ID・署名・CRC検査済みで、4e6a3f4から製品の版番号だけを変更した差分を照合している。同じIPAそのものを実機試験済みとは記載しない。
+SideStore notes that iOS updates or device resets can invalidate the pairing file. Before deleting the app during recovery, consult [SideStore troubleshooting](https://docs.sidestore.io/docs/troubleshooting) and preserve feature data when possible.
 
-## 保証しない境界
+When overwriting a diagnostic build with a normal IPA under the same bundle ID, diagnostic features disappear from the app list. A previously placed diagnostic widget can retain stale display after its kind/resources are absent; that is not evidence that its feature or store is still running. Remove the stale widget manually. Code removal and owned-data deletion are separate; see [removing a static widget type](guides/package-static-widgets.md#widget型を出荷構成から除いた後).
 
-実機確認済みの範囲は冒頭に挙げたsourceで、同じ端末・Appleアカウント・JibunKitの論理bundle IDで行った操作である。すべての版の初回導入・上書き・署名更新を保証しない。次は別の移行として扱う。
+## Evidence history
 
-- AppleアカウントやTeamの変更。
-- bundle IDやApp Groupの変更。
-- JibunKitを削除してからの再導入。
-- 端末交換、iOS更新、pairing file再作成後の維持。
+- iPhone 16e / iOS 26.6 / SideStore 0.6.3 verified 0.1.0 build 1→2 overwrite and refresh; see the [0.1 record](verification/0.1.md).
+- Source `afbf4dc` verified the Records-connected build, overwrite, refresh, widget/Shortcuts/notifications, and selected restore on 2026-09-09. Its device/OS/SideStore version was not re-reported; do not copy the older environment onto it. See the [candidate record](verification/2026-09-09-v1-candidate.md).
+- Sources `6beb877` and `4e6a3f4` provide component-specific 0.8.0-era device evidence. The published 0.8.0/build10 IPA was checked for CI, version/IDs, signing structure, CRC, and release-download integrity, but that exact IPA did not receive a new device run. See the [release record](verification/2026-09-15-0.8-release.md), [P1-A record](verification/2026-09-13-p1-a.md), and [P1 device procedure](verification/2026-09-14-0.8-device-check.md).
 
-SideStore公式手順も、iOS更新や端末リセット等でpairing fileが無効になる場合があるとしている。問題時はアプリを削除する前に、[SideStoreのトラブルシューティング](https://docs.sidestore.io/docs/troubleshooting)と検証記録を確認する。
-
-## 診断版から通常版へ戻した場合
-
-同じbundle IDのまま通常IPAへ上書きすると、診断Featureは本体一覧からなくなる。ホームに既に置いた診断Widgetは以前の表示のまま残る場合がある（4e6a3f4実機で観測）。通常IPAに診断kind/resourceがないことは検査済みで、残った表示を診断Featureが引き続き動いている証拠とはしない。不要な配置はホームから取り除ける。コード除去と所有データの削除は別で、詳しくは[静的Widgetの接続](guides/package-static-widgets.md#widget型を出荷構成から除いた後)を参照する。
+Those historical observations establish only the tested SideStore path. Other installation or re-signing methods remain unverified unless their own evidence says otherwise.

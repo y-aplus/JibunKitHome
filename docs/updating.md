@@ -1,40 +1,44 @@
-# 基盤を更新する
+# Updating the JibunKit foundation
 
-公開VERSIONは0.8.3/build13、PREVIOUSは0.8.2/build12。音声・撮影/scanの対象別実機、版変更後CIと公開IPA/ZIP検査を完了しました。[出荷照合](verification/2026-09-17-0.8.3-release.md)。
-更新日: 2026-09-17。公開版0.8.3/build13とmainは[現在状態](status.md)を参照。
-0.8.0のP0/P1証拠と公開物は[出荷記録](verification/2026-09-15-0.8-release.md)を参照。P0の0.7.0当時の証拠もsourceを分けて保持する。
+Stable release: 0.8.5/build15. Candidate: 1.0.0/build16, unpublished and awaiting final publication approval. See [status](status.md).
 
-この文書は、JibunKit基盤を更新しながら個人用ミニアプリを維持するための境界を示す。現在の構成は動的プラグイン機構を持たず、ミニアプリをSwift Packageへビルド時に組み込む。
+## Keep downstream notes separate
 
-## 編集箇所を分ける
+Use `docs-local/` in your personal host repository for migration notes, local decisions and private development procedures. Upstream owns `docs/`; keeping downstream notes elsewhere reduces merge conflicts. Do not submit `docs-local/` in upstream pull requests. The directory name does not make files private: repository visibility controls access. Never commit credentials, signing material or personal application data there. For notes that should remain only on your machine, add the directory to `.git/info/exclude` rather than assuming it is ignored automatically.
 
-個人用ミニアプリの処理、保存形式、Root View、Feature固有の通知予約は独立Packageの`Modules/<Name>/Sources/<Name>Feature`などへ置く。ミニアプリ固有の画面や通知予約処理を`Sources/JibunKit`へ追加しない。通常の追加で基盤と交差する箇所は次に限定する。
+Keep your own Features in independent `Modules/<Name>` packages when standalone reuse or Linux/WSL tests of portable logic are useful. The root package is not generally Linux-buildable; test portability depends on the package's actual dependencies. See [Feature setup](mini-apps.md) and [build capabilities](build.md).
 
-| 交差箇所 | 個人用ミニアプリで行う変更 |
+JibunKit has no dynamic plug-in mechanism. Features are Swift packages linked into the host at build time.
+
+## Keep ownership boundaries narrow
+
+Place feature logic, storage format, root view, and feature-specific notification scheduling in its package, for example `Modules/<Name>/Sources/<Name>Feature`. Do not add feature screens or notification logic to `Sources/JibunKit`. Normal integration should touch only:
+
+| Integration point | Feature change |
 | --- | --- |
-| `Project.swift` | 独立Packageのpathとapp targetへのproduct依存を追加する |
-| `Package.swift` | root PackageへFeatureを置く場合にtarget/productとテスト依存を追加する |
-| Integration targetまたはホストの薄い接続ファイル | MiniAppDefinition、保存先・バックアップ・通知操作の接続を定義する |
-| `Sources/JibunKit/MiniAppRegistry.swift` | Featureの定義を`all`へ1件列挙する |
+| `Project.swift` | Add the package path and app-target product dependency |
+| `Package.swift` | If the feature belongs in the root package, add its target/product and test dependencies |
+| Integration target or a thin host adapter | Define `MiniAppDefinition` plus storage, backup, and notification wiring |
+| `Sources/JibunKit/MiniAppRegistry.swift` | Add one definition to `all` |
 
-通知を使う場合も、ホストの`NotificationAppDelegate`は増やさず、共通payloadから同じdestination mappingへ渡す。必要なOS連携に応じて、Widget/extension、App Shortcuts、[Featureのplist/entitlements宣言](guides/feature-build-requirements.md)と検証対象を追加する。background等の登録はMiniAppDefinitionの`onHostLaunch`へ接続する。詳しくは[ミニアプリの追加](mini-apps.md)を参照する。
+Do not add another `NotificationAppDelegate`; route the common payload through the same destination mapping. Add widget/extension products, App Shortcuts, [plist/entitlement requirements](guides/feature-build-requirements.md), and matching verification only for OS surfaces the feature uses. Register background/native startup work through `MiniAppDefinition.onHostLaunch`. See [adding a feature](mini-apps.md).
 
-基盤側として扱うのは、`JibunKitCore`、root navigation、通知の受け取り口、共有ビルド設定、workflow、共通文書である。個人用の機能処理をこれらへ直接埋め込まない。
+`JibunKitCore`, root navigation, notification entry points, shared build settings, workflows, and common documentation are foundation-owned. Do not embed personal feature behavior there.
 
-## 二つの独立Packageの片側だけを更新する
+## Update one of two independent packages
 
-例として`Modules/FeatureA`と`Modules/FeatureB`を独立Swift Packageとして維持し、Aだけを互換更新する。両Packageに同名の`Config.json`や同じ翻訳keyがあっても、各targetでresourcesを宣言し`Bundle.module`から読む。片方のresourceをhostの`Bundle.main`へ移したり、BのファイルをAの更新commitへ含めたりしない。
+Assume `Modules/FeatureA` and `Modules/FeatureB` are independent and only A is changing. Resources with the same file or localization key remain declared in their own targets and are read with `Bundle.module`; do not move A's resource into `Bundle.main` or include B files in the A commit.
 
-更新前にA/B双方の固定点を作る。
+Before the update:
 
-1. 作業ツリーをcleanにし、AとBをそれぞれPackage単独でtestする。
-2. 生成hostでA/BのFeature ID、同名resourceの実値、英語・日本語等の翻訳、保存値を記録する。秘密値は記録しない。
-3. A/BのID、library product名、保存namespaceを記録し、更新前状態をcommitする。
-4. 保存形式を変更するAは、現行版でAだけのbackupを作る。Bや共有UserDefaults suite全体のcopyをAのbackup代わりにしない。
+1. Start from a clean tree and run each package's standalone tests.
+2. In the generated host, record A/B feature IDs, actual same-named resources, required localizations, and stored values. Do not record secrets.
+3. Record IDs, product names, and storage namespaces, then commit the baseline.
+4. If A changes storage format, export an A-only backup with the current version. Do not substitute a copy of B or the entire shared defaults suite.
 
-Aの互換更新は`Modules/FeatureA`と必要なA Integrationだけにまとめる。既存IDと保存先を維持し、追加フィールドは旧データをdecodeできるoptional/defaultまたは明示的schema移行として導入する。読取り時に破損を空データへ置き換えず、移行・リセットは[保存アクセスの調停](guides/store-access-coordination.md)を使う。Recordsのversion 1から2へのdecode・検証・明示移行が小さい実例である。長寿命TaskやDB接続を持つAは[Feature lifetime](guides/feature-lifetime.md)と[Runtime／復元接続](runtime-restore-integration.md)も更新する。BのID、Package manifest、resource、保存処理は変更しない。
+Limit the update to FeatureA and its necessary integration. Preserve its ID and storage location. Introduce fields as optional/default values that decode old data, or implement an explicit schema migration. Do not turn corruption into empty data. Coordinate migration/reset through [store access](guides/store-access-coordination.md). Records v1-to-v2 decoding/validation/migration is the small reference implementation. If A owns long-lived tasks or database connections, update [feature lifetime](guides/feature-lifetime.md) and [runtime/restore](runtime-restore-integration.md) too. Leave B's ID, manifest, resources, and storage untouched.
 
-更新後は次を順に確認する。
+Run:
 
 ```bash
 swift test --package-path Modules/FeatureA
@@ -43,24 +47,24 @@ tuist generate --no-open
 tuist build JibunKit-App
 ```
 
-その後、生成hostをビルドしてA/Bの定義が両方Registryへ残ることを確認する。更新インストールでは、Aの旧保存値を新コードが読み移行できること、Aの新フィールドが保存・再読込できること、A/Bそれぞれの同名resourceと翻訳が元のPackageから表示されること、Bの保存値が更新前と同じことを実画面で確認する。Package test、host build、実画面の保存・resource比較は別の結果として記録する。
+Then verify that both definitions remain in the generated registry. On an upgrade install, verify old A data migrates, new A fields survive reload, each package supplies its own resource/localization, and B data is unchanged. Record package tests, host build, storage behavior, and resource/UI behavior as separate results.
 
-### 壊れたA更新から復旧する
+### Recover from a broken FeatureA update
 
-AのPackage test、Tuist生成、host compile、旧データdecode、resource比較のいずれかが失敗したら配布へ進まない。エラーがpath/product/target依存/Registryなら[追加時の診断表](mini-apps.md#package接続に失敗したとき)の該当箇所を直す。Aの更新を一つのcommitへ分離していれば、未配布の壊れた更新は`git revert <Aの更新commit>`で履歴を残して戻し、A/BのPackage testとhost生成を再実行できる。未commitの作業を先に退避せず、広いディレクトリへ`git restore`を実行しない。
+Do not distribute when package tests, generation, host compilation, old-data decoding, or resource comparison fails. For path/product/target/registry errors, use the [feature-addition diagnostics](mini-apps.md#troubleshoot-package-connections). When the A update is one commit and has not shipped, use `git revert <commit>` to preserve history, then rerun both package tests and host generation. Do not broadly restore a dirty tree before preserving unrelated work.
 
-既に端末上でAのschema移行が始まった場合、コードだけを戻して旧版が新schemaを読めると仮定しない。まずA所有データを保全し、旧schemaも読めるforward fixを優先する。確認済みbackupへ戻す必要がある場合は、利用者確認後にAのproviderだけを選択復元し、Bを選択しない。復旧後もAの再読込とBの値・resource保持を再確認する。Package全体、App Group、UserDefaults suiteを推測で削除しない。
+If a device has already begun A's schema migration, do not assume old code can read the new schema. Preserve A data and prefer a forward fix that reads both versions. If a verified backup must be restored, obtain user confirmation and restore only A's provider, then verify A and B. Never guess-delete a package, App Group, or complete defaults suite.
 
-P0-Bの同意・無効化・削除・提示は0.7.0に含まれ、実機確認も2026-09-13に完了した。接続・復旧判断は[Feature管理](guides/feature-management.md)、[利用同意](guides/feature-consent.md)、[所有データ削除](guides/feature-data-removal.md)、[Feature所有の提示](guides/feature-owned-presentations.md)に従う。削除済み状態や同意をbackup復元だけで暗黙に有効化しない。
+Consent, disable/remove, and owned presentations shipped in 0.7.0. Follow [feature management](guides/feature-management.md), [feature consent](guides/feature-consent.md), [owned-data removal](guides/feature-data-removal.md), and [feature-owned presentations](guides/feature-owned-presentations.md). Restoring a backup must not silently re-enable a removed feature or approve consent.
 
-## 基盤更新を取り込む前
+## Before merging an upstream foundation update
 
-1. 作業ツリーを確認し、個人用変更を意味のある単位でコミットする。
-2. カウンター値、各ミニアプリの保存内容、bundle ID、App Group、現在導入中の版を記録する。実データやTeam IDはGitへ保存しない。
-3. 取り込む基盤の変更履歴を読み、保存キー、識別子、最低iOS版、ビルドツールの変更を確認する。
-4. `git diff`で、個人用変更と基盤更新が同じ交差箇所へ触れるか確認する。
+1. Inspect the tree and commit personal changes in meaningful units.
+2. Record stored feature values, bundle ID, App Group, and installed version without committing real data or Team IDs.
+3. Read the incoming history for storage-key, identifier, minimum-iOS, and build-tool changes.
+4. Use `git diff` to identify overlap at the integration points above.
 
-公開リポジトリを`upstream`、個人用forkを`origin`として使う場合の最小例は次のとおりである。remote名が違う場合は読み替える。
+With public upstream named `upstream` and a personal fork named `origin`:
 
 ```bash
 git status --short
@@ -69,40 +73,30 @@ git diff HEAD..upstream/main
 git merge upstream/main
 ```
 
-実際のリポジトリでブランチを新設するか、mergeとrebaseのどちらを使うかは、そのリポジトリの規則に従う。この文書の検証のためだけに利用者のブランチやremoteを作らない。
+Adapt remote names and merge/rebase policy to the actual repository. Do not create user branches or remotes merely to follow this example.
 
-## 競合を解消する
+## Resolve conflicts deliberately
 
-`Package.swift`と`MiniAppRegistry.swift`は、基盤と個人用ミニアプリの両方が触れやすい。単純に`ours`または`theirs`を選ばず、次をすべて残す。
+`Package.swift` and `MiniAppRegistry.swift` commonly conflict. Do not choose all of “ours” or “theirs.” Preserve foundation targets/dependencies, personal targets/dependencies, old and new definitions, and unique IDs/namespaces/notification IDs. Keep display names, icons, destinations, bundle ID, App Group, and storage keys unless a separate migration explicitly changes them.
 
-- 基盤側が追加・変更したtargetsと依存。
-- 個人用feature targetと本体からの依存。
-- 既存と新規の定義、およびID・namespace・通知IDの一意性。
-- 各定義の表示名、アイコン、destination。
-- 既存のbundle ID、App Group、保存キー。変更が必要なら移行を別タスクとして設計する。
+Treat an old unknown notification owner as unknown and return to the list; never guess another feature. Preserve or explicitly migrate old storage even during 0.x development.
 
-通知payloadの古いIDは未知値として一覧へ戻し、別ミニアプリへ推測で割り当てない。保存形式を変更する場合は、旧値を残すか移行するかを明示し、0.xであることを理由に黙って破棄しない。
+## Verify after merging
 
-## 取り込み後に確認する
+1. Run Swift tests for ID collisions, App Group resolution, every feature, and isolated storage.
+2. Use Tuist/Xcode to compile iOS targets and validate an IPA containing its widget extensions.
+3. For Shortcuts, use the Xcode CI path that produces native App Intents metadata.
+4. Without deleting the installed app, perform an overwrite installation and verify data, list/screens, Shortcuts, widgets, and notifications.
+5. Refresh signing and repeat the same checks.
 
-1. `swift test`でID衝突、App Group解決、各feature、独立保存を確認する。
-2. Tuist／XcodeのビルドでiOS向けコンパイルとWidget入りIPAの整合性を確認する。
-3. Shortcutsを含む場合はGitHub ActionsのXcode経路で公式App Intentsメタデータ入りIPAを生成する。
-4. 既存アプリを削除せずSideStoreで上書きし、保存値、一覧、各画面、Shortcuts、Widget、通知を確認する。
-5. SideStoreで署名更新し、同じ項目を再確認する。
+Separate feature logic, iOS compilation, metadata extraction, re-signing, and device behavior when diagnosing a failure. A build does not prove persistence or system-surface behavior.
 
-失敗時は、feature処理、iOSビルド、App Intentsメタデータ、SideStore署名、実機動作を分けて原因を探す。ビルド成功だけで保存やsystem surfaceを合格にしない。
+The downstream friction log is [2026-09-19-downstream-friction.md](verification/2026-09-19-downstream-friction.md). Treat it as evidence from its recorded environment, not a guarantee for every host, shell, package layout, or signing setup.
 
-## 対応範囲
+## Scope and migrations
 
-この更新手順が扱うのは、同じAppleアカウント、bundle ID、App Groupを維持したソース更新と上書きインストールである。Appleアカウント変更、bundle ID変更、App Group変更、削除後の再導入は自動移行の対象ではない。必要になった時点で、データのexport/importまたはキー移行を別仕様として決める。
+This workflow covers source updates and overwrite installation while keeping the same Apple account, bundle IDs, and App Group. Account/Team changes, bundle/App Group changes, reinstall after deletion, and device migration require a separately designed export/import or key migration.
 
-## 2026-09-07のnamespace修正
+The 2026-09-07 namespace correction preserves built-in `counter`/`reminder` keys and notification IDs. Only string IDs containing a dot encode that dot as `%2E` inside storage namespaces and notification IDs, while retaining the source ID and payload. A downstream build that used the unpublished old encoding must back up, name the feature-owned keys, migrate only those keys, cancel only its old notification IDs, and reschedule under the new IDs. Core cannot safely infer ownership for a bulk migration/deletion.
 
-組込み済みの`counter`、`reminder`の保存キーと通知IDは変わらない。新たに導入された文字列IDのうち、ドットを含むIDだけは、保存namespaceと通知ID内のドットを`%2E`へ変換する。元のIDと通知payloadは維持する。
-
-未公開ブランチの旧方式でドット入りIDを使った派生がある場合、更新前にバックアップし、該当Featureが所有するキーを明示して旧キーから新キーへ移す。旧方式では他Featureと同じキーになり得るため、基盤は所有者を推測した一括移行・削除をしない。旧通知はそのFeatureが予約したIDを明示して取り消し、新IDで再予約する。
-
-## 0.8.1の共有状態接続
-
-既存Featureの変更は不要で、Definition.externalAccessはoptional。Widget/Control等の別process writerがある場合だけ、owner別の共有状態と管理/復元の停止・再開へ接続する。既存DBや保存先をMiniAppSharedStateへ強制移行しない。削除/復元は保存世代を更新するため、古いWidget/Control設定は更新を拒否し、対象の再選択が必要になる。[接続手順](guides/interactive-widgets.md)。Counter/Reminderの保存IDと通常IPA構成は維持する。
+Since 0.8.1, `Definition.externalAccess` is optional and needed only for another-process writers such as widgets/controls. Existing stores are not forced into `MiniAppSharedState`. Removal/restore increments the storage generation, so old widget/control configurations are rejected until the user reselects a target; see [interactive widgets](guides/interactive-widgets.md). Counter/Reminder IDs and normal IPA composition remain unchanged.

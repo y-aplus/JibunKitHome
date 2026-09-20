@@ -25,9 +25,16 @@ final class MigrationUITests: XCTestCase {
         XCTAssertTrue(app.buttons["miniapp.counter"].waitForExistence(timeout: 5))
     }
 
+    private func showMiniAppList() {
+        let counter = app.buttons["miniapp.counter"]
+        if counter.waitForExistence(timeout: 1) { return }
+        returnToList()
+    }
+
     func testBackupRoundTripRestoresOnlySelectedCounter() throws {
         app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
         app.launch()
+        showMiniAppList()
         tap(app.buttons["miniapp.counter"])
         tap(app.buttons["1を追加"])
         let original = app.staticTexts["counter.value"].label
@@ -84,9 +91,15 @@ final class MigrationUITests: XCTestCase {
             tap(list)
             XCTAssertTrue(file.waitForExistence(timeout: 15), app.debugDescription)
             capture("backup-files-list")
-            tap(file)
+            // Diagnostic hypothesis: the cell/filename hit points used in the
+            // previous runs may not invoke the document picker's primary action.
+            // Record selectability separately, then try the visible icon region.
+            print("Backup file candidate enabled=\(file.isEnabled) hittable=\(file.isHittable) frame=\(file.frame)")
+            XCTAssertTrue(file.isEnabled, "Backup JSON is present but disabled: \(app.debugDescription)")
+            XCTAssertTrue(file.isHittable, "Backup JSON is present but not hittable: \(app.debugDescription)")
+            file.coordinate(withNormalizedOffset: CGVector(dx: 0.16, dy: 0.5)).tap()
             capture("backup-after-file-selection")
-            XCTAssertTrue(app.collectionViews["File View"].waitForNonExistence(timeout: 15), app.debugDescription)
+            XCTAssertTrue(app.buttons["backup.restore"].waitForExistence(timeout: 20), app.debugDescription)
         }
         XCTAssertTrue(file.waitForExistence(timeout: 10))
         capture("backup-file-importer")
@@ -118,6 +131,7 @@ final class MigrationUITests: XCTestCase {
         tap(app.buttons["閉じる"])
         app.terminate()
         app.launch()
+        showMiniAppList()
         tap(app.buttons["miniapp.counter"])
         XCTAssertTrue(app.staticTexts["counter.value"].waitForExistence(timeout: 10), app.debugDescription)
         XCTAssertEqual(app.staticTexts["counter.value"].label, original)
@@ -129,6 +143,7 @@ final class MigrationUITests: XCTestCase {
     func testMiniAppSearchFiltersAndOpensResults() throws {
         app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
         app.launch()
+        showMiniAppList()
         // Reveal the standard navigation search field.
         app.swipeDown()
         let search = app.searchFields.firstMatch
@@ -156,6 +171,18 @@ final class MigrationUITests: XCTestCase {
     func testMiniAppLinksOpenColdAndSwitchWarm() throws {
         app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
         app.launch()
+        showMiniAppList()
+        tap(app.buttons["miniapp.reminder"])
+        XCTAssertTrue(app.textFields["例: 水を飲む"].waitForExistence(timeout: 5))
+        XCUIDevice.shared.press(.home)
+        XCTAssertTrue(app.wait(for: .runningBackground, timeout: 10))
+        app.terminate()
+        app.launch()
+        // Establish that a different owner really is restored, rather than
+        // claiming URL precedence from an unsaved in-memory selection.
+        XCTAssertTrue(app.textFields["例: 水を飲む"].waitForExistence(timeout: 10))
+        XCUIDevice.shared.press(.home)
+        XCTAssertTrue(app.wait(for: .runningBackground, timeout: 10))
         app.terminate()
         XCUIDevice.shared.system.open(try XCTUnwrap(URL(string: "jibunkit://mini-app/counter")))
         XCTAssertTrue(app.staticTexts["counter.value"].waitForExistence(timeout: 10))
@@ -174,6 +201,7 @@ final class MigrationUITests: XCTestCase {
     func testPersistenceAndHostIntegration() throws {
         app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
         app.launch()
+        showMiniAppList()
         capture("01-mini-app-list")
 
         tap(app.buttons["miniapp.counter"])
@@ -200,6 +228,7 @@ final class MigrationUITests: XCTestCase {
         returnToList()
         app.terminate()
         app.launch()
+        showMiniAppList()
         tap(app.buttons["miniapp.counter"])
         XCTAssertTrue(app.staticTexts["counter.value"].waitForExistence(timeout: 5))
         XCTAssertEqual(app.staticTexts["counter.value"].label, counterValue)
@@ -213,6 +242,7 @@ final class MigrationUITests: XCTestCase {
     func testNotificationDeliveryAndRouting() throws {
         app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
         app.launch()
+        showMiniAppList()
         tap(app.buttons["miniapp.reminder"])
         let message = app.textFields["例: 水を飲む"]
         tap(message)
@@ -274,6 +304,7 @@ final class MigrationUITests: XCTestCase {
     func testStandaloneCounterUsesIndependentStorage() throws {
         app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
         app.launch()
+        showMiniAppList()
         tap(app.buttons["miniapp.counter"])
         XCTAssertTrue(app.staticTexts["counter.value"].waitForExistence(timeout: 5))
         let original = app.staticTexts["counter.value"].label

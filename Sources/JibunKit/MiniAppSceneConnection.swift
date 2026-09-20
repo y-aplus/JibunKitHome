@@ -8,14 +8,16 @@ import UIKit
 struct MiniAppSceneConnection: UIViewRepresentable {
     let connect: @MainActor () -> Void
     let disconnect: @MainActor () -> Void
+    var connectScene: (@MainActor (UIWindowScene) -> Void)? = nil
 
     func makeUIView(context: Context) -> ConnectionView {
-        ConnectionView(connect: connect, disconnect: disconnect)
+        ConnectionView(connect: connect, disconnect: disconnect, connectScene: connectScene)
     }
 
     func updateUIView(_ view: ConnectionView, context: Context) {
         view.connect = connect
         view.disconnect = disconnect
+        view.connectScene = connectScene
     }
 
     static func dismantleUIView(_ view: ConnectionView, coordinator: ()) {
@@ -26,16 +28,19 @@ struct MiniAppSceneConnection: UIViewRepresentable {
     final class ConnectionView: UIView {
         var connect: @MainActor () -> Void
         var disconnect: @MainActor () -> Void
+        var connectScene: (@MainActor (UIWindowScene) -> Void)?
         private weak var observedScene: UIWindowScene?
         private var connected = false
         private let notifications: NotificationCenter
 
         init(connect: @escaping @MainActor () -> Void,
              disconnect: @escaping @MainActor () -> Void,
-             notifications: NotificationCenter = .default) {
+             notifications: NotificationCenter = .default,
+             connectScene: (@MainActor (UIWindowScene) -> Void)? = nil) {
             self.connect = connect
             self.disconnect = disconnect
             self.notifications = notifications
+            self.connectScene = connectScene
             super.init(frame: .zero)
             isUserInteractionEnabled = false
         }
@@ -77,6 +82,7 @@ struct MiniAppSceneConnection: UIViewRepresentable {
             guard !connected, observedScene != nil else { return }
             connected = true
             connect()
+            if let observedScene { connectScene?(observedScene) }
         }
 
         private func endConnection() {

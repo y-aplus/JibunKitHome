@@ -1,0 +1,123 @@
+# 0.8.4後のAR診断検証
+
+通常製品は0.8.4のまま。Tests/P2ARのみを拡張し、同一sceneで同一capture coordinatorへ別ownerの実camera要求を送る。Bは診断用で独立Feature登録を持たず、AR診断のruntime/同意/sceneに従属する。従ってFeature管理全体の独立性をこの比較だけで証明しない。
+
+AR起動→B reject/A継続→B stopCurrent/A停止・B camera実稼働→B停止/A暗黙再開なし→A明示再開を1周で判定する。OS interruptionの時刻付き最大80行は観測用で、実callbackが発生しなければ未観測。ホームへ送っただけのscene停止をOS interruption成功には数えない。
+
+自動試験2件を追加。生成host local4試験は成功。既存ar-action境界のnative試験・診断Release/IPAを一回実行し、通常IPA/背景/BLE等の未変更試験を重複実行しない。Files比較CI35335082797は独立して進行中。AR試験が成功しても実cameraとOS中断は実機未確認のまま。
+
+CI35335272799の診断compile失敗（internal scene initializer）は、診断専用dispatcherによる配送へ修正。ddb0f83/CI35336219498でnative17件成功、failure0/skip0、Release/IPA検査成功。実camera競合・OS interruptionは未検証。診断tag p2-ar-followup-20260918を公開し無認証再取得のSHA/CRCを照合。IPA6,246,645 bytes、SHA-256 `75fbc8b81319f7f7f03503b0602ba7a041a549511d11627c65421090aa388532`。通常0.8.4の製品コード変更なし。
+
+
+## 実機結果
+
+2026-09-18、ユーザーが上記診断IPAの手順1〜5をすべてOKと回答。AR実frame増加、Camera B reject時のA継続、stopCurrentでA停止/B実camera稼働、B停止後A暗黙再開なし、A明示再開後frame増加を確認。sourceはddb0f83で、通常0.8.4の再実機や別Feature管理全体の実証とはしない。OS delegate由来のinterruption/復帰は今回依頼しておらず未観測を維持。
+
+次の境界はBLE cold復元のprocess識別・永続観測の診断整備と、AR OS中断の観測妥当性レビュー。必要な観測がない状態でユーザーへ反復操作を依頼しない。Files独立比較は[別記録](2026-09-18-files-independent-comparison.md)で両bridgeのOS参照解決失敗を確認済み。
+
+## OS中断観測のレビューと次の一括境界
+
+実機camera競合成功と、OS interruptionの未観測を分離する。Appleの一般的な中断例である背景移動は本hostのscene離脱停止と競合するため、その操作を中断復帰の成功証拠にしない。確実な短時間triggerが得られていないので追加実機試行は依頼しない。
+
+診断ログは従来booleanだけでend→frameを対応付けており、matching began・実行世代・中断sequenceの照合が不足していた。また同一ARSessionのraw delegateがcurrentForwarderを取得する境界は、保持された旧forwarderを拒否する既存試験だけでは十分に検証できない。これを実OS障害と断定せず、診断の帰属・成功表示を先に修正する。
+
+次のCIはAR相関修正とBLE process/cold復元診断をまとめたp2-combined一回とする。各workerは独立試験を添えて提出、親で契約・差分確認後に投入する。通常製品IPA・署名環境不足の実通信・Files独立比較は再実行しない。旧run/end-without-began/stop後frameで復帰成功を作らないこと、BLEで単なる手動起動をcold成功としないことを負条件に含む。
+
+## 相関診断の統合候補
+
+ARはrunごとのsession/delegateへ分離し、旧run callbackとbeganなしendを拒否。重複開始時に既存runを保持し、中断完結後に次sequenceを受け付ける試験を追加した。BLEは接続begin/completed/failedを分離、復元通知のowner/generation照合、保存120件/message512文字・揮発80件を検証する。表示は新processでの復元callback観測であり、OS自動cold起動の証明とはしない。
+
+Core変更は既存の任意diagnostics sink（通常nil）へのwillRestoreState trace追加のみ。通常通信・公開APIの動作変更はない。ローカル生成4試験成功。p2-combinedで両診断・native/shared・Release/IPAを一括検証する。実機で未検証の新観測を、以前のAR/BLE実機成功へ上乗せしない。
+
+## 統合CI結果
+
+59f7081b2830f48691d4cc2c41891f54ce9460d2 / CI35342293484は11分55秒で成功。native79件、共有BLE/window24件、failure0/skip0、Release/IPA検査成功。取得IPA6,459,039 bytes、SHA-256 `2b381351fbbf49c4a7becc7dc0c1662105ee505a2d65323bd97d9f14a9d646e2`、全entry CRC照合済み。ARの世代相関・重複開始・複数中断、BLEの接続成功限定・世代照合・永続上限の追加試験を含む。実OS interruptionや自動cold起動の成功ではない。
+
+診断IPAはartifactとして保持し、新しい有効な実機手順が確定するまで追加インストールを要求しない。次はBLE復元の再現可能なOS条件と、P2-6/P2-13の古いremaining/実際の未検証の照合をread-onlyで並行確認する。根拠のない時間待ちを実機タスクにはしない。
+
+
+## 保存専用Actionの完了判定
+
+5a978579ededfe83ddd6ce87573b753d27548537 / CI35343811711で関連native21件成功。追加の登録省略期間保持試験は2.530秒で成功。実ファイルstoreの再生成、publish([])、既存A/B pending保持、新規拒否、再登録後のA text配送/ACKとB保持を確認した。OS再インストールを直接実施した試験とはしない。
+
+Action/Shareの差は入口presentationで、provider loader/保存/取消は共通。c66b624のAction URL/file入口・取消・A管理/B保持、既存Share text実機とnative実provider文字列試験、source不変照合、今回保持試験を再利用して採用P2-13をcompleteとする。Action sheetのplain text単独実測は未観測のまま明記し、同一経路の手動再反復や通常IPA往復を新たな必須条件にしない。任意extension全体を完了とはしない。
+
+## BLE終了試験の準備
+
+ユーザーはFast App Termination項目があると回答。Apple DTSの自然終了を模した復元試験案（https://developer.apple.com/forums/thread/840468）を根拠に、まず設定を変更せず診断版で接続・購読を準備する。tag p2-ble-restoration-20260918へ59f7081の検証済みIPAを公開し、公開URLから再取得したSHA-256が上記2b381351...と一致。終了・OS復元はまだ未実施。P2-6 OS UI試験はSimulatorのAR非対応判定がpermission要求を妨げるため、投入前に診断入口を修正中。
+
+## BLE実機・新process復元の観測
+
+ユーザーは診断版で購読・2122受信後、「アプリの高速終了」を用いた手順を実施し、受信値2324と「新processでOS復元callbackからconnectedを確認（OSの起動契機は未判定）」を報告した。新processでOS復元callback経由の接続復元と最終受信値を確認。OS自動起動か手動再入場による起動かは未判定、同一世代の復元Notify判定表示は未報告なので、その成功までは加算しない。OFFへ戻す手順は案内済み。
+
+先行記録の「ユーザーはFast App Termination項目があると回答」は「はい」の帰属を取り違えた記録。後にユーザーが「アプリの高速終了」という日本語項目の存在を明示確認した。日本語名は実機操作記録 https://qiita.com/Shimokita/items/b650ae070b758f3635e9 でも確認した。
+
+P2-6は実OS Widget英語表示と代表camera許可文言のSimulator UI試験を統合。camera文言は診断専用の実permission APIを使い、ARKit hardware support判定に遮られない入口とする。通常ARの同意/所有権/非対応判定を変更しない。生成・runnerローカル11試験成功。OS UI2件の成功・skip0を必須とし、一括p2-combined CIで検証する。
+
+## OS表示自動試験の結果
+
+18a94bd50dc19052501ba883db29ba01e587abc8 / CI35347692100は18分14秒で成功。取得したos-ui-summary.jsonでiPad(A16) iOS26.5 Simulator上の2件成功/失敗0/skip0、test-summary.jsonでnative80件成功/失敗0/skip0を確認。実SpringBoardのCounter Widget gallery/home英語描画と実camera OS許可文言を検証した。実機の全言語/全権限組合せの確認ではない。BLE接続世代負試験9475781はこのCIより後に追加したため、まだ実行済みに含めない。次の関連CIにまとめる。
+
+P2-5は既存の実機OS操作/管理/再起動と31478f2・CI35075825942の実4Feature非初期値/世代保持回帰を照合し採用通常範囲をcompleteとした。過去の230/200差分は原因不明・非再現の履歴として残す。修正済みやユーザー誤操作とは断定しない。
+
+
+## BLE永続ログによる復元通知の追加確認
+
+ユーザー提供の59f7081診断ログでは12:56:16Zの新process内で、AccessoryのwillRestoreState→ownerOnRestore→restoredConnected generation353F4A95→同generationのrestoredNotification（0B1EC4D4-1383-4460-B1E2-9AE98653CC1B、2bytes）→consumerConnectCompletedを確認した。12:57:16Zと13:21:58Zの別processではconnectedのみ。従って同一復元世代Notifyは実機確認済みに更新する。payload自体はログへ保存しないため2bytesを2324と断定しない。OSの起動契機は記録されておらず自動起動を断定しない。
+
+最新processだけのstatusは以前のprocessの成功を表示しないため、過去の完全な復元通知証拠を別欄へ時刻付きで示す診断修正を進める。再試行を増やす必要はなく、cross-process/owner/generationを混ぜない自動試験で検証する。
+
+## 次の一括境界: 復元履歴と実OS二window復元
+
+BLEの過去process完全証拠欄80028f7と再接続負試験9475781を統合。現在processの結果と分け、同じprocess/owner/generationに属する保存済み証拠だけを表示する。Core通信経路は変更しない。
+
+複数windowは選択FeatureがAppNavigationのメモリだけに保持される不足を発見。c8e5de3で通常MiniAppSceneRootへscene別選択IDのSceneStorageを追加し、復元は登録・有効状態を確認する既存navigation経路へ接続する。任意NavigationPathの自動保存は追加しない。実OS二windowの異なるowner/countを保存し、background確認→終了→再起動→session/owner/count復元→片側破棄他方保持を追加OS UI試験で確認する。
+
+生成/runner/台帳ローカル31試験成功。次はp2-combined一回で追加BLE native2件とOS UI計3件、診断Release/IPAを検証。前回全体18分14秒（native6分05秒/OS UI3分58秒/Release3分21秒）に対し追加window UI3〜4分、準備upload込み25分内を見込む。通常製品IPAの最終検証はこのwindow経路を確認した後の出荷境界へまとめ、未変更のFiles不安定試験を同時に再実行しない。
+
+
+## 残るOS観測の限定
+
+独立reviewでP2-3/P2-4/P2-12の既知の実装不足は見つからなかった。ARは通常実camera/frame/明示停止再開とnative中断相関を再利用し、残件を実OS delegate中断→終了→同run frame復帰の未観測へ限定する。scene離脱による能動pauseは代用しない。着信・高負荷の反復や、ユーザーが見送ったiPad準備を新たな操作待ちにしない。位置は既存前景callback/監視登録解除を繰り返さず、Simulatorの実背景配送が成立するかを投入前に確認する。通常schedulerの任意時間内配送をCI成功条件にせず、継続処理code1の追加追究停止指示も維持する。
+
+## 復元選択の独立レビュー修正
+
+復元開始時点で保存ownerが無効/未登録の場合、navigation.activeIDが元からnilだとonChangeが発火せずSceneStorageに古いIDが残る経路を発見。後日同IDを再有効化/再導入した際の意図しない再openを防ぐため、SceneStorage読込境界でregisteredIDs（enabled集合）に含まれない値を明示的にnilへ戻す。通常navigationのadmissionを維持し、別sceneで有効なownerを変更しない。修正は実行中cbf6938のCIには含まれず、位置試験と合わせた次境界で限定回帰を追加する。
+
+## 次候補の準備完了
+
+b36b8b3の無効scene選択消去に対し、保存ownerを起動前からregistryに含めない診断引数を用いた実OS復元UI回帰を追加。通常のactive scene変更通知で偶然保存値が消える経路とは分ける。UI sourceは診断appの自動収集対象から分離した。
+
+背景位置はb763e49/65209f3でXCUILocationによるP0確認→実background状態→P1移動→callback記録保存成功に限ったtracker専用Darwin通知→再入場後の新規同process/background記録を確認する。古いログ、保存失敗、別owner、前景受信を成功にしない。実電波/geofence/cold配送を主張しない。
+
+OS UIは計5件をclass/method名ごとにstructured resultから検証する。ローカル35試験・py_compile・diff check成功。Swift/Xcodeは未実行。進行中CI35350686130はこれらの後続修正を含まないため、その結果を受領後に一括して次CIへ投入する。追加ユーザー操作は不要。
+
+## CI35350686130の切り分けと次投入
+
+cbf6938のnative82件はfailure0で成功、camera/Widget OS UIも成功。二window UIはB選択後・終了再起動前にXCTest window数3/期待2で失敗した。失敗時の実hierarchyにはA/Bそれぞれのowner/session/countと、Otherだけを持つ空の補助UIWindowが含まれる。製品sceneが3つ生成された証拠ではない。host NavigationStackを含むwindowへ計数を限定し、独立したsession ID照合は維持する。隠れたAを閉じる前にはOSの既存session activationで前面化する診断入口を使い、非表示画面の座標tapは行わない。
+
+次候補はこの修正、無効保存選択の消去とUI回帰、背景位置1ケースをまとめ、OS UI計5件/関連native/Release・IPAを一回で検証する。ローカル35試験成功。今回がこの復元UI境界の初失敗で、同じ数え方の再試行はしない。Swift実行は次CIで判定する。
+
+## CI35352655988: 成功した追加試験と二windowの再切り分け
+
+source1138dedでnative82件成功。OS UIは5件中4件成功し、背景位置callback（65.529秒）と無効な保存owner除去・再導入時に再openしない回帰（44.224秒）が初めて成功した。前者はSimulatorの実Core Location配送とbackground状態の永続記録を確認したもので、実機の境界通過/iBeacon電波/cold配送まで確認したものではない。
+
+二windowは作成・別owner/値・session IDの保存まで通過し、background→終了→起動後に接続windowがBだけの1件で失敗した。前回の空UIWindow誤計数は解消。Appleの[openSessions説明](https://developer.apple.com/documentation/uikit/uiapplication/opensessions)は、archived sessionにはconnected sceneがなく、再選択時にsession情報からUIを再作成することを明記している。二window同時接続を起動直後の必須条件にしていた試験を修正する。
+
+再起動後にopenSessionsが元のA/B両IDと完全一致することを確認し、接続が一つなら既存の他方sessionをrequestSceneSessionActivationで再表示する。その後両ID/owner/countの保持と片側破棄を確認する。新規session作成で復元を代用せず、待機時間も延長しない。この境界は2回目の失敗で、いずれも失敗箇所とOS hierarchyを確認してから変更した。
+
+修正source99632e3をCI35355170934へ投入し、Scheduled Taskの完了通知を登録した。ローカル35試験と台帳検査は成功。通常版差分は0878ede以後、MiniAppSceneRootの選択保存/無効保存値消去とCoreBluetoothの診断ログ追加に限られる。通常版回帰では、保存した選択と異なるcold URLを開く際の優先順位を既存UI試験で確認する。起動直後の一覧表示を前提にする既存テストは別途修正を準備する。
+
+出荷候補の通常build/IPA・共有試験と限定UIは、この復元境界の結果とテスト修正を集約して一回にまとめる。Filesの既知の独立環境失敗や未変更の生成Feature/Recordsを全面再実行する境界にはしない。patchの変更範囲文書レビューを行い、minor全件レビューを実施したとは記載しない。新しい実機依頼が必要かは通常版証拠を確認して判断し、iPadや有料署名環境の再準備を要求しない。
+
+## P2-9採用通常範囲の完了判定
+
+独立レビューとsource別証拠を照合し、BLE通常接続・背景復元の採用範囲をcompleteへ更新した。通常無線と両owner/片側管理の実機、59f7081の実OS新process・同一復元世代Notify、1138ded/CI35352655988のnative82件（履歴再読込・異process/owner/generationの混合拒否・切断後の通常再接続を復元扱いしない負試験を含む）で判定した。window UIの失敗とBLE native成功を混同しない。
+
+OSが何を契機にprocessを起動したかは未判定のまま残し、自動起動/遅延保証の証拠にはしない。アプリ側のstable restoration ID、background mode、launch時manager再生成、owner admission、callback世代とcleanupの契約を確認した。特殊機器全網羅や全OS状態の直積試験へ拡張しない。親D24全体や1.0全体が完了したという意味ではない。
+
+## CI35355170934成功・通常版候補へ
+
+99632e3e489be015acddb5858214b290da14e22dのrunは15分52秒で成功。取得したstructured summaryでiPad(A16)/iOS26.5のnative82件・OS UI5件、いずれも失敗0/skip0を確認。二window復元試験は44.308秒。保存元二session ID/owner/値を再表示後に照合し、A破棄後B保持まで成功した。Release/署名/IPA CRCも成功。物理iPad成功とはしない。
+
+通常版は0.8.5/build15候補に進める。be3669dまでに既存UIの一覧前提を修正し、通常リマインダーの実復元を前提条件にcold counter URL優先を検証する。通常build/IPA・共有/Module・限定UIを一括実行し、生成Feature/RecordsとFiles自動UIは未変更証拠を再利用する。版変更時、旧診断workflowのbuild期待値13が残っていた箇所も15へ同期した。旧公開0.8.4記録は変更しない。

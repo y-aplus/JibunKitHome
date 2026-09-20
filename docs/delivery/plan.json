@@ -491,10 +491,10 @@
       ],
       "priority": "P2",
       "milestone": "1.0.0",
-      "state": "partial",
+      "state": "complete",
       "title": "位置・背景更新・監視",
-      "existing": "活動/寿命/権限境界を再利用。実OSの位置所有を検証する",
-      "remaining": "前景/背景位置と通常geofence/iBeacon、権限変更/復帰、owner別登録/解除、枠不足の説明とB保持",
+      "existing": "開発branch da62672/CI35176070341: owner別位置service、native設定/SDK値、永続Region予約/20枠/破損保護、世代/同意/管理/復元を実装。Core24件・native7件成功。未出荷 3af8e32実機で前景位置、geofence/iBeacon登録・一覧・解除を確認。82f61bb実機ログはactive中の位置受信。1138ded/CI35352655988でSimulatorの実background位置callbackと同processの新規永続記録を確認。 0daaeb9/CI35371803883でSimulator終了後のRegion enter/exitを別background processとowner永続ログで観測（1pass/0skip、86.643秒）。",
+      "remaining": "採用基準は2026-09-19にユーザーが充足と判断。未観測条件は検証成功とはせず維持: 既知の実装不足なし。Simulator背景配送と4a1340a/CI35365770330の通常geofence enter/exitは確認済み。実機の背景位置callback、実境界通過、iBeacon電波受信、終了後OS配送は未観測。前景位置・Region/iBeacon登録解除・同意解除は確認済みで反復しない。iPad準備やAndroid送信アプリ導入を現在のユーザー操作待ちにしない。",
       "deferred": "大量監視枠の透過仮想化/予測最適化",
       "criteria": [
         {
@@ -517,7 +517,12 @@
           "description": "宣言した署名/OS/機器構成で通常入口・必要な背景/中断/復帰・上書き/Refresh・片側管理とB保持をまとめて実機確認",
           "kinds": [
             "device"
-          ]
+          ],
+          "conditional_verification": {
+            "status": "approved-unverified",
+            "scope": "Physical iBeacon radio, background boundary movement and reboot/unlock delivery; existing foreground device and Simulator OS evidence are retained.",
+            "reason": "Owner accepted v1 criteria on 2026-09-19 with these observation limits disclosed. This is not a device pass or final publication approval. See docs/verification/2026-09-19-final-observation-boundary.md."
+          }
         },
         {
           "id": "P2-3.docs",
@@ -537,10 +542,10 @@
       ],
       "priority": "P2",
       "milestone": "1.0.0",
-      "state": "partial",
+      "state": "complete",
       "title": "背景起動・転送再接続・継続処理",
-      "existing": "既存BGTask API/shared refresh journal/background URLSession registryを再利用",
-      "remaining": "実OS受付/launch/期限/取消/completion、cold launchと転送再接続、重複配送・再起動の他owner保持",
+      "existing": "開発branch da62672/CI35176070341: 継続処理の一意job/owner、通常/shared refresh/URLSessionのlifetime受付・cleanup join。Core continued6件・背景native10件（実HTTP A取消/B保存含む）成功。未出荷 f6f6c04/CI35243182556で背景19＋位置9native件、診断IPA成功。実機でbackground URLSession host callback→再接続→保存→host completion解放を確認。",
+      "remaining": "採用基準は2026-09-19にユーザーが充足と判断。未観測条件は検証成功とはせず維持: 既知の実装不足なし。4a1340a/CI35365770330の診断IPAで、run78450873/task1の別processでのOS callback→owner再接続→10bytes保存→completion返却を実機確認。OSの起動契機は未判定。通常schedulerのOS選択による実起動は未観測。継続処理はnative直接比較でもcode1で実開始未確認、ユーザー指示により追加追究停止。採用契約の完了判定を見直し中であり、定時配送を保証しない。",
       "deferred": "特殊GPU/複雑scheduler・全OS不具合回避",
       "criteria": [
         {
@@ -563,7 +568,12 @@
           "description": "宣言した署名/OS/機器構成で通常入口・必要な背景/中断/復帰・上書き/Refresh・片側管理とB保持をまとめて実機確認",
           "kinds": [
             "device"
-          ]
+          ],
+          "conditional_verification": {
+            "status": "approved-unverified",
+            "scope": "Actual BackgroundTasks OS launch/expiration and continued-processing start; verified device background HTTP restoration remains separate.",
+            "reason": "Owner accepted v1 criteria on 2026-09-19 with these observation limits disclosed. This is not a device pass or final publication approval. See docs/verification/2026-09-19-final-observation-boundary.md."
+          }
         },
         {
           "id": "P2-4.docs",
@@ -581,10 +591,10 @@
       ],
       "priority": "P2",
       "milestone": "1.0.0",
-      "state": "partial",
+      "state": "complete",
       "title": "Live Activities・AlarmKit",
       "existing": "typed Live/Alarm adapters、journal/gate、通常管理/復元、独立/統合CI、対象別OS実機・通常版復帰を確認",
-      "remaining": "Live Bの上書き前の値差分（期待230/観測200）が原因未特定。210からの実機再確認と31478f2/35075825942の実4Feature非初期値・世代保持回帰は成功。元観測の原因は未解明で、最終保持判定を留保。新たな兆候がない限り同じ実機手順を反復しない",
+      "remaining": "なし（採用通常範囲）。実機のOS操作/再起動/片側管理/通常版復帰と31478f2・CI35075825942の実4Feature非初期値/世代保持試験を合成して判定。過去の期待230/観測200は原因未特定・制御した210では非再現の履歴として残し、修正済みや誤操作とは断定しない。再発時は当該遷移を切り分ける。",
       "deferred": "大量同時要求の高度最適化/特殊表示面",
       "criteria": [
         {
@@ -628,10 +638,10 @@
       ],
       "priority": "P2",
       "milestone": "1.0.0",
-      "state": "partial",
+      "state": "complete",
       "title": "低負荷残件の採否と採用範囲",
-      "existing": "idle timer/scene接続、Spotlight、翻訳・説明合成の既存成果",
-      "remaining": "idle実機/外観分離/Spotlight/Widget翻訳/権限dialogを関連P2と評価し採用範囲を検証",
+      "existing": "c66b624の外観5/Widget翻訳1と用途説明bundle検査が成功。実機でidle点灯維持/非選択後通常消灯を確認。Spotlight既存成果を再利用。 18a94bd/CI35347692100で実SpringBoard英語Widget gallery/homeと代表camera許可文言のOS UI2件、native80件成功。",
+      "remaining": "なし（採用範囲）。実機idle、実window外観/Spotlight既存成果、英日built bundle、Simulator実OS英語Widget/代表camera dialogの証拠を合成して判定。全言語×全権限の実機網羅ではない。",
       "deferred": "採用しない残件も台帳へ根拠を維持",
       "criteria": [
         {
@@ -676,9 +686,9 @@
         }
       ],
       "scope_decision": {
-        "status": "pending",
-        "reason": "",
-        "adopted_scope": ""
+        "status": "adopted",
+        "reason": "Source-specific idle/Spotlight/metadata/resource evidence supports reuse. Remaining normal appearance isolation, actual widget copy localization and adopted P2 permission dialog metadata can use native containment and existing build helpers. See docs/delivery/P2-adoption-contract.md. Adoption is not completion.",
+        "adopted_scope": "Feature/operation idle leases with selected-scene binding; explicit SwiftUI environment/presentation and contained UIKit appearance; owned Spotlight selected-item/index cleanup; normal Widget en/ja copy and adopted P2 permission descriptions. Preserve physical/OS rendering gaps. Universal process-global UIAppearance/SDK interception, arbitrary user activity/query continuation and arbitrary extension/general permission mediation remain distinct later scope; required dependencies of mandatory P2 are not excluded."
       }
     },
     {
@@ -735,10 +745,10 @@
       ],
       "priority": "P2",
       "milestone": "1.0.0",
-      "state": "partial",
+      "state": "complete",
       "title": "外部データidentity・同期共存",
-      "existing": "既存保存/復旧・宣言合成とFeatureの外部同期を再利用",
-      "remaining": "利用可能な署名構成でcontainer/account/data所有、同期中の削除/復帰・B保持。条件の根拠を明示",
+      "existing": "owner/container/account/localIDと世代を分離、native CloudKit private zone adapter、停止後削除/復元/account切替。共有9件・統合native6件/host構成をCI35249566535/35253192466で検証。",
+      "remaining": "なし（採用通常範囲）。署名専用CloudKit/APNs実通信はsigned-serviceの承認済み未検証として残す。2026-09-19-p2-identity-push-final-evidence.jsonで通常範囲のsource別証拠と後続差分を照合。正式出荷の文書全件監査は別工程。",
       "deferred": "任意既存container/schemaの自動移行・汎用同期サービス",
       "criteria": [
         {
@@ -750,7 +760,7 @@
         },
         {
           "id": "P2-8.integration",
-          "description": "通常Featureと実OS入口で利用可能な署名構成でcontainer/account/data所有、同期中の削除/復帰・B保持。条件の根拠を明示",
+          "description": "通常Featureの外部同期におけるowner/container/account/data所有、取消・復帰・B保持。CloudKit実通信はsigned-serviceに分離し、汎用HTTP等の必須範囲を維持",
           "kinds": [
             "simulator",
             "device"
@@ -758,7 +768,7 @@
         },
         {
           "id": "P2-8.device",
-          "description": "宣言した署名/OS/機器構成で通常入口・必要な背景/中断/復帰・上書き/Refresh・片側管理とB保持をまとめて実機確認",
+          "description": "無料署名の通常構成における入口・復帰・既存データ保持・片側管理とB保持を代表実機証拠で確認。署名専用実通信はsigned-serviceに分離し、未検証を合格にしない",
           "kinds": [
             "device"
           ]
@@ -769,6 +779,18 @@
           "kinds": [
             "inspection"
           ]
+        },
+        {
+          "id": "P2-8.signed-service",
+          "description": "有料署名・container設定を要するCloudKit実通信とそのOS復帰",
+          "kinds": [
+            "device"
+          ],
+          "conditional_verification": {
+            "status": "approved-unverified",
+            "scope": "有料署名・container設定を要するCloudKit実通信とそのOS復帰",
+            "reason": "2026-09-19ユーザー確定。無料署名での通常利用にそぐわないため任意条件付き提供とし、1.0必須の実通信検証から外す。実通信未検証を維持する。"
+          }
         }
       ]
     },
@@ -779,10 +801,10 @@
       ],
       "priority": "P2",
       "milestone": "1.0.0",
-      "state": "partial",
+      "state": "complete",
       "title": "BLE通常接続・背景再接続",
-      "existing": "既存寿命/権限/状態配送を再利用",
-      "remaining": "scan/connect/disconnect、ON/OFF、read/write/subscribe、宣言した背景利用のstate restorationとB維持",
+      "existing": "fe1a6e5/CI35309744549でnative統合69件。Android実機で単独read/write/notify、両Feature通知、片側無効化後他方維持、scan停止・切断/再接続後受信を確認。59f7081実機ログで新processのOS復元と同一owner/generation Notify2バイトを確認。1138ded/CI35352655988のnative82件で履歴保持・世代混同拒否・通常再接続を復元扱いしない負試験も成功。",
+      "remaining": "なし（採用通常範囲）。OS自動起動か手動再入場起動かは未判定で、自動起動や一定時間内の配送を実証・保証したとは記載しない。後続processのconnectedのみの記録は過去の完全な復元Notify証拠と分けて保持する。",
       "deferred": "特殊周辺機器網羅・central/peripheral高度複合",
       "criteria": [
         {
@@ -824,10 +846,10 @@
       ],
       "priority": "P2",
       "milestone": "1.0.0",
-      "state": "partial",
+      "state": "complete",
       "title": "APNs・必要な通知extension",
-      "existing": "通知のowner配送/宣言合成を再利用",
-      "remaining": "app tokenとFeature/server identity、正しい配送・必要extension、失敗/取消/再登録のB維持、署名/server条件説明",
+      "existing": "app token/Feature server identity、Runtime所有配送・cold admission・失敗回復・整数保持、実delegate接続。共有9件・native3件・host3件をCI35249566535/35253192466で検証。",
+      "remaining": "なし（採用通常範囲）。署名専用CloudKit/APNs実通信はsigned-serviceの承認済み未検証として残す。2026-09-19-p2-identity-push-final-evidence.jsonで通常範囲のsource別証拠と後続差分を照合。正式出荷の文書全件監査は別工程。",
       "deferred": "複数backendを横断する汎用push基盤",
       "criteria": [
         {
@@ -839,7 +861,7 @@
         },
         {
           "id": "P2-10.integration",
-          "description": "通常Featureと実OS入口でapp tokenとFeature/server identity、正しい配送・必要extension、失敗/取消/再登録のB維持、署名/server条件説明",
+          "description": "通常Featureの通知所有者・server identity・delegate配送・失敗/取消/再登録時B保持を検証。注入callbackと実APNs配信を区別し、後者はsigned-serviceに分離",
           "kinds": [
             "simulator",
             "device"
@@ -847,7 +869,7 @@
         },
         {
           "id": "P2-10.device",
-          "description": "宣言した署名/OS/機器構成で通常入口・必要な背景/中断/復帰・上書き/Refresh・片側管理とB保持をまとめて実機確認",
+          "description": "無料署名の通常構成における入口・復帰・既存データ保持・片側管理とB保持を代表実機証拠で確認。署名専用実通信はsigned-serviceに分離し、未検証を合格にしない",
           "kinds": [
             "device"
           ]
@@ -858,6 +880,18 @@
           "kinds": [
             "inspection"
           ]
+        },
+        {
+          "id": "P2-10.signed-service",
+          "description": "有料署名・provider設定を要するAPNs実登録・実配信とその背景入口",
+          "kinds": [
+            "device"
+          ],
+          "conditional_verification": {
+            "status": "approved-unverified",
+            "scope": "有料署名・provider設定を要するAPNs実登録・実配信とその背景入口",
+            "reason": "2026-09-19ユーザー確定。無料署名での通常利用にそぐわないため任意条件付き提供とし、1.0必須の実通信検証から外す。実通信未検証を維持する。"
+          }
         }
       ]
     },
@@ -869,10 +903,10 @@
       ],
       "priority": "P2",
       "milestone": "1.0.0",
-      "state": "partial",
+      "state": "complete",
       "title": "通常複数window・scene",
-      "existing": "既存window別navigationとscene routerを再利用",
-      "remaining": "実OSの二window独立状態、生成/破棄/復帰、指定sceneへの配送と他window/Feature保持",
+      "existing": "iPad Simulatorで実window生成・指定owner配送・片側破棄/保持をnative検証。99632e3/CI35355170934で終了後の元二session ID・別owner/値の復元、片側破棄後B保持、無効保存owner消去を実OS UI検証。native82/OS UI5成功。",
+      "remaining": "採用基準は2026-09-19にユーザーが充足と判断。未観測条件は検証成功とはせず維持: 既知の実装不足なし。通常版のcold URLと保存選択の優先順位はfeab170/CI35357260854で成功。物理iPadはユーザーがsideload準備を見送ったため未確認のまま、操作待ちから外す。Simulator成功を実機成功へ読み替えず最終検証範囲に明記する。",
       "deferred": "任意View/実行instanceの自動理解・一般化",
       "criteria": [
         {
@@ -895,7 +929,12 @@
           "description": "宣言した署名/OS/機器構成で通常入口・必要な背景/中断/復帰・上書き/Refresh・片側管理とB保持をまとめて実機確認",
           "kinds": [
             "device"
-          ]
+          ],
+          "conditional_verification": {
+            "status": "approved-unverified",
+            "scope": "Physical iPad multiwindow operation; actual Simulator session creation/restoration/isolation evidence is retained.",
+            "reason": "Owner accepted v1 criteria on 2026-09-19 with these observation limits disclosed. This is not a device pass or final publication approval. See docs/verification/2026-09-19-final-observation-boundary.md."
+          }
         },
         {
           "id": "P2-11.docs",
@@ -913,10 +952,10 @@
       ],
       "priority": "P2",
       "milestone": "1.0.0",
-      "state": "partial",
+      "state": "complete",
       "title": "通常ARの採否と採用範囲",
-      "existing": "P2撮影/captureの成果を再利用して評価",
-      "remaining": "単一前景sessionの開始/停止/中断復帰が比較的低負荷に成立する範囲を採用・検証",
+      "existing": "通常前景ARを採用しARSession接続/scene束縛/停止/世代試験成功。c66b624実機でframe受信・離脱停止・再開/明示停止を確認。ddb0f83/CI35336219498 native17件成功、実機でARと同一画面camera contenderの拒否/明示切替/B停止後A暗黙再開なし/A明示再開を確認",
+      "remaining": "採用基準は2026-09-19にユーザーが充足と判断。未観測条件は検証成功とはせず維持: 実OSが稼働中ARSessionへinterruption began/endedを配送し同一runでframeが復帰する一点は未観測。通常実AR/frame・scene離脱停止/明示再開・実camera競合とnative世代/復帰条件/失敗解放は検証済み、既知の実装不足なし。ホーム移動は能動停止なので代用せず、iPad実機準備や着信/高負荷の反復を現在のユーザー操作待ちにしない。",
       "deferred": "高度world state/長期再位置合わせ",
       "criteria": [
         {
@@ -949,7 +988,12 @@
           "kinds": [
             "device"
           ],
-          "adopted_only": true
+          "adopted_only": true,
+          "conditional_verification": {
+            "status": "approved-unverified",
+            "scope": "Actual OS AR interruption began/ended and same-run frame recovery; device frames, explicit lifecycle and camera contention remain verified.",
+            "reason": "Owner accepted v1 criteria on 2026-09-19 with these observation limits disclosed. This is not a device pass or final publication approval. See docs/verification/2026-09-19-final-observation-boundary.md."
+          }
         },
         {
           "id": "P2-12.docs",
@@ -961,9 +1005,9 @@
         }
       ],
       "scope_decision": {
-        "status": "pending",
-        "reason": "",
-        "adopted_scope": ""
+        "status": "adopted",
+        "reason": "Issue #6 current recommendation and source inspection: existing CaptureCoordinator/Owner, permission, scene activity and lifetime provide arbitration/stop/join; limited AR adapter and explicit originating-scene binding are sufficient without a second resource framework. See docs/delivery/P2-ar-contract.md. Adopted implementation and representative verification are complete; actual OS interruption remains explicitly unobserved under the owner acceptance.",
+        "adopted_scope": "Single foreground ARSession; native configuration/run options/delegate/frame freedom; start/explicit stop/interruption recovery; originating-scene stop and camera arbitration with other Features. Advanced world-map persistence/relocalization/background AR and simultaneous camera sessions remain outside this adopted scope."
       }
     },
     {
@@ -974,10 +1018,10 @@
       ],
       "priority": "P2",
       "milestone": "1.0.0",
-      "state": "partial",
+      "state": "complete",
       "title": "追加extensionの採否と採用範囲",
-      "existing": "P1共有/Widget、P2通知等の種類別成果を再利用",
-      "remaining": "種類別に採否評価して通常接続/所有/終了/他owner維持を検証。P2主機能の必要extensionは除外不可",
+      "existing": "保存専用Action extensionを採用。c66b624実機でOS入口、URL/ファイルの対象ownerへの取込み、取消、A無効化/B継続を確認。。0.8.4の版・文書・公開検査と通常Counter/Reminder保持は完了。ただしAction inbox保持そのものの実機証拠とはしない。5a97857/CI35343811711で登録省略期間を挟む実store再生成・再登録・text配送ACK・B保持を検証（関連native21件成功）。Action/Shareは共通provider loader/storeを使用し、Action URL/file実入口とShare text実入口の証拠を再利用",
+      "remaining": "なし（採用した保存専用Action範囲）。任意extensionの自動統合や別主機能の必要extensionを完了としない",
       "deferred": "任意既存extensionの自動統合",
       "criteria": [
         {
@@ -1022,9 +1066,9 @@
         }
       ],
       "scope_decision": {
-        "status": "pending",
-        "reason": "",
-        "adopted_scope": ""
+        "status": "adopted",
+        "reason": "Existing incoming provider loader, owner catalog/admission, durable receipt and cancellation join can be reused by an optional Action extension target. UI and storage semantics are shared with Share, while the OS extension entry and package identity require separate verification. See docs/guides/action-extension.md. This does not exclude an extension required by another mandatory P2 capability.",
+        "adopted_scope": "Optional save-only Action extension for text/URL/file input into a selected Feature inbox; explicit target opt-in, owner admission, cancellation, durable completion and other-owner preservation. Arbitrary existing extension auto-integration and bespoke notification content UI remain outside this adopted scope; mutable-content notification service requirements, if adopted, belong to P2-10."
       }
     }
   ],
@@ -1398,5 +1442,18 @@
     ]
   },
   "v1_decision": "adopted-issue6-2026-09-15",
-  "scope_issue": "https://github.com/y-aplus/JibunKit/issues/6"
+  "scope_issue": "https://github.com/y-aplus/JibunKit/issues/6",
+  "v1_acceptance": {
+    "date": "2026-09-19",
+    "status": "criteria-satisfied-publication-approved",
+    "reference": "docs/verification/2026-09-19-final-observation-boundary.md",
+    "unobserved_units": [
+      "P2-3",
+      "P2-4",
+      "P2-11",
+      "P2-12"
+    ],
+    "publication_requires_final_user_approval": false,
+    "publication_approval_date": "2026-09-19"
+  }
 }

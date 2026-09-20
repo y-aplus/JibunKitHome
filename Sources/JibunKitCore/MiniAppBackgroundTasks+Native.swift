@@ -33,18 +33,19 @@ private final class SystemBackgroundTaskScheduler: MiniAppBackgroundTaskScheduli
         kind: MiniAppBackgroundTaskKind,
         launch: @escaping @MainActor (any MiniAppBackgroundTaskNative) -> Void
     ) -> Bool {
-        scheduler.register(forTaskWithIdentifier: identifier, using: .main) { task in
+        scheduler.register(forTaskWithIdentifier: MiniAppBackgroundTaskIdentifier.resolve(identifier), using: .main) { task in
             Task { @MainActor in launch(SystemBackgroundTask(task)) }
         }
     }
 
     func submit(_ request: MiniAppBackgroundTaskRequest, kind: MiniAppBackgroundTaskKind) throws {
+        let identifier = MiniAppBackgroundTaskIdentifier.resolve(request.identifier)
         let native: BGTaskRequest
         switch kind {
         case .appRefresh:
-            native = BGAppRefreshTaskRequest(identifier: request.identifier)
+            native = BGAppRefreshTaskRequest(identifier: identifier)
         case .processing:
-            let processing = BGProcessingTaskRequest(identifier: request.identifier)
+            let processing = BGProcessingTaskRequest(identifier: identifier)
             processing.requiresNetworkConnectivity = request.requiresNetworkConnectivity
             processing.requiresExternalPower = request.requiresExternalPower
             native = processing
@@ -54,7 +55,7 @@ private final class SystemBackgroundTaskScheduler: MiniAppBackgroundTaskScheduli
     }
 
     func cancel(identifier: String) {
-        scheduler.cancel(taskRequestWithIdentifier: identifier)
+        scheduler.cancel(taskRequestWithIdentifier: MiniAppBackgroundTaskIdentifier.resolve(identifier))
     }
 }
 

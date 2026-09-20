@@ -19,6 +19,9 @@ public struct MiniAppDefinition: Identifiable {
     public let externalAccess: MiniAppExternalAccess?
     public let continuingSurfaces: [MiniAppContinuingSurface]
     public let permissions: [MiniAppPermissionDeclaration]
+    /// Apply a saved Feature decision even when its view is not mounted.
+    /// A cleanup failure is reported without reverting the user's denial.
+    public let onConsentChange: (@MainActor (String, MiniAppConsent) throws -> Void)?
     /// Idempotent cleanup for owned registrations beyond host notifications/search.
     public let onUnregister: (@MainActor @Sendable () async throws -> Void)?
     public let restoreLifecycle: MiniAppRestoreLifecycle?
@@ -48,6 +51,7 @@ public struct MiniAppDefinition: Identifiable {
         externalAccess: MiniAppExternalAccess? = nil,
         continuingSurfaces: [MiniAppContinuingSurface] = [],
         permissions: [MiniAppPermissionDeclaration] = [],
+        onConsentChange: (@MainActor (String, MiniAppConsent) throws -> Void)? = nil,
         onUnregister: (@MainActor @Sendable () async throws -> Void)? = nil,
         appendDestination: (@MainActor (String, inout NavigationPath) -> Bool)? = nil,
         resolveIncomingURL: MiniAppURLRouter.Resolver? = nil,
@@ -87,6 +91,7 @@ public struct MiniAppDefinition: Identifiable {
         precondition(Set(continuingSurfaces.map(\.id)).count == continuingSurfaces.count)
         self.continuingSurfaces = continuingSurfaces
         self.permissions = permissions
+        self.onConsentChange = onConsentChange
         self.onUnregister = onUnregister
         self.restoreLifecycle = restoreLifecycle
         self.appendDestination = appendDestination
@@ -100,6 +105,14 @@ public struct MiniAppDefinition: Identifiable {
         self.rootView = { context in
             AnyView(makeRootView(context))
         }
+    }
+
+    @MainActor
+    public func setConsent(_ consent: MiniAppConsent, permissionID: String,
+                           in store: MiniAppConsentStore) throws {
+        precondition(permissions.contains { $0.id == permissionID }, "Undeclared Feature permission")
+        store.setConsent(consent, for: id, permissionID: permissionID)
+        try onConsentChange?(permissionID, consent)
     }
 
     @MainActor

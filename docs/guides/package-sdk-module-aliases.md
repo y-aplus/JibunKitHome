@@ -1,4 +1,16 @@
-# 同名の純Swift SDK moduleを接続する
+# Integrating same-named pure Swift SDK modules
+
+## Current integration contract
+
+Use Swift package module aliases to resolve source-module name collisions while keeping product and target ownership explicit. Apply aliases consistently to every dependency edge that imports the renamed module, and verify both standalone and integrated builds.
+
+A module alias does not resolve duplicate product names, Objective-C runtime names, resource bundle identifiers, generated metadata, or linker symbols. Those conflicts require distinct products/targets or upstream naming changes; do not present aliasing as a universal namespace mechanism.
+
+On each consumer product edge, map the dependency's original module name to a unique alias with `moduleAliases`. Vendor SDK and feature sources keep `import VendorSDK`; SwiftPM propagates the alias through the dependency path. The packages must have distinct identities. This does not permit resolving two versions of one package identity or isolate OS singletons and external data.
+
+The pure-Swift macOS fixture succeeds with aliased targets and fails without them. In the tested iOS/Tuist graph, target aliasing alone still hit an Xcode PIF collision because both packages published a product named `VendorSDK`. The working iOS fixture also renamed the public products to `VendorAProduct` and `VendorBProduct`, updated each feature's product dependency, and retained the target/module name plus aliases. That requires control or a maintained fork of the vendor manifests; do not claim arbitrary binary, C, Objective-C, or immutable third-party SDKs are supported.
+
+## Japanese source notes and historical evidence
 
 別々のPackageが同じmodule名をexportしている場合、SwiftPM標準の`moduleAliases`で
 消費側の名前を分けられる。JibunKit独自の型名書換えやruntimeを追加する必要はない。

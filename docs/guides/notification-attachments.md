@@ -1,4 +1,18 @@
-# 通知添付の原本と一時コピー
+# Notification attachment sources and temporary copies
+
+## Current integration contract
+
+Keep the feature-owned original in its storage namespace and create a bounded temporary copy for the notification request. The notification coordinator owns staging, request submission, cleanup, and recovery. Do not delete the original merely because a request completed, and do not retain temporary copies indefinitely.
+
+Validate ownership, file type, size, and lifetime before submission. Cancellation, replacement, shutdown, and feature removal must clean up only their own staged files. Fixture success does not prove device delivery or attachment rendering.
+
+Create an owner/operation-specific copy under `Library/Caches/JibunKit/NotificationAttachments`, then build the normal native request with that copy. Await both copying and native registration before completing the operation; do not spawn un-awaited file work. Cancellation waits for an active copy, while cancellation observed after successful native registration does not retroactively change success. Each operation uses its own directory even when file names match.
+
+On normal completion, error, or cancellation, remove only that operation directory. `removeStagingFiles()` may clean leftovers after the owner's work drains; it preserves other owners and never deletes the feature original or the OS-managed attachment. To remove an attachment already handed to the OS, remove its pending/delivered notification request. Access a returned attachment URL under its security scope.
+
+Management removal order is runtime drain, owner notification deregistration, staging cleanup, then business-data removal. The diagnostic fixture reads back pending attachments under security scope and compares bytes, while registration completion, foreground presentation, and action callbacks are recorded separately.
+
+## Japanese source notes and historical evidence
 
 0.8.0で公開したP1-B接続。0.7.0には含まれない。Foundation試験と通常hostのnative通知/添付/foreground UI試験に加え、2026-09-15の6beb877実機確認で通知カードの添付、記録、文字入力返信、owner別解除と通常前景方針を確認済み。集中モード下の配信は通常状態の成功へ含めない。
 

@@ -1,5 +1,7 @@
 # P2-L AlarmKit 設計提出
 
+> 履歴注記: 本文は実装前の設計提出であり、現在状態や未達一覧ではない。採用範囲の状態は[plan.json](plan.json)と[status](../status.md)、現行接続は[AlarmKitガイド](../guides/alarms.md)を優先する。
+
 基準は `bcfde0d88c19a143620b16e71230e4fb404ae7f1`。これは実装前の契約案であり、Windows では Swift/Xcode/AlarmKit を実行していない。以下の Swift 宣言は Apple の現行公開 documentation と WWDC25 sample で照合したが、actor annotation と最終 SDK interface は Xcode 26 CI で再確認する。
 
 ## 結論と責任境界

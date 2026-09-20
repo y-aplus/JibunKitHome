@@ -1,7 +1,7 @@
 # Live Activities integration
 
 Development status: targeted for 0.8.2; native build, metadata, and fixture tests
-passed. Grouped physical checks covered OS actions, management/restore, restart and normal-app return. One Live B score discrepancy (expected230, observed200 before IPA overwrite) remains unexplained; restarting and Alarm A management/restore after setting210 did not reproduce it. P2-5 remains partial; do not treat this as a proven fix. See [source-specific evidence](../verification/2026-09-16-p2-continuing-surfaces-device.md).
+passed. Grouped physical checks covered OS actions, management/restore, restart and normal-app return. One Live B score discrepancy (expected230, observed200 before IPA overwrite) remains unexplained; restarting and Alarm A management/restore after setting210 did not reproduce it. The adopted P2-5 scope is complete based on device evidence and the real four-Feature state/generation regression (31478f2, CI35075825942). The historical observation is not a proven fix. See [source-specific evidence](../verification/2026-09-16-p2-continuing-surfaces-device.md).
 
 JibunKit keeps ActivityKit payloads in the Feature module. Define a concrete
 `MiniAppLiveActivityAttributes` type, its business-specific `ContentState`, an

@@ -6,6 +6,12 @@ final class MiniAppManagementUITests: XCTestCase {
 
     override func setUpWithError() throws { continueAfterFailure = false }
 
+    private func showMiniAppList() {
+        if app.buttons["management.open"].waitForExistence(timeout: 1) { return }
+        tap(app.buttons["miniapp.back-to-list"])
+        XCTAssertTrue(app.buttons["management.open"].waitForExistence(timeout: 5))
+    }
+
     private func tap(_ element: XCUIElement, file: StaticString = #filePath, line: UInt = #line) {
         XCTAssertTrue(element.waitForExistence(timeout: 10), app.debugDescription, file: file, line: line)
         element.tap()
@@ -21,6 +27,7 @@ final class MiniAppManagementUITests: XCTestCase {
     func testConsentRefusalPreservesOrdinaryReminderEditing() {
         app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
         app.launch()
+        showMiniAppList()
         tap(app.buttons["management.open"])
         tap(app.buttons["management.consent.reminder.notifications"])
         tap(app.buttons["未確認"])
@@ -52,6 +59,7 @@ final class MiniAppManagementUITests: XCTestCase {
     func testDisableRestartCancelDeleteAndReregisterPreserveReminder() throws {
         app.launchArguments = ["-AppleLanguages", "(ja)", "-AppleLocale", "ja_JP"]
         app.launch()
+        showMiniAppList()
         tap(app.buttons["miniapp.counter"])
         let value = app.staticTexts["counter.value"]
         XCTAssertTrue(value.waitForExistence(timeout: 5))

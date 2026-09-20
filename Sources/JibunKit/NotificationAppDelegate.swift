@@ -13,22 +13,58 @@ final class NotificationAppDelegate: NSObject, UIApplicationDelegate,
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         UNUserNotificationCenter.current().delegate = self
+        // Apply persisted admission before passive cold-launch registrations.
+        // Registration rejection must not turn a fallible OS operation into an
+        // app-wide trap. Keep the failed owner visible with its launch error.
+        _ = MiniAppRegistry.management
+        MiniAppRegistry.launchState.register(MiniAppRegistry.all)
         do {
-            // Apply persisted admission before passive cold-launch registrations.
-            // Native launch handlers still register OS callbacks at the required
-            // launch time; their work must enter through the Feature lifetime.
-            _ = MiniAppRegistry.management
-            for definition in MiniAppRegistry.all {
-                try definition.onHostLaunch?()
-            }
             let registrations = Dictionary(uniqueKeysWithValues:
-                MiniAppRegistry.all.map { ($0.id, MiniAppRegistry.management.isEnabled($0.id) ? $0.notificationCategories : []) })
+                MiniAppRegistry.all.map { ($0.id,
+                    MiniAppRegistry.management.isEnabled($0.id) && MiniAppRegistry.launchState.errors[$0.id] == nil
+                        ? $0.notificationCategories : []) })
             try MiniAppNotificationCategoryRegistry.shared.configure(registrations)
-            MiniAppRegistry.reconcileContinuingSurfaces()
         } catch {
-            preconditionFailure("Invalid Feature launch registration: \(error)")
+            MiniAppRegistry.launchState.hostError = String(describing: error)
+            Logger(subsystem: "com.jibunkit.app", category: "Launch")
+                .error("Notification registration failed: \(String(describing: error))")
+        }
+        MiniAppRegistry.reconcileContinuingSurfaces()
+        // Explicit build-time opt-in. It does not replace a valid aps-environment
+        // entitlement/profile. Registration failures still reach the coordinator.
+        if Bundle.main.object(forInfoDictionaryKey: "JibunKitRemotePushEnabled") as? Bool == true {
+            application.registerForRemoteNotifications()
         }
         return true
+    }
+
+    func application(_ application: UIApplication,
+                     didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
+        MiniAppRemotePushCoordinator.shared.didRegisterForRemoteNotifications(deviceToken: deviceToken)
+    }
+
+    func application(_ application: UIApplication,
+                     didFailToRegisterForRemoteNotificationsWithError error: Error) {
+        MiniAppRemotePushCoordinator.shared.didFailToRegisterForRemoteNotifications(error)
+    }
+
+    func application(_ application: UIApplication,
+                     didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        Task { @MainActor in
+            guard let route = MiniAppNotificationRoute.candidateRoute(userInfo: userInfo),
+                  MiniAppRegistry.management.isEnabled(route.id),
+                  MiniAppRegistry.launchState.errors[route.id] == nil else {
+                completionHandler(.noData)
+                return
+            }
+            let result = await MiniAppRemotePushCoordinator.shared.deliver(userInfo: userInfo)
+            switch result {
+            case .newData: completionHandler(.newData)
+            case .noData: completionHandler(.noData)
+            case .failed: completionHandler(.failed)
+            }
+        }
     }
 
     func application(

@@ -1,4 +1,16 @@
-# DBの保存先とエンジンの責任
+# Database file placement and engine responsibilities
+
+## Current integration contract
+
+Place database files under the feature's `MiniAppFiles` namespace. The database engine owns its auxiliary files, locking, and recovery; callers must not copy or delete a live database as if it were a single ordinary file. Coordinate open, maintenance, snapshot, reset, and removal through the shared store-access boundary.
+
+For SQLite, a consistent snapshot must account for WAL and shared-memory state by using the engine's backup/snapshot facilities after admission is closed and active operations are drained. A runtime stop does not imply that every durable database should be deleted.
+
+Create the database URL with `MiniAppFiles.shared(context:)`, call `prepareDirectory()`, and pass `fileURL(named:)` to the feature's native database configuration. `MiniAppFiles` validates the file name and isolates the directory; it does not manage schemas, WAL files, pools, or connections. Keep engine-created sidecars in that directory. A deliberately shared database needs an explicit URL and a single agreed connection owner.
+
+Use `withStoreAccess` to coordinate ordinary reads and writes with backup or restore. Before replacement or deletion, close every connection, statement, and external writer. A successful `sqlite3_close_v2` call may defer closure, while `sqlite3_close` can return `BUSY`; neither should be treated as proof that all users have stopped. Put fallible database shutdown in `MiniAppRestoreLifecycle.stop` after runtime draining. On failure, abort replacement and either restore the existing connection in `stop` or implement `recoverAfterFailedStop`; report restoration failure separately from recovery failure. After a clean restore, reconnect `resume` to the restored store.
+
+## Japanese source notes and historical evidence
 
 JibunKitへ統合してもDBエンジンを置き換える必要はない。`MiniAppFiles`でFeature専用URLを作り、SQLite・GRDB・Core Data等、そのエンジンの接続設定へ渡す。同じローカルDB名でもFeatureごとのディレクトリへ分かれる。
 

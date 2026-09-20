@@ -47,7 +47,11 @@ class MediaHostTests(unittest.TestCase):
         self.assertIn("CounterMiniApp.definition", registry)
         self.assertIn("ReminderMiniApp.definition", registry)
         requirements = (root / "Tuist/ProjectDescriptionHelpers/EnabledFeatureBuildRequirements.swift").read_text(encoding="utf-8")
-        self.assertEqual(requirements.count('"NSMicrophoneUsageDescription"'), 2)
+        self.assertEqual(requirements.count('"NSMicrophoneUsageDescription"'), 6)
+        self.assertEqual(requirements.count('"Uses the microphone to verify audio and capture behavior."'), 2)
+        self.assertEqual(requirements.count('"en": ['), 2)
+        self.assertEqual(requirements.count('"ja": ['), 2)
+        self.assertIn('"NSCameraUsageDescription": "Uses the camera to verify capture, document scanning, and code scanning."', requirements)
         self.assertIn('"UIBackgroundModes": ["audio"]', requirements)
         self.assertIn('public static let widget = FeatureBuildConfiguration()', requirements)
 

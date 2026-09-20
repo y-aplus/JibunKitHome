@@ -1,5 +1,7 @@
 # P2-7 操作Widget／Controlの実装境界
 
+> 履歴注記: 本文は未実装時に固定した開始契約である。操作Widget/Controlの採用範囲は後段で実装・検証され0.8.1で公開済み。現在状態は[plan.json](plan.json)と[status](../status.md)、現行接続は[ガイド](../guides/interactive-widgets.md)を優先する。
+
 2026-09-15開始。共通製品baselineは0.8.0のsource71ef1ff、統合開始点はmain25ded31。Issue #6の正式採用に従い、設定・操作・別process保存・管理・通常接続・OS試験・ガイドを一つの境界として扱う。
 
 ## 補う差分と契約

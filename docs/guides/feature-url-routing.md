@@ -1,4 +1,16 @@
-# FeatureのURLから画面を開く
+# Opening feature screens from URLs
+
+## Current integration contract
+
+Keep URL resolution pure: parse and validate a URL into an explicit feature route before changing selection, scene state, or storage. Reject ambiguous, malformed, unsupported, or cross-owner routes instead of guessing. Execution then passes through normal runtime admission and presentation ownership.
+
+The host composes URL schemes and universal-link metadata and must detect conflicts. Build-time declarations do not prove association-file deployment, system routing, cold launch, or multi-scene behavior; verify those in the adopting application.
+
+Implement `MiniAppDefinition.resolveIncomingURL` as a side-effect-free parser that receives the original Foundation `URL` and returns `.root`, `.detail(String)`, or `nil`. The host asks every feature and routes only a single match into the navigation path of the scene that received the URL. The feature validates identifier syntax and existence in `appendDestination`. A rejected or ambiguous URL leaves the current screen unchanged; never prefer registration order. Reserved `jibunkit://` URLs use only the host's strict resolver and are not reinterpreted by features.
+
+Custom schemes belong in the app target's `CFBundleURLTypes`; universal links require Associated Domains and the matching website association. Compose those through the feature build requirements, preserve the host declaration when resolving a conflict, and do not copy app-only schemes into widgets. This resolver handles address delivery only: web-auth completion, security-scoped files, generic action callbacks, `UIOpenURLContext` options, and OS multi-window selection use their dedicated boundaries.
+
+## Japanese source notes and historical evidence
 
 独立アプリのURL entry pointを単一hostへ統合すると、受信先Featureの選択が必要になる。`MiniAppDefinition.resolveIncomingURL`は元のFoundation `URL`を受け取り、受理する場合だけ`.root`または`.detail(String)`を返す。hostは全Featureの一致を調べ、一つだけならSwiftUIが配送したsceneの既存navigationへ接続する。
 

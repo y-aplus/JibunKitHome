@@ -1,0 +1,19 @@
+<macro name="JibunKit P2S notify" icon="MESSAGE">
+   <assert-server-service description="JibunKit P2S test service" uuid="ad539a02-1289-44dc-bd27-f991c68a1fb9">
+      <assert-characteristic description="Read and write characteristic" uuid="9e0f4195-64b6-4c4a-8ffa-e8dd8f4036d5">
+         <property name="READ" requirement="MANDATORY"/>
+         <property name="WRITE" requirement="MANDATORY"/>
+      </assert-characteristic>
+      <assert-characteristic description="Read and notify characteristic" uuid="0b1ec4d4-1383-4460-b1e2-9ae98653cc1b">
+         <property name="READ" requirement="MANDATORY"/>
+         <property name="NOTIFY" requirement="MANDATORY"/>
+         <assert-cccd/>
+      </assert-characteristic>
+   </assert-server-service>
+   <set-value description="Set initial read value to 0x0102" service-uuid="ad539a02-1289-44dc-bd27-f991c68a1fb9" characteristic-uuid="9e0f4195-64b6-4c4a-8ffa-e8dd8f4036d5" value="0102"/>
+   <wait-for-read description="Wait for JibunKit to verify 0x0102" service-uuid="ad539a02-1289-44dc-bd27-f991c68a1fb9" characteristic-uuid="9e0f4195-64b6-4c4a-8ffa-e8dd8f4036d5"/>
+   <wait-for-write description="Wait for JibunKit to write 0x0304" service-uuid="ad539a02-1289-44dc-bd27-f991c68a1fb9" characteristic-uuid="9e0f4195-64b6-4c4a-8ffa-e8dd8f4036d5">
+      <assert-value description="Expected write value" value="0304"/>
+   </wait-for-write>
+   <send-notification description="Send 0x0506 to JibunKit" service-uuid="ad539a02-1289-44dc-bd27-f991c68a1fb9" characteristic-uuid="0b1ec4d4-1383-4460-b1e2-9ae98653cc1b" value="0506"/>
+</macro>

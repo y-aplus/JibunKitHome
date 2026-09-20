@@ -1,4 +1,18 @@
-# Featureの選択状態とsceneの活動状態
+# Feature selection and scene activity
+
+## Current integration contract
+
+Feature selection answers which feature a scene intends to show; scene activity answers whether that scene may currently perform foreground work. Keep them separate. Activate presentation, observations, and scene-scoped leases only when both conditions permit them, and release those resources when the scene resigns activity even if selection remains.
+
+Multi-scene hosts must scope state by scene identifier and must not let one scene's selection or full-screen presentation extend another scene's runtime generation.
+
+Connect `MiniAppDefinition.onSceneActivityChange` and maintain a record for each `sceneID`; add/update it while `isConnected` and remove it on disconnect. The feature ID is durable, but `sceneID` is a UUID for one host-root connection, not an OS session ID or view generation. `phase` is active, inactive, or background; `nil` means disconnected and forces `isSelected` false. Initial state is delivered even before a feature root is created.
+
+`isSelected` means only that host routing currently selects the feature. It can remain true in background and says nothing about sheet coverage, visible percentage, or keyboard focus. Notifications are synchronous on `MainActor`, suppress duplicates, and finish one transition for every owner before delivering a reentrant transition; handlers must return quickly and move heavy work to feature-owned tasks. Do not translate deselection/background into unconditional runtime stop—communications and playback may continue, and other scenes may still use the feature.
+
+A feature-owned full-screen presentation must keep its selected scene connection alive. Neither `onDisappear` nor temporary `view.window == nil` is a disconnect; `MiniAppSceneConnection` closes on the relevant `UIWindowScene` disconnect or root destruction. This does not relax camera stop rules or promise additional OS execution time.
+
+## Japanese source notes and historical evidence
 
 独立アプリでは自分のsceneの活動を観測できる。統合後はhostがactiveでも自分のFeatureが選択されているとは限らない。`MiniAppDefinition.onSceneActivityChange`で両者を区別してIntegrationへ渡す。既存の`onHostPhaseChange`は全sceneの集約通知のまま維持する。
 

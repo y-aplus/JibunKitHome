@@ -1,4 +1,20 @@
-# 通常の保存操作と復元を調停する
+# Coordinating normal store access and restoration
+
+## Current integration contract
+
+All normal reads and writes acquire a store-access reservation tied to the active owner and runtime generation. Maintenance operations such as migration, restore, reset, snapshot, and removal close admission and wait for accepted work to drain before obtaining exclusive access.
+
+Do not treat actor serialization alone as a lifecycle guarantee: an operation may suspend while stop or maintenance begins. Validate its reservation before committing, reject stale generations, and reopen admission only after the durable store is in a coherent state.
+
+Wrap every UI, App Intent, synchronization, and callback entry point in `MiniAppRestoreCoordinator.shared.withStoreAccess(for:operation:)`, using the same coordinator and feature ID as backup and restore. Ordinary operations for one feature may run concurrently; the database engine still owns transactions, pools, and read/write exclusion. Closures and results are `Sendable`, but the API does not make a non-Sendable connection safe across executors.
+
+Restore or snapshot returns `Conflict` before stopping/exporting when any ordinary operation remains. While exclusive work runs, new ordinary operations for that owner also receive `Conflict`; other owners continue. Cancellation before admission skips the closure. Cancellation after admission keeps the reservation until the closure returns or throws, so the store must finish or roll back safely. Do not start an un-awaited task and return from the protected closure. There is no unbounded queue or automatic retry.
+
+Code already inside exclusive export, stop, apply, resume, or recovery calls lower-level storage directly and must not reacquire `withStoreAccess`. Ordinary work cannot upgrade itself to restore. This process-local contract cannot detect unregistered writes, widget processes, stale callbacks, open transactions, or retained connections; pair it with `restoreLifecycle` before replacing files.
+
+Run migration and reset with `withStoreMaintenance(for:lifecycle:operation:)`. It rejects conflicts immediately and holds the owner reservation through stop, operation, and resume. Cancellation and transaction rollback after operation start remain store responsibilities; resume failure is reported as `MiniAppRestoreLifecycle.Failure`. In Records integration, inject `RecordStoreOperationBoundary`: reads/writes/import/attachments are ordinary operations, migration/reset are maintenance, while backup export/apply use lower-level methods because the outer coordinator already owns the reservation.
+
+## Japanese source notes and historical evidence
 
 Featureの通常の読書きは、`MiniAppRestoreCoordinator.withStoreAccess(for:operation:)`で同じ保存先の復元・snapshotと調停できる。DBを変更したり通常の読書きを一つずつ直列化したりする必要はない。
 

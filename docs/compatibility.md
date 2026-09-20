@@ -1,52 +1,46 @@
-# 1.0の互換性とFeatureの責任境界
+# Compatibility and Feature responsibilities
 
-公開VERSIONは0.8.3/build13、PREVIOUSは0.8.2/build12。音声・撮影/scanの対象別実機、版変更後CIと公開IPA/ZIP検査を完了しました。[出荷照合](verification/2026-09-17-0.8.3-release.md)。
-更新日: 2026-09-17。公開版0.8.3/build13とmainは[現在状態](status.md)を参照。
-0.8.0のP0/P1証拠と公開物は[出荷記録](verification/2026-09-15-0.8-release.md)を参照。P0の0.7.0当時の証拠もsourceを分けて保持する。
+Stable release: **1.0.0/build16**. The 1.0.0 artifact was published after the owner accepted its functional criteria and the final audit completed. See [current status](status.md), [release verification](verification/2026-09-19-1.0-release.md), and [explicitly unobserved conditions](verification/2026-09-19-final-observation-boundary.md).
 
-1.0に向けた実装・レビューで守る基準。現時点で1.0を公開済みという意味ではない。
-[Issue #5の版境界](implementation-priorities.md)に従い、P0完了を0.7.0、P0を維持したP1完了を0.8.0とする。
-途中のpatch版にも機能追加・検証の進捗を含められるが、互換性破壊を版番号だけで正当化しない。
-API/データ変更は版にかかわらず移行・失敗時の保持・利用者への説明を必要とする。
-需要調査Issue #6は受領済みで、1.0の最終対応範囲は2026-09-15にIssue #6推奨境界で承認された。minorごとに[現状文書の全件確認](ci-boundaries.md#マイナー版の文書・出荷gate)を行う。
+## Coexistence contract
 
-## 共存に対する基盤の責任
+When integration into JibunKit removes isolation, coordination or ownership that a standalone app would obtain from the OS or app boundary, JibunKit compensates for that difference where feasible. Separate modules and shared APIs alone are insufficient: contention, cancellation, shutdown and restoration must preserve the intended owner. See [coexistence boundaries](coexistence-boundaries.md).
 
-> JibunKitへ統合した結果、独立アプリならOSやアプリ境界によって得られていた隔離・調停・所有権管理が失われるなら、その差分をJibunKitが可能な範囲で補う。
+Feature namespaces are cooperative isolation, **not a security sandbox**. Features execute in one process with shared signing privileges. They must not read or mutate another Feature's data outside an explicit shared contract. JibunKit does not load arbitrary compiled IPAs.
 
-Featureの分離や共通APIの提供だけでこの責任を満たしたとはしない。独立アプリの境界で得られた効果が統合後も保たれるか、競合・取消・終了・復帰で検証する。技術的制約と未対応の判定は[共存基準](coexistence-boundaries.md)に従う。
+## Stable identities and data
 
-## 維持する識別子と保存データ
+A Feature ID is persistent identity, independent of its display name. Renaming a screen must not rename its ID. Counter/Reminder IDs, storage keys and existing notification request IDs are retained. Changes to identity or storage location require migration, recovery after partial failure, and update-install verification.
 
-Feature IDは表示名と独立した永続識別子である。表示名を変えてもIDを変えない。既存Counter/ReminderのID、保存キー、従来の通知request IDは維持する。IDや保存先を変更する必要がある場合は、旧データからの移行と途中失敗時の復旧方法を実装し、更新インストールで検証する。
+API and data compatibility applies to every version, including 0.x. A version bump alone does not justify breakage. Public API removal or signature changes require an explicit migration explanation and consideration of a deprecation period.
 
-MiniAppContextによるnamespaceは共存のための整理であり、Feature間のセキュリティ隔離ではない。Featureのコードは同じプロセスと署名権限で動く。他Featureの保存値を読まない・変更しない責任はFeatureにもある。
+## Supported integration boundaries
 
-## 依存してよい接続
+- Register `MiniAppDefinition` values in the registry; do not add Feature-specific switches to host navigation or lists.
+- A standalone Feature may depend on Core or receive storage/services/entry points from an integration adapter.
+- Use public IDs, context, storage, backup providers and URL generation. Host view types, diagnostic applications and temporary CI source transformations are not public APIs.
+- Prefer additive APIs and optional registrations. Complex Features remain responsible for their own domain logic; JibunKit does not require a simple-screen-only architecture.
 
-- MiniAppDefinitionとRegistryへの列挙をホスト接続とする。Feature固有の分岐を一覧やAppNavigationへ追加しない。
-- 独立FeatureはCoreへの依存を選べる。Coreを使わないFeatureにはIntegrationから保存先・サービス・入口を渡す。
-- 公開のMiniAppID、MiniAppContext、保存API、バックアップprovider、URL生成を使う。ホスト内の画面型、検証用アプリ、CI内の一時的なファイル変換は公開APIとしない。
-- 新しい機能は原則として追加APIや任意登録で提供する。公開APIの削除・引数変更が必要なら移行例と非推奨期間を検討し、互換性を破る変更を無言で入れない。
+## Backup compatibility
 
-## バックアップの互換性
+The outer `JibunKitBackup` version 1 and each entry's `schemaVersion` are separate versions. New formats and file-backed paths must preserve existing version-1 input. Unknown formats must not be guessed as known ones.
 
-外側のJibunKitBackup/version 1と各entryのschemaVersionは別の版である。新しい保存形式・ファイルベースのバックアップ経路を追加しても、既存version 1の読込みを維持する。未知の版を既知の版として推測して読み込まない。
+Features own payload schemas, migrations, validation and application. Preparation must not mutate live data or notifications. Validate migrated state before returning an apply operation. Corrupt input must not produce a partially applied state reported as success.
 
-Featureはpayloadの形式・schema移行・整合性検証・保存処理を所有する。prepareではライブデータや通知を変更しない。旧schemaを受け入れる場合は変換した状態を検証してから適用操作を返す。破損データで部分的な状態を作って成功として返さない。
+Restore across all Features is not atomic. Report applied, failed and unattempted targets separately. Feature-local rollback follows that Feature's transaction design. Copying an open database file is not automatically a consistent snapshot.
 
-全Featureの原子的復元は保証しない。適用済み・失敗対象・未実行を利用者へ区別して伝える。失敗したFeature内のrollbackやDB transactionはFeatureの実装に従う。ファイルをコピーするだけで開いたDBの整合したsnapshotが取れるとは扱わない。
+## System surfaces
 
-## システム連携
+Features own notification scheduling conditions, rescheduling and cancellation; Core supports owner IDs and routing. Declare Widget/App Intents permissions and entitlements in the app/extension integration layer. Registering a Feature alone does not enable every OS capability.
 
-通知の予約条件・再予約・取り消しはFeatureの責任とし、CoreはIDと遷移先の共存を支援する。Widget/App Intents/権限・entitlementsはAppまたはextensionの接続層で宣言する。Featureを追加しただけで必要な権限やextensionが自動的に有効になるとは説明しない。
+`jibunkit://mini-app/<ID>` opens an entry; it does not mutate data or invoke arbitrary operations. Optional destination queries preserve this existing URL contract. Integration validates detailed identifiers and converts them into navigation values; the host does not interpret Feature-specific types or guess another owner for unknown URLs.
 
-現在のjibunkit://mini-app/<ID>は入口を開くだけで、データ変更や任意操作を実行しない。任意のdestination queryによる詳細接続でも既存の入口URLを維持する。詳細識別子の検証とnavigation valueへの変換はIntegrationが所有し、ホストはFeature別の型を解釈しない。未知のURLを別Featureへ推測で転送しない。
+`Definition.externalAccess` remains optional. Use its owner-scoped shared-state and management/restore coordination when another process, such as a Widget or Control, writes data. Existing databases need not migrate to `MiniAppSharedState`. Removal/restore advances the stored generation: old Widget/Control configurations reject updates until their target is selected again. See [interactive widgets](guides/interactive-widgets.md).
 
-## 変更時の確認
+## Signing and verification limits
 
-公開API・保存形式を変更する作業では、旧版データの読込み、単独版とホスト版のビルド、他Featureとの独立性、該当するUI経路を確認する。出荷候補は同じsourceから作ったIPAで上書き・署名更新を確認する。Foundation/Simulatorの成功を署名環境の実績として代用しない。
+Signing entitlements, app-group access, OS scheduling and device capabilities remain platform constraints. CloudKit/APNs are optional, conditional integrations with live service communication unverified; they are not required for normal free-signing use. Generic HTTP synchronization remains part of the normal ownership contract.
 
-## 0.8.1の共有状態接続
+Preserve the distinction between physical-device observations, Simulator OS execution and injected native contract tests. The accepted [unobserved conditions](verification/2026-09-19-final-observation-boundary.md) are not successes. The installation tool is chosen by the developer; tested SideStore behavior does not prove every other signing path.
 
-既存Featureの変更は不要で、Definition.externalAccessはoptional。Widget/Control等の別process writerがある場合だけ、owner別の共有状態と管理/復元の停止・再開へ接続する。既存DBや保存先をMiniAppSharedStateへ強制移行しない。削除/復元は保存世代を更新するため、古いWidget/Control設定は更新を拒否し、対象の再選択が必要になる。[接続手順](guides/interactive-widgets.md)。Counter/Reminderの保存IDと通常IPA構成は維持する。
+For API/storage changes, check older data, standalone and integrated builds, other-owner preservation and affected UI. Reuse unchanged source-specific device evidence when justified by reviewed differences; do not claim a new device run for a candidate that was only rebuilt with updated version metadata.

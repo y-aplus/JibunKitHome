@@ -1,4 +1,20 @@
-# Feature管理への接続
+# Feature management integration
+
+## Current integration contract
+
+Management actions operate through the same feature coordinator as normal runtime work. Enable, disable, restore, reset, and remove must be serialized with startup and shutdown, close admission before destructive maintenance, and surface partial failure for retry.
+
+The host may present management UI, but feature code owns its data model, consent declarations, external registrations, and removal implementation. Management must not infer success from a hidden screen or a stopped runtime, and must not affect another owner.
+
+Register a matching lifetime and removal provider on `MiniAppDefinition`. A data-free/read-only feature still declares that fact with a no-op provider; omission does not mean no data. Put host-unmanaged external registrations in `onUnregister`. Deregistration and removal must be idempotent because partial progress is not rolled back: persist an incomplete state, distinguish an in-flight callback from a returned error, retry after process death, and block re-enable until completion. Default-index Spotlight domains are automatic; custom indexes belong in `onUnregister`.
+
+Disable/remove first rejects new starts, then joins owned runtime work before touching registrations or data. Long-running UI work registers with the runtime. Management runs outside owned tasks to avoid self-wait. Use the same `MiniAppRestoreCoordinator` for normal access, backup, maintenance, and management; stale screens must pass through it and providers already under reservation must not reacquire it.
+
+Use `onHostLaunch` only for synchronous native registration required during cold launch; callback business work still passes through `lifetime.start`. Re-enable restores admission/static registration but does not request OS permission or start business work. Declare stable permission IDs, user-facing purpose, and denied behavior; read feature consent before requesting app-wide OS permission. Re-registration resets feature consent to unconfirmed.
+
+Persist management status in the existing App Group when configured. Widgets hide disabled/removing/removed owners and request a timeline refresh without promising immediate display. Shortcuts and other process writers initialize status on cold launch, check admission, and use store coordination; a one-time status read is not a write lock. Optional cross-process writers use `Definition.externalAccess` and must participate in stop/remove/restore coordination.
+
+## Japanese source notes and historical evidence
 
 0.8.1以降の別process writerは、optionalのDefinition.externalAccessを使う。[操作Widget/Controlのガイド](interactive-widgets.md)に起動・停止・削除・復元との契約を記す。0.8.0以前には未収録で、新接続のnative/通常管理UIは35027469173で成功。実OS Widget/Controlからの更新拒否・片側削除/再登録・復元・B保持もe984d44で実機確認済み。版更新後CIと0.8.1公開IPA取得も完了した。
 

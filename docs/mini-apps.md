@@ -1,344 +1,144 @@
-# ミニアプリの追加
+# Adding a feature
 
-公開VERSIONは0.8.3/build13、PREVIOUSは0.8.2/build12。音声・撮影/scanの対象別実機、版変更後CIと公開IPA/ZIP検査を完了しました。[出荷照合](verification/2026-09-17-0.8.3-release.md)。
-操作可能Widget/Controlを追加する場合は[標準型の登録・共有状態・管理/復元接続](guides/interactive-widgets.md)へ進む。0.8.1以降の追加経路で、0.8.0以前には含まれない。
+A JibunKit feature is source code compiled into the host at build time. The preferred shape is a Swift package with business logic and a root view, plus a thin integration that creates one `MiniAppDefinition`.
 
-JibunKitのミニアプリは、ビルド時にSwift Packageへ組み込む。組み込み単位は`@main`を持つ独立アプリtargetではなく、SwiftライブラリtargetとしてコンパイルできるFeatureである。動的プラグイン、任意のIPA読込み、ミニアプリストアは対象ではない。
+JibunKit does not load arbitrary IPAs or runtime plug-ins. It also does not automatically convert an existing app target: separate reusable feature code from the app shell first.
 
-リマインダーが、保存・画面・通知を持つ最小の実例である。ID、表示名、アイコン、遷移先はFeature側の1件の定義へまとめ、ホストの一覧や画面遷移へ個別のswitchを増やさない。
+Prefer a separate package under `Modules/<Name>` for a new personal feature. It gives the feature an isolated test command, a standalone example, and a clearer reuse boundary; a portable package can also run its own tests on Linux/WSL even though the repository's root package cannot. Adding sources to the root package can be reasonable for code inseparable from the host, but it couples validation to the macOS/Xcode path and increases shared CI work.
 
-## 通常の画面を追加する
+## 1. Create a standalone feature
 
-### 雛形から始める
-
-macOSのTuist 4.207.0で次を実行する。Windowsでは同じファイルを手動作成してActionsで検証できる。
+On macOS with Tuist 4.207.0:
 
 ```bash
 tuist scaffold feature --name Notes
 tuist generate --path Modules/Notes --no-open
 ```
 
-`Modules/Notes`へ独立したSwift Package・Root View・薄いExample App・Project.swiftを生成する。`NotesExample` schemeだけで試用でき、JibunKitCoreに依存しない。名前はSwift型名として使える英数字（先頭大文字）にする。既存フォルダには生成しない。これは雛形生成であり、既存アプリの自動変換やホストへの自動登録ではない。独自Pythonのdry-run／衝突検査は廃止し、差分確認と以下の明示登録へ移行した。
+Use a valid Swift type name beginning with an uppercase letter. The template creates a Swift package, root view, tests, a small example app, and UI-test scaffolding under `Modules/Notes`. It refuses to overwrite an existing directory.
 
-JibunKitに組み込むには次を行う。
+The repository's scaffold and project-generation commands are macOS paths. In the reported Tuist 4.207.0 Linux experiment, the installed binary did not provide the local `scaffold` and Xcode-project `generate` commands used here; this is not a claim about every Tuist version. On Windows/WSL, create the package files manually or prepare them on macOS, then use the package-specific checks described in [Build, sign, and install](build.md).
 
-1. `Modules/Notes/Package.swift`で`NotesFeature` targetと、それを公開する同名のlibrary productを確認する。
-2. ルート`Project.swift`の`packages`へ`.package(path: "Modules/Notes")`を追加する。pathはルート`Project.swift`からの相対位置である。
-3. 同じ`Project.swift`の`JibunKit-App` targetの`dependencies`へ`.package(product: "NotesFeature")`を追加する。Widgetや別extensionからもimportする場合は、そのtargetにも個別に依存を追加する。
-4. ホスト側の薄い接続ファイルで`import NotesFeature`し、publicな`MiniAppDefinition(id: MiniAppID("notes"), title: "日記", systemImage: "book") { _ in NotesRootView() }`を定義する。
-5. `Sources/JibunKit/MiniAppRegistry.swift`の`all`へその定義を1件列挙する。
-6. Feature Package単独のテスト後、ルートで`tuist generate --no-open`と`tuist build JibunKit-App`を実行し、期待するFeature IDが一覧とURL入口に存在することを生成hostで確認する。
+Develop and test `NotesExample` independently. Keep domain models, persistence rules, validation, and feature-specific native behavior in this package. The feature package does not need to depend on JibunKitCore unless it directly uses its APIs.
 
-Featureをroot Package内に置く方式も使える。その場合はPackageのtarget・library productと、Projectのproduct依存を明示する。既存Counter／ReminderはFeatureとIntegrationのtargetを分け、IntegrationがMiniAppDefinitionとbackup登録を所有する。単独appはFeatureだけを参照する。既存StoreはJibunKitCoreの保存APIを使うが、新しいFeatureへこの依存を強制しない。
+## 2. Add the package to the host
 
-### Package接続に失敗したとき
+In the root `Project.swift`:
 
-0.7.0では、追加したローカルlibrary productをホストへ直接依存させる経路の診断を用意している。CI34705653297で実Swift/Tuist診断を検証済み。0.7.0の追加で、以前の0.6.0には含まれない。
+1. Add `.package(path: "Modules/Notes")` to `packages`.
+2. Add `.package(product: "NotesFeature")` to the `JibunKit-App` target dependencies.
+3. Add the dependency separately to a widget or other extension only when that target imports the product.
 
-```bash
-python3 Tools/check-feature-connection.py --package Modules/Notes --product NotesFeature
-```
+The package must expose a library product. Do not add the generated example app's `@main` target to the host.
 
-このコマンドは`swift package dump-package`と`tuist dump`で現在のmanifestを評価し、path・library product・所属target・指定hostの直接product依存を診断する。Swift manifestを実行するため、信頼するcheckoutで使う。Integrationの推移的依存、コンパイル、実行中のRegistryは別に確認する。`--host`でWidget等の検査対象を指定できる。
+## 3. Define one integration
 
-登録漏れは、Integration試験で実際の`MiniAppRegistry.all.map(\.id)`を`MiniAppValidator.validate(ids:expectedIDs:)`へ渡して期待IDの欠落を確認し、通常URL/画面も操作する。生成hostのP0COnboardingUITestsがその接続例である。期待ID集合はテストの条件であり、製品へもう一つの登録manifestを追加するものではない。
-
-path、product、target依存、Registryは別々の接続であり、Swiftファイルの文字列検索だけでは成立を保証できない。次の順で、最初に失敗する境界を直す。
-
-| 欠けている接続 | 主な症状 | 確認先 | 修正と再確認 |
-| --- | --- | --- | --- |
-| Package path | Tuistの生成・依存解決時にPackageを見つけられず、productの解決まで進まない | ルート`Project.swift`の`packages`と、実在する`Modules/Notes/Package.swift` | pathの綴りと基準位置を直し、`tuist generate --no-open`を再実行する |
-| library product | Package単独ではtargetが見えても、host生成時に`NotesFeature` productがない、または名前が一致しないと報告される | `Modules/Notes/Package.swift`の`products`と`targets` | `.library(name: "NotesFeature", targets: ["NotesFeature"])`と実target名を一致させ、`swift package --package-path Modules/Notes describe`、Package test、Tuist生成を順に行う |
-| host target依存 | Package解決は通るが、JibunKit-Appのコンパイルで`No such module 'NotesFeature'`になる | ルート`Project.swift`内の`JibunKit-App.dependencies`。エラーがWidgetならWidget target側 | importするnative targetへ`.package(product: "NotesFeature")`を追加し、生成し直してそのtargetをビルドする |
-| Registry登録 | 生成・コンパイルは通るが、一覧に出ず、`jibunkit://mini-app/notes`も登録済みFeatureとして開かない | Integrationのpublicな定義と`Sources/JibunKit/MiniAppRegistry.swift`の`all` | 定義を`all`へ1件だけ追加し、生成hostでID `notes`の一覧行とURL入口を検査する |
-
-`swift package describe`はPackage manifestのproduct/targetを確認し、Tuist生成・Xcodeの型検査はnative targetへの依存を確認する。生成hostのUI/URL試験はRegistryへの意味上の登録を確認する。どれか一つの成功を残り三つの成功として扱わない。
-
-Info.plistやentitlementsを要求するFeatureは、[Featureビルド要求](guides/feature-build-requirements.md)の既存合成へ接続する。二Featureが同じkeyへ異なる値を要求した場合は、既存のnative検査がowner名、異値、解消対象を示す。その診断を直し、別の設定生成器や正規表現検査を追加しない。
-
-### 手動で追加する・生成後の内容を実装する
-
-1. Featureのライブラリtargetへ保存・更新処理とpublicなRoot Viewを置き、Packageのlibrary productとホストの依存を追加する。ID・表示名・アイコン・Root ViewをまとめるMiniAppDefinitionはIntegration側に置く。FeatureはCore非依存でもよく、必要なら接続層から保存先や依存を注入する。Coreの共有UserDefaultsを使う場合はMiniAppStorage.sharedDefaultsで解決し、保存キーはContextから取る。独立版の@mainは別のApp targetへ残す。
-2. `Sources/JibunKit/MiniAppRegistry.swift`の`all`へ定義を1件列挙する。ID・表示名・アイコン・destinationをRegistry側に書かない。IDは小文字英字で始め、小文字英数字、`.`、`-`、`_`だけを使う。IDは保存namespace、通知request ID、通知payloadの遷移先になるため、公開後に安易に変更しない。
-3. `MiniAppValidator.validate(ids:)`をテストから呼び、ID・保存namespace・通知request IDの不正と衝突を事前確認する。Storeの保存キーはstatic定数ではなくContextから初期化したinstance値にし、通知予約のrequest IDとpayloadもContextから取る。別ミニアプリのStoreやキーへ依存させない。
-4. `JibunKitCoreTests`でID、保存namespace、通知request IDを、統合テストで同じUserDefaults suite内の保存値が互いを変えないことを確認する。
-
-接続層（Integration targetまたはホスト側の接続ファイル）に置く定義の例:
+For this example, create `Sources/JibunKit/NotesMiniApp.swift`, which is already in the host source set. If you keep integration beside the package instead, explicitly include that integration source in the host target:
 
 ```swift
-public enum ReminderMiniApp {
-    public static let definition = MiniAppDefinition(
-        id: .reminder,
-        title: "リマインダー",
-        systemImage: "bell"
-    ) { context in
-        ReminderRootView(context: context)
+import JibunKitCore
+import NotesFeature
+
+@MainActor
+enum NotesMiniApp {
+    static let definition = MiniAppDefinition(
+        id: MiniAppID("notes"),
+        title: "Notes",
+        systemImage: "note.text"
+    ) { _ in
+        NotesRootView()
     }
 }
 ```
 
-```swift
-static let all = makeRegistry([
-    CounterMiniApp.definition,
-    ReminderMiniApp.definition,
-])
-```
+Add `NotesMiniApp.definition` once to `Sources/JibunKit/MiniAppRegistry.swift`.
 
-画面を離れても終わらないTask・接続を持つ場合は[Feature lifetime](guides/feature-lifetime.md)、通常保存と復元・移行・リセットを調停する場合は[保存アクセスの調停](guides/store-access-coordination.md)と[Runtime／復元接続](runtime-restore-integration.md)をIntegrationから接続する。単純な読取り専用画面へダミーのlifetimeや保存providerを追加する必要はない。
+The ID must begin with a lowercase ASCII letter and contain only lowercase letters, digits, `.`, `-`, and `_`. It becomes part of storage, notification, routing, backup, and system-registration identities. Treat a shipped ID as persistent data: do not rename it without a migration.
 
-P0-Bの管理・同意・削除・提示はmainへ統合済みである。[Feature管理](guides/feature-management.md)、[利用同意](guides/feature-consent.md)、[所有データ削除](guides/feature-data-removal.md)、[Feature所有の提示](guides/feature-owned-presentations.md)を接続元とする。0.7.0に含まれ、実機確認も2026-09-13に完了した。保存データを持つFeatureだけが所有範囲を宣言し、削除callback内部ではhostが既に保持するowner予約を再取得しない。
+Keep the title, symbol, destination factory, lifecycle hooks, permissions, backup provider, and optional system integrations together in the definition or its integration layer. Do not add feature-specific switches to the host's list or navigation code.
 
-通常の画面追加で`MiniAppID.swift`、`MiniAppListScreen.swift`、`AppNavigation.swift`を編集しない。ミニアプリ固有の画面や通知予約処理を`Sources/JibunKit`へ追加しない。JibunKitが受け取るのはFeatureライブラリであり、既存Xcode app targetのfileを名前や条件コンパイルで自動除外する変換器ではない。
+## 4. Use owner-scoped APIs
 
-リマインダーでは、`ReminderStore`が`reminder.message`だけを扱う。カウンターの`counter.value`とは同じApp Group内でもキーが分かれ、統合テストで独立した保存と再読込みを確認している。
+`MiniAppContext` supplies identities and storage locations owned by the feature. Use it instead of global names for:
 
-## Packageのリソースと翻訳
+- UserDefaults keys and shared-state keys;
+- files and database locations;
+- notification requests, categories, and routing payloads;
+- URL routes and detail destinations;
+- backup, restore, removal, and external-input registrations.
 
-画像・JSON・翻訳などをSwift Packageのresourcesとして宣言し、そのPackage内の`Bundle.module`で読む。
-同じファイル名や翻訳キーを他Featureが使っていても、ホストの`Bundle.main`へ集める必要はない。
-JibunKitのapp/Widgetは`CFBundleAllowMixedLocalizations = true`を設定しており、Package固有の翻訳を
-ホストの表示名の対応言語へ揃える必要はない。同じ設定要求は合成でき、異なる値の要求は衝突として扱う。
+These APIs coordinate cooperating features; they do not sandbox arbitrary Swift code. The feature remains responsible for data validation, schema migration, transactions, and correct native API use.
 
-二PackageのJSON・通常の翻訳選択を単独/統合/A除去後で比較し、実際の生成JibunKitホストでは
-英語・日本語と、ホストに翻訳がないフランス語の値を確認した。
-[検証記録](verification/2026-09-11-package-resource-localization.md)を参照。
-Widgetについてはビルド済み設定の確認までで、翻訳の描画・更新はこの検証に含まない。
+Add only the contracts your feature needs:
 
-同名の純Swift SDK moduleが衝突する場合は、別Package identityであることを確認し、
-標準module aliasによる分離を検討できる。[接続条件と検証範囲](guides/package-sdk-module-aliases.md)を参照。このSDK比較は0.7.0のソースに含まれ、iOSでは公開product名も分けるmanifest編集が必要。
-同一SDKの複数versionやOS singletonの隔離まで自動的に解決するものではない。
+- [Feature lifetime](guides/feature-lifetime.md) for work that survives view changes.
+- [Store access coordination](guides/store-access-coordination.md) for writes, restore, and removal.
+- [Feature management](guides/feature-management.md), [consent](guides/feature-consent.md), and [data removal](guides/feature-data-removal.md).
+- [Owned presentations](guides/feature-owned-presentations.md) and [URL routing](guides/feature-url-routing.md).
+- [Database and files](guides/database-files.md), [HTTP](guides/feature-http.md), or [Web storage](guides/web-storage-ownership.md).
+- [App Intents](guides/package-app-intents.md), [widgets](guides/package-static-widgets.md), and [incoming files](guides/feature-incoming.md).
+- Other Apple system surfaces under [docs/guides](guides/).
 
-## ローカル通知も追加する
+A read-only screen does not need dummy lifecycle, backup, or removal providers. Add explicit ownership only for resources and data that exist.
 
-通知の受け取り口はホストに1つだけ置く。既存の`NotificationAppDelegate`が起動時にnotification centerのdelegateを設定し、通知payloadのミニアプリIDを`AppNavigation`へ渡す。新しいミニアプリのためにapp delegateを増やさない。
+## 5. Keep navigation and app shells separate
 
-通知を予約する側では、次を守る。
+The JibunKit host owns the outer `NavigationStack`, the feature list, and the return-to-list action. A feature root view supplies content and may own typed routes or navigation inside its own sheets, but it should not create another host-level stack.
 
-- request IDとpayloadは定義から渡された`MiniAppContext.notificationRequestIdentifier`と`notificationUserInfo`を使う。
-- 通知許可は、通知を使うと利用者が選んだ操作の中で確認・要求する。アプリ起動時には要求しない。
-- 拒否はクラッシュや全画面エラーにせず、そのミニアプリの通常操作を続けられる結果として扱う。
-- 不正payloadや未登録の入口IDは一覧へ戻す。詳細destinationをIntegrationが拒否した場合は現在の画面を維持する。別ミニアプリや詳細を推測しない。
-- `UNTimeIntervalNotificationTrigger`の時刻は予約条件であり、正確な表示時刻を保証するものとして説明しない。
-
-リマインダーの`ReminderNotificationScheduler`はFeature側にあり、Root Viewから渡されたContextのrequest IDとpayloadを使う。画面の「10秒後に通知」からだけ許可を要求する。foregroundでも通知を表示し、通知タップは同じdestination mappingでリマインダー画面を開く。
-
-## WidgetやApp Intentを追加する場合
-
-通常画面の追加だけなら、Widget extensionやApp Intentの宣言は不要である。
-
-Widgetは本体とは別のWidget extension targetへ組み込む。Featureごとにextensionを増やすことは必須ではなく、既存extensionの標準`WidgetBundle`へ複数のWidget型を登録できる。Swift Packageが所有する二つの静的Widgetについて、単独版と一つのextensionへ組み込んだ統合版のgallery表示・ホームへの追加・共有値の描画を[比較fixture](verification/2026-09-11-package-widgets-native.md)で確認済み。統合版ではAの更新後もBの値を保持した。これは検証した静的Widgetの証拠であり、任意のWidgetやControlまで確認したものではない。
-
-接続時はWidget targetのpackage dependency、WidgetBundleへの登録、extensionの`Info.plist`、本体と共有するApp Group entitlement、IPAへの組込みを確認する。共有値はFeatureの同じStoreを通して読む。Registryから自動生成されないため、Featureが所有する安定IDから同じContextを生成し、app/extension双方で同じApp Group suiteを使う。現在のカウンターWidgetが実例である。比較fixtureも同じ接続を使い、hostで書いた値をWidgetが読み、ホームに描画するところまで検証している。
-
-App IntentはFeatureのSwift Packageに公開型として置き、標準`AppIntentsPackage.includedPackages`でapp targetへ接続できる。[Package内Intentの接続手順と検証範囲](guides/package-app-intents.md)を参照。自動提示するApp Shortcutには`AppShortcutsProvider`のphrase等も登録する。Xcodeが生成するnative metadataをIPAへ含め、Shortcuts実機確認用IPAはGitHub ActionsのmacOS／Xcode 26.6経路で生成する。現在の`AddCounterValueIntent`と`JibunKitShortcuts`はapp target内にある既存の互換経路で、Package内配置を禁止するものではない。Intentからも同じFeature所有Storeを使う。
-
-## 検証
-
-変更後は次を分けて確認する。
-
-1. macOS／Linux／WSLの`swift test`またはActionsでFeature処理、ID衝突、独立保存を確認する。UserNotificationsなどApple frameworkを使う条件付きテストはmacOSで確認する。
-2. Tuistで生成したworkspaceをXcode／Actionsでビルドし、WidgetとIPAを検査する。
-3. App Intentを含む場合はGitHub Actionsで公式メタデータ入りIPAを生成する。
-4. SideStoreで更新インストールし、一覧からの起動、保存値の独立、通知許可の拒否、通知予約、foregroundと終了状態からの通知タップを実機で確認する。
-
-ビルド成功、SideStore導入成功、各system surfaceの動作成功は別々の証拠として記録する。
-
-## 基盤が保証する保存の境界
-
-`MiniAppContext.storageKey(_:)`はID中のドットを`%2E`へ変換してからキーを連結する。例えば`zaiko.backup`の`latest`は`zaiko%2Ebackup.latest`となり、`zaiko`の`backup.latest`と衝突しない。通知request IDにも同じnamespaceを使う。通知payloadには元のIDを使う。
-
-同じ保存値を複数のStoreから更新する場合、読み取り・計算・書き込み全体を`MiniAppStorage.withExclusiveAccess { ... }`へ入れる。CounterStoreが使用例。これはプロセス内の全利用者に共通する同期的な排他処理であり、各Storeのactorが別でも更新を直列化する。全writerがこの境界を使う必要がある。closureは短い同期処理にし、入れ子に呼び出さない。失敗時のrollbackやプロセス間の排他は提供しない。現在のWidgetは読取り専用であり、別プロセスからの書込みを追加する場合は保存方式も再設計する。
-
-JibunKitはFeature同士の識別・保存先の分離と共通APIの契約を担当する。Featureの入力検証、バックアップ形式、通知する条件など、そのFeature固有の正しさはFeature側で担保する。基盤が不正な実装を自動補正する契約にはしない。
-
-## 画面とホストの境界
-
-一覧からFeatureを開く最外層の`NavigationStack`、一覧へ戻る操作、標準の画面タイトルはJibunKitが所有する。FeatureのRoot Viewはそのstackの内容を返し、もう1つのroot stackを入れない。Feature固有のpush先は固有のroute型で宣言してよい。設定・編集など別のsheet内には、そのsheet用の`NavigationStack`を持てる。
-
-同じRoot Viewを単独アプリでも使う場合、単独版のApp Shellが`NavigationStack { FeatureRootView(context: ...) }`で包む。JibunKit内のためだけに独立版の起動・画面構成をFeatureへ埋め込まない。
-
-foregroundの通知は通知所有者の`MiniAppDefinition.notificationPresentation`で方針を指定でき、省略時はbanner・通知センターのlist・soundを使う。表示中の別Featureの方針へ置き換えない。無効な所有者の通知は抑止する。表示内容や予約条件はFeatureが持ち、タップ後の入口はContextのpayloadを使う。システム設定による実際の表示・音の可否は別に検証する。
-
-## ファイル・データベースを保存する
-
-UserDefaults以外を使うFeatureは、`MiniAppFiles`から専用の保存先を得られる。
+The standalone example app owns its own app shell:
 
 ```swift
-let files = try MiniAppFiles.shared(context: context)
-try files.write(encodedData, named: "state.json")
-let data = try files.read(named: "state.json")
-
-// SQLite等はFeatureが選んだライブラリで開く。
-try files.prepareDirectory()
-let databaseURL = try files.fileURL(named: "store.sqlite")
+NavigationStack {
+    NotesRootView()
+}
 ```
 
-App Groupは既存のSideStore識別子解決を使い、取得できなければエラーにする。別の場所へ黙って保存しない。単独版やテストでは`MiniAppFiles(context:containerURL:)`へ呼出側が所有するコンテナを渡せる。保存先はコンテナ内の`Library/Application Support/JibunKit/Features/<storageNamespace>`。URLを永続保存せず、起動ごとに解決する。
+This keeps the same feature usable independently and inside JibunKit.
 
-ファイル名は単一成分で指定する。空文字・`.`・`..`・区切り文字・制御文字は拒否する。サブディレクトリやデータベースの管理は、公開した`directoryURL`を起点にFeature側が実装できる。これは協調するFeature間の保存先整理であり、任意のSwiftコードやシンボリックリンクを隔離するセキュリティ境界ではない。
+## 6. Validate the integration
 
-`write`はDataを一つのファイルとしてatomicに置き換える。複数ファイルのtransaction、読取り→計算→書込みの排他、DBファイルの安全なバックアップを代行しない。同一プロセスの短い同期更新なら`MiniAppStorage.withExclusiveAccess`を使える。別プロセスからの更新は、利用するDBやファイル調整方式で扱う。`read`は未作成も含めてエラーを返し、不正なデータを空データに変換しない。
+Run the smallest checks that prove each boundary:
 
-既存UserDefaultsのキーと値は自動移行しない。保存形式・schema移行・バックアップ方針はFeatureが所有する。このAPIは秘密情報用の保存庫でもない。
+```bash
+swift test --package-path Modules/Notes
+tuist generate --no-open
+tuist build JibunKit-App
+```
 
-App Groupのコンテナは[Appleの公式API](https://developer.apple.com/documentation/foundation/filemanager/containerurl(forsecurityapplicationgroupidentifier:))で取得する。端末での署名・App Groupアクセスの確認はCIの一時ディレクトリによるテストと区別する。
+The Tuist commands require macOS. The package-specific test may run on Linux/WSL only if that feature's dependencies are portable; the repository-root `swift test` currently does not. A WSL installation that already has a compatible Darwin Swift SDK may additionally perform an iOS compile-only check, but that is not an IPA build or a generally installed prerequisite; see the build guide.
 
-## アプリ単位のバックアップと復元
+Also verify:
 
-`MiniAppBackup`は、Feature ID・schema version・任意のDataを共通JSONへ包む。`decode`は外側の形式と全entryを検証し、`selecting`は明示したIDのentryだけ返す。対象のFeatureがpayloadを検証・移行してから保存状態へ適用する。Feature固有の形式には`MiniAppBackupEntry.decodePayload`によるCodable JSON読込みも選べる。
+1. The standalone example launches and its important behavior works.
+2. The integrated host lists exactly one entry and opens it through its stable ID.
+3. Data, notifications, tasks, and native registrations do not collide with another feature.
+4. Disabling, deleting, restoring, or failing this feature preserves other owners.
+5. Package resources and localization load through `Bundle.module`.
+6. Any widget, App Intent, extension, entitlement, or background mode is present in the built product.
 
-Featureは任意の`MiniAppBackupProvider`を定義の`backup:`へ登録できる。exportはそのFeatureの整合したsnapshotを返し、prepareはpayloadを検証・移行してから適用closureを返す。prepareでは保存値を変更しない。ホストは全選択のprepareを終えてから適用する。適用中の失敗は完了済みと失敗対象を区別し、Feature間のrollbackを保証しない。CounterとReminderが実装例で、一覧のバックアップ操作から書出し・読込み・復元対象選択・上書き確認へ進む画面を実装している。CIでFilesの書出し・再読込みから選択復元、キャンセル、再起動後の値維持まで成功した。0.6.0出荷CIでも通常UIとFiles経由JSON選択復元が成功している。[0.7.0公開記録](verification/2026-09-13-0.7-release.md)を現在の出荷証拠とし、初期のSimulator操作失敗は過去の経緯として扱う。
+Compilation, Simulator behavior, installation, physical-device behavior, and live service behavior are separate results. Record what was actually exercised. See [Build, sign, and install](build.md) and [current status](status.md).
 
-## Widget・外部URLから開く
+## Compatibility checklist
 
-`MiniAppLink.url(for: id)`で`jibunkit://mini-app/<Feature ID>`を生成できる。ホストは登録済みFeatureの入口へ遷移し、起動中ならホストの遷移先を置き換える。Counter Widgetが使用例。Widget targetにも`JibunKitCore`を依存として追加する。
+Before publishing an update, review [Compatibility and stable identities](compatibility.md). In particular, do not casually change:
 
-URLは画面を開く用途のみで、保存値の変更・復元・任意処理は実行しない。未知のID、不正なID、未対応のpath・query・fragmentは無視し現在の画面を保つ。詳細画面には`MiniAppLink.url(for: id, destination: recordID)`を使う。ホストは`MiniAppDefinition.appendDestination`へ文字列を渡し、Integrationが型・形式を検証してFeature所有のnavigation valueをpathへ追加する。拒否時はfalseを返す。RecordsのUUID接続が実例であり、ホストへFeature別switchを追加しない。[所有提示](guides/feature-owned-presentations.md)へ接続したsheet/UIKit提示があれば、その終了要求と実際の終了通知を待ってから遷移する。任意の未登録sheetをhostが自動検出・終了する契約ではない。独立版ではそのApp ShellがURL登録・受信を担う。
+- feature IDs or storage namespaces;
+- bundle IDs or App Groups;
+- notification request/category IDs;
+- widget kinds, App Intent identities, or URL destinations;
+- backup schema versions and payload meaning.
 
-[AppleのWidget連携](https://developer.apple.com/documentation/widgetkit/linking-to-specific-app-scenes-from-your-widget-or-live-activity)に従い、Widgetの`widgetURL`とホストの`onOpenURL`を接続している。カスタムschemeは認証境界ではなく、同じschemeを登録する別アプリとの競合はOSの扱いに依存する。
+The Records module is a larger reference for files, navigation, notifications, and backup integration. See [Records](../Modules/Records/README.md). Focused system-surface details belong in the individual guides rather than in this entry document.
 
-## Feature内に複数の通知を持つ
+## Troubleshoot package connections
 
-`context.notificationRequestIdentifier(for: recordID)`はFeatureが管理する安定したキーから通知IDを生成する。同じキーで再予約すれば同じIDになり、異なるキーは別IDになる。キーには文字列化したレコードIDなどを使い、更新のたびにランダムIDを作らない。日時変更だけならキーを維持する。空文字列・日本語なども区別して扱う。
+On macOS, run `python3 Tools/check-feature-connection.py --package Modules/Notes --product NotesFeature`. It evaluates the trusted checkout's Swift and Tuist manifests to check the path, library product, target membership and direct host dependency; `--host` selects a different target such as the widget. It does not prove compilation, transitive integration dependencies or runtime registry contents.
 
-通知整理では`context.ownsNotificationRequestIdentifier(request.identifier)`に一致するものだけを選び、そのIDを`removePendingNotificationRequests(withIdentifiers:)`へ渡せる。配信済み通知も同様にそのrequestのidentifierで選別できる。従来の引数なし`notificationRequestIdentifier`も自身のものとして判定し、既存予約のIDは変更しない。全アプリ分を削除するAPIは使わない。
+Check the first failing boundary in order:
 
-これは命名と所属判定のAPIであり、予約時刻・重複排除・再予約・通知権限の判断はFeatureが担う。予約可能な件数などOSの制約を解消するものではない。個々の通知には既存の`context.notificationUserInfo`を付けるとFeature入口へ遷移できる。レコード詳細には`context.notificationUserInfo(destination:)`とDefinitionの`appendDestination`を接続する。下のRecords例を参照。
+1. Package not found: correct `Project.swift`'s package path and confirm `Modules/Notes/Package.swift` exists.
+2. Product not found: match the package's library product and target names; run `swift package --package-path Modules/Notes describe`, package tests and generation.
+3. `No such module`: add the product dependency to the exact app or extension target importing it, include integration sources, then regenerate and build.
+4. No list entry or URL destination: add the definition once to `MiniAppRegistry.all`; inspect the actual registry IDs with `MiniAppValidator.validate(ids:expectedIDs:)` and exercise `jibunkit://mini-app/notes`.
 
-### バックアップ接続の実装箇所
-
-Counterの接続は`Sources/CounterIntegration/CounterMiniApp.swift`の`backup:`を参照する。実際のsnapshot生成・検証・適用は`Sources/CounterFeature/CounterFeature.swift`の`backupProvider`と`restoreBackup`にある。ホストにFeature名の分岐を増やす必要はない。独立版でJibunKitCoreへの依存を避けたいFeatureでは、providerをIntegration側で作り、Featureの公開snapshot・検証・適用APIへ接続する。
-
-データ形式を更新する際は、prepareで対応するschemaを選び、旧payloadを新しい状態へ変換し、必須値や参照整合性を検証してから`MiniAppPreparedRestore`へ渡す。この時点では保存先や通知を変更しない。実際の適用は利用者が上書きを確定した後に行われる。実行失敗で途中状態を残せないFeatureは、自身の保存方式に応じてtransactionや置換処理を使う。共通基盤による全Featureのrollbackはない。
-
-新しいproviderの検証では、snapshotの往復だけでなく、不正payload・未知schemaをprepareで拒否して値を維持すること、片方の復元で他Featureを変更しないこと、実行時の失敗を成功として返さないことを確認する。既存の`Tests/MiniAppIntegrationTests/MiniAppBackupIntegrationTests.swift`がテストの参照先になる。
-
-### 独立版のUIテスト
-
-雛形は`UITests/LaunchTests.swift`とExample用UIテストtargetも生成する。生成したExample schemeで`xcodebuild test -workspace Modules/Notes/NotesExample.xcworkspace -scheme NotesExample -destination 'platform=iOS Simulator,name=<利用可能なiPhone名>'`を実行できる。最初のテストはFeatureの初期画面を確認する。実装を育てたら、利用可能になったことを示す画面要素や重要な操作へテストを更新する。
-
-これはJibunKitのRegistryやCoreに依存しない単独版の起動確認である。ホストへ組み込んだ後の共存検証とは別に行う。既存Moduleは自動更新しないため、テストtargetが必要なら生成されるProjectとUITestsを参考に追加する。CIのSimulator検証では、その場で生成したNotesExampleを起動して同じテストを実行する。
-
-### 詳細通知と添付を持つ参照実装
-
-[Records](../Modules/Records/README.md)はCore非依存のFeatureへ保存先と通知操作を注入する例である。詳細通知は`context.notificationUserInfo(destination: recordID)`でURLと同じdestinationを渡せる。従来の`notificationUserInfo`は引き続き入口を開く。詳細URLのホスト遷移と通知requestの内容はCIで検証済み。通知から対応するRecords詳細への遷移と片側取消は、2026-09-09の`afbf4dc`実機確認で成功した（[source別の証拠](verification/2026-09-09-v1-candidate.md)）。通常0.6.0にはRecordsを登録しておらず、この実機結果を0.6.0そのものの実機成功とは扱わない。
-
-添付を含むFeatureは`MiniAppFileBackupProvider`を`fileBackup:`へ登録できる。exportは整合したsnapshot directoryとschema versionを渡し、prepareはデータを変更せず検証し、applyが復元する。ファイルproviderを含む選択はZIP、従来のData providerだけの選択はJSONとして書き出す。DBのsnapshot、schema移行、OS通知など保存先外の状態との整合はFeatureのIntegrationが所有する。Recordsは復元成功後に自身の既存通知を取り消し、復元失敗時は通知も維持する。
-
-## ホスト状態と非同期処理の所有者
-
-IntegrationはMiniAppDefinitionの`onHostPhaseChange:`にハンドラを登録できる。ホスト全体のactive/inactive/backgroundを、Feature画面が未生成でも受信する。Feature画面の表示/終了とは別のイベントであり、非表示になっただけで一律に停止しない。ハンドラは短くし、同期の重い処理を実行しない。
-
-`MiniAppTaskScope`はFeature runtimeごとに別instanceを所有する。`start`へそのFeatureの非同期処理を渡し、`cancelAll`はそのscopeの処理だけへ取消要求を送る。所有者を解放しても取消を要求する。取消後の新しいstartは可能。返されたTaskのvalueを待つことで完了を観測できる。エラー報告はoperation側で行う。
-
-Swiftの取消は協調的であり、cancelAllが返っても処理完了や資源解放は保証しない。処理側で取消を確認し、所有する資源を解放する。別Featureと共有する資源の排他・引継ぎ、background実行権限、勝手に生成されたTaskの追跡はこのscopeに含まない。Core非依存Featureには、Integrationから必要な操作やruntimeを注入できる。
-
-Taskのoperationがscopeを所有するruntime自身を強参照し続けると、runtime解放を契機とする取消は起きない。終了操作では明示的にcancelAllし、operationへ必要な依存だけを渡すか弱参照を使う。scopeは自身のTaskから弱参照されるが、呼出側が作る保持循環まで解消しない。取消で終了する処理はTaskのvalueで完了を待ち、共有資源の引継ぎ前に所有者自身の解放を確認する。
-
-複数Taskの終了確認にはruntime側から`await scope.cancelAllAndWait()`を使える。対象は呼出時点のTask群であり、待機中の新規startは対象外。終了中に新規処理を受けるかはruntimeが決める。scope内のoperationから呼ぶと自分自身の完了待ちになるため、外側の調停処理から呼ぶ。取消に応じないoperationがある場合は完了しない。
-
-## 通知操作の所有者配送
-
-IntegrationはonNotificationActionへasyncハンドラを任意登録できる。open/dismiss/custom(action ID)、request ID、destination、文字入力を受け取る。通常openだけが既存の画面遷移を行い、dismiss/customではホストが勝手に画面を切り替えない。未登録ownerやハンドラなしの操作を他Featureへ転送しない。ハンドラ完了後にOSへ完了を返すため、長時間処理や終了しない処理を置かない。category/action宣言の合成とOS経由の独自actionは[既存のnative回帰](verification/2026-09-11-notification-ui-regression.md)で検証済み。独自userInfo/content/trigger等は任意の[requestSnapshot](guides/notification-request-snapshots.md)から読める。6beb877で文字入力・添付等の実機確認も成功した（[source別結果](verification/2026-09-14-0.8-device-check.md)）。
-
-通知categoryは`context.notificationCategoryIdentifier(for:)`でIDを生成し、ネイティブUNNotificationCategoryをMiniAppDefinition.notificationCategoriesへ登録する。通知content.categoryIdentifierにも同じIDを設定する。ホストが起動時に有効なFeatureの和集合を登録する。FeatureからsetNotificationCategoriesを直接呼ぶと他Featureの登録を上書きするため、この接続を使う。カテゴリIDの重複・他ownerのIDは構成エラーとして登録前に拒否する。action IDはカテゴリ内のFeature所有値のまま保持し、文字入力actionやoptionsを独自形式へ変換しない。実行中の更新には`context.replaceNotificationCategories(with:)`を使い、他Featureの登録を維持する。下の動的更新手順を参照。
-
-`await context.removeAllOwnedNotifications()`は、そのFeatureのnamespaceに属する予約中・配信済み通知のみを取り消す。従来の単一request IDも対象。他Featureや名前空間外の通知は保持する。取得したID一覧に対する操作なので、新規予約との原子的な停止は保証しない。復元・削除時に新規予約を止める必要がある場合はFeature runtimeで受付を調停する。Records復元後の取消が使用例。
-
-### 前面通知の表示方針
-
-`MiniAppDefinition.notificationPresentation` は通知所有Featureの同期MainActor callbackです。
-`MiniAppForegroundNotification` のrequestIdentifier / categoryIdentifier / destinationと、Feature自身の表示状態を使い、標準の`UNNotificationPresentationOptions`を返します。例えば詳細画面で既読なら`[]`、静かな一覧通知なら`[.list]`を返せます。他Featureのcallbackとの合成はしません。未指定・所有者不明は既存の`[.banner, .list, .sound]`を維持します。
-
-callback内で長時間処理をしないでください。これはhostが前面にある場合のOSへの表示指定であり、Featureの画面表示状態の判定や通知権限の分離を自動提供するものではありません。空のoption setによる抑止を含む標準動作は[AppleのwillPresent仕様](https://developer.apple.com/documentation/usernotifications/unusernotificationcenterdelegate/usernotificationcenter(_:willpresent:withcompletionhandler:))に従います。
-
-所有者別方針・既定値の単体テストと実foreground通知の二Feature比較は検証済みです。P1-Bの通常hostでもAの非表示/Bのbannerと添付をCIで確認し、OSカードの操作と今回の実機条件は[通知添付ガイド](guides/notification-attachments.md)で区別しています。
-
-### 実行中の通知カテゴリ更新
-
-`try context.replaceNotificationCategories(with: categories)` は、そのFeatureの登録だけを置き換えます。空配列でそのFeatureのカテゴリだけを解除できます。hostは起動時に有効なFeatureを`MiniAppNotificationCategoryRegistry.shared`へ登録し、更新時には他Featureのカテゴリを保った全体集合をOSに渡します。各識別子は`context.notificationCategoryIdentifier(for:)`で作成してください。所有者不一致・重複・未登録Featureの更新はthrowし、既存登録を変更しません。
-
-MainActor上で同期的に検証・合成・標準API呼出しを行います。OS側の適用完了通知は標準APIにないため、このメソッドの成功はOS内の適用完了を保証しません。動的な登録はプロセス内の状態です。次回起動時に必要なカテゴリはFeatureが定義または永続化した情報から再登録してください。カテゴリ解除は通知要求自体の取消ではありません。
-
-Featureから`setNotificationCategories`を直接呼ぶと全体集合が置き換わるため、この経路を使用します。独立したアプリで得られていたカテゴリ登録範囲の分離を補う仕組みで、任意の直接呼出しを遮断するsandboxではありません。
-
-### Feature所有のKeychain
-
-`MiniAppKeychain(context: context, service: "login")` はgeneric passwordのservice名をFeatureごとに分けます。`set(data, for: account)` / `data(for: account)` / `remove(account:)` / `removeAll()`を使用します。`removeAll()`の対象はそのFeatureのそのservice内だけです。同名accountでも別Featureや別serviceの値は残ります。取得時の未登録はnil、削除時の未登録は成功、それ以外のOSエラーは`Failure.status`として返します。更新は既存項目を削除せずに行います。
-
-このAPIはiCloud同期しないKeychain項目のgeneric passwordを扱います。新規項目は標準のwhen-unlocked属性、既存項目の更新では属性を維持します。同期的なSecurity APIなので、UIを待たせる処理は適切な実行場所から呼んでください。SecAccessControlと操作ごとのLAContextも指定できます。[アクセス制御ガイド](guides/keychain-access-control.md)に呼出し・認証取消・OSエラーの扱いを記載しています。
-
-`accessGroup`は署名で許可されたグループを明示する場合に指定します。省略時は追加が標準group、検索がアプリに許可されたgroup群という[Appleの仕様](https://developer.apple.com/documentation/Security/sharing-access-to-keychain-items-among-a-collection-of-apps)に従うため、複数groupを使い分ける場合は明示してください。namespaceは同一process内での協調的な所有権管理であり、任意のSecItem呼出しを隔離するものではありません。iOS再起動・A logout後のB保持、アクセス属性、userPresence項目の非対話拒否と認証後の値保持は検証済みです（[証拠](verification/2026-09-10-keychain-access-control.md)）。通常HTTP用Cookie/パスワード資格情報は6beb877で署名更新後の保持を確認しました。userPresence項目の再署名後継続、端末ロック・パスコード変更等は未検証です。
-
-`set(data, for: account, accessibility: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly)`のように、標準のaccessibility定数を指定できます。新規保存と既存項目の変更に適用し、省略した更新では既存属性を維持します。バックグラウンド利用のためのafter-first-unlockは、[最初の端末ロック解除後に利用可能となるAppleの保護条件](https://developer.apple.com/documentation/security/ksecattraccessibleafterfirstunlockthisdeviceonly)に従います。利用可能性を事前判定して成功を保証せず、OSエラーを処理してください。端末ロック・再起動・パスコード変更の実機検証は未完です。
-
-### WebViewの永続データ分離
-
-WebView生成前に`configuration.websiteDataStore = context.websiteDataStore()`を設定します。必要なら`profile: "work"`などで同じFeature内のプロファイルも分けられます。返り値は標準の`WKWebsiteDataStore`なので、cookie管理・対象データ種別の削除などはそのAPIを使用できます。[Appleの識別子付き永続データストア](https://developer.apple.com/documentation/webkit/wkwebsitedatastore)を使い、非永続モードには置き換えません。
-
-識別子はFeature IDとprofileからSHA-256先頭128bit（UUID version/variant設定分を除く）で導出します。毎回同じ保存先となり、UserDefaults側の割当表は不要です。ハッシュ衝突は理論的にはあり得ます。ID/profileを変更すると別ストアになるため、変更時は移行が必要です。`websiteDataStoreIdentifier(profile:)`の導出仕様を無断変更しないでください。別Featureのストアを直接指定する呼出しやdefault storeの利用を遮断するものではありません。
-
-所有データの削除はそのストアの`removeData`を使います。使用中WebViewの処理をFeature lifetimeと通常StoreAccessへ登録し、管理側が停止・終了待ち・排他予約を終えた後にremoval providerから削除します。この接続によるCookie/localStorage/IndexedDBの再起動保持、書込取消・終了待ち・A削除後のB保持は通常hostで検証済みで、6beb877の実機でも保存・再起動・認証取消・片側削除・B保持と上書き/Refresh保持を確認しました（[接続と範囲](guides/web-storage-ownership.md)）。ストアfactoryが任意のWebViewやJavaScriptを自動停止するわけではなく、識別子付きストア自体の破棄、任意の認証provider、即時永続化、全Webデータ種別の検証は別に残ります。この通常接続は0.8.0で公開しました。0.7.0へ追加したという意味ではありません。
-
-### 自動ロック抑止の共存
-
-iOSでは`MiniAppIdleTimer.shared.preventSleep(for: context.id)`の返すleaseを処理の間保持し、終了時に`lease.release()`します。複数Feature・同じFeatureの複数操作の要求を数え、最後の要求が終了したときだけ自動ロック抑止を解除します。releaseは繰返し呼べます。lease解放時にもMainActor上で後始末しますが即時とは限らないため、終了時刻が重要なら明示releaseを使ってください。
-
-hostが一つの共有調停器を保持し、Featureは`UIApplication.isIdleTimerDisabled`を直接書き換えずこの経路を使います。独自の調停器を複数作って同じOS設定へ書き込む使い方は共存できません。画面非表示・background・Feature無効化のどの時点で要求を終了するかは操作側の寿命管理に接続する必要があります。これは常時点灯のOS保証ではなく、共有設定への要求の合成です。実際の端末自動ロック動作は未検証です。
-
-### Runtimeの終了境界
-
-`MiniAppRuntime`はFeatureの処理単位が所有します。`try runtime.start { ... }`でTaskを登録し、`try runtime.onShutdown { ... }`で共有資源のreleaseなどを登録します。`await runtime.shutdown()`は最初に新規受付を閉じ、所有Taskへ取消を要求して完了を待ち、登録と逆順に後始末します。終了後のstart/onShutdownはthrowし、再開時は新しいruntimeを作ります。複数のshutdown呼出しは同じ終了処理を待ちます。
-
-shutdownは所有Task自身から呼ばず、外部の調整役から呼んでください。協調しないTaskを強制終了する機能ではありません。解放時にも同じ順序の後始末を試みますが、明示shutdownが待機可能な境界です。登録closureやTaskがruntime/ownerを強く保持すると循環参照になり得るため、明示終了やweak captureを使います。登録されたrestoreLifecycleを呼ぶhostの復元経路は接続済みです。画面非表示・Feature無効化でいつ終了するか、個々のFeatureが通常書込みやDB接続をどう止めるかは、Featureの所有者が接続します。
-
-### 復元前後の処理停止と再開
-
-所有者の保持から再開までの接続手順と、動作する検証用接続例は[Runtimeと復元の接続ガイド](runtime-restore-integration.md)を参照してください。
-
-`MiniAppDefinition.restoreLifecycle`に`MiniAppRestoreLifecycle(stop:resume:)`を登録すると、hostのJSON/ファイル復元は各対象Featureについてstop→apply→resumeの順で実行します。未選択Featureのhookは呼びません。stopでは新規受付を閉じて保存先の利用終了を待ちます。`MiniAppRuntime.shutdown()`を利用した場合、resumeでは新しいruntimeを作ってFeatureの参照先を切り替えます。
-
-stopが失敗するとapply/resumeは呼ばず、登録されていれば`recoverAfterFailedStop`を待ちます。この回復callbackを登録するか、stop自身が失敗時に利用可能な状態へ戻す必要があります。回復も失敗した場合は両方の理由を報告します。applyが失敗してもresumeを呼び、両方失敗した場合は両方の理由を保持します。resume失敗はデータ適用済みの場合もあるため、復元全体のロールバック成功とは表示しません。後続Featureへの適用は既存の失敗報告に従って停止します。
-
-hook未指定のFeatureは従来どおりです。これは全Featureの処理を自動検出して停止する機能ではなく、Feature所有者の停止・DB再接続・再開処理を共有復元経路へ接続する契約です。直接planを使う場合も`apply(lifecycles:)`へ登録を渡します。同一Featureの重複復元は下記の既定coordinatorが調停します。通常書込みとの排他と別プロセスの利用調整は別途必要です。
-
-### 同時復元の調停
-
-`MiniAppRestorePlan.apply`は既定でプロセス共通の`MiniAppRestoreCoordinator.shared`を使います。選択したFeatureをすべて停止前に予約し、実行中の復元と対象が重なれば`MiniAppRestoreCoordinator.Conflict`を返します。その要求では停止も適用も始めません。対象の異なる復元は並行実行できます。予約は成功・失敗いずれでもplan終了時に解除します。
-
-通常の保存処理を止める契約は`restoreLifecycle`が担います。Widgetなど別プロセスとの排他はこのcoordinatorの対象外です。テストや独立したhostには明示的なcoordinatorを渡せますが、同じ保存先を扱う画面は同じcoordinatorを共有してください。
-
-復元予約前にTaskが取消済みなら`CancellationError`で終了し、停止・適用を始めません。開始後の取消は協調的です。実際の処理が終了するまで予約を保持し、取消だけを理由に別の復元へ保存先を明け渡しません。適用開始後に発生した取消エラーは、部分変更の可能性がある`MiniAppRestoreFailure`として扱います。
-
-複数Featureを選択したplanでは、各Featureの開始前にも取消を確認します。着手済みFeatureの再開処理を終えてから次の着手を止め、`MiniAppRestoreFailure.stage == .cancelledBeforeStart`で完了済みIDと未着手のIDを返します。完了済みの復元を巻き戻す契約ではありません。
-
-JSON/file providerの`exportEntry`も同じcoordinatorを利用します。同一Featureのsnapshot作成と復元を重ねず、競合はcallbackを始める前に返します。独自coordinatorを使う場合、exportとrestoreで同じものを渡してください。生の`export` closureの直接呼出しはこの調停の対象外です。予約はsnapshot作成までで、複数Featureを同じ時点の状態として書き出す保証はありません。
-
-`MiniAppBackupArchive.export(..., coordinator:)`にも同じcoordinatorを渡せます。省略時はプロセス共通のものを使い、ZIP内の各JSON/file providerへ転送します。出力callbackが失敗した場合と出力検証が失敗した場合も予約は解除されます。
-
-### 非同期の資源解放
-
-`try runtime.onShutdownAsync { await connection.close() }`で非同期の後始末を登録できます。所有Taskがすべて終了した後、`onShutdown`と共通の登録逆順で一つずつ完了を待ちます。`shutdown()`を待つ復元hookは、その後始末の終了までapplyへ進みません。hookは自分自身のruntime.shutdownを待たず、有限時間で終了する必要があります。closeがthrowする場合の回復方針はFeatureで定めてください。
-
-### Feature別のURL cache
-
-`try context.urlCache(memoryCapacity: 4 * 1024 * 1024, diskCapacity: 32 * 1024 * 1024, containerURL: container)`でnative URLCacheを作り、URLSessionを生成する前に`configuration.urlCache`へ設定します。容量は例であり任意に指定できます。同じFeature/profileのcacheは保持して使い回してください。`profile:`で同一Feature内のアカウント等を分けられます。
-
-このAPIはcache保存先だけを分けます。Cookie・認証情報の共有を解消するAPIではなく、cacheはOSによって削除される可能性があります。default設定のままならCookie共有は残るため、通信全体の隔離が完了したとは扱わないでください。
-
-### 画面生成前の登録とbackground連携
-
-`MiniAppDefinition.onHostLaunch`はhost起動時に呼ばれる同期・throwingな任意hookです。
-Featureの画面を開く前に必要なnative登録をここで行い、providerや処理所有者を適切な寿命で保持します。
-二Featureの画面未生成時登録と再訪時の一回性は[host launch検証](verification/2026-09-11-host-launch-hook.md)で確認済みです。
-
-background連携は[短時間の処理継続](guides/background-execution-ownership.md)、
-[background URLSession再接続](guides/background-urlsession-reconnect.md)、
-[共有refresh枠](background-refresh-coordination.md)に分けて接続します。
-登録API・注入試験の成功を、実OSの起動や期限配送の保証に置き換えません。
-
-## 共有入力と静的Widget（0.8.0のP1-A追加）
-
-0.8.0で公開した追加（0.7.0には含まれない）。外部ファイルとShare Extensionからの受信は、通常Definitionのoptional `incoming`へ接続する。[共有入力ガイド](guides/feature-incoming.md)に受信先選択、receipt IDでの冪等保存、取消・再試行とファイル寿命を示す。業務モデルをCoreへ移す必要はない。
-
-静的Widgetは既存Widget extensionへ標準のWidgetBundle登録を追加する。[二Packageの静的Widget接続](guides/package-static-widgets.md)に所有store、管理状態、kind、翻訳と他owner保持を示す。App Intentsは[Package接続](guides/package-app-intents.md)と[App Shortcuts寄与](guides/feature-app-shortcuts.md)を参照。P1-AのCI証拠、6beb877/4e6a3f4の対象別実機結果、公開0.8.0の出荷照合を[実機追補](verification/2026-09-15-p1-device-followup.md)と[出荷記録](verification/2026-09-15-0.8-release.md)で区別する。
+The expected ID set is a test assertion, not another production registry. Source-text searches alone cannot prove these four connections.

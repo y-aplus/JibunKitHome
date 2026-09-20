@@ -12,6 +12,12 @@ KINDS = {"unit", "simulator", "device", "inspection"}
 BASE_UNITS = {f"{p}-{i}" for p in ("P0", "P1") for i in range(1, 7)}
 P2_UNITS = {f"P2-{i}" for i in range(1, 14)}
 CONDITIONAL_UNITS = {"P2-6", "P2-12", "P2-13"}
+CONDITIONAL_VERIFICATION_CRITERIA = {
+    "P2-8.signed-service",
+    "P2-10.signed-service",
+    # Explicit owner acceptance on 2026-09-19; never represented as device passes.
+    "P2-3.device", "P2-4.device", "P2-11.device", "P2-12.device",
+}
 
 
 def require(ok, message):
@@ -80,6 +86,19 @@ def validate_plan(plan):
                     f"{uid}: invalid evidence kinds")
             require(not criterion.get("adopted_only") or uid in CONDITIONAL_UNITS,
                     f"{uid}: mandatory functionality cannot be conditional")
+            decision = criterion.get("conditional_verification")
+            if decision is not None:
+                require(isinstance(decision, dict),
+                        f"{criterion['id']}: invalid conditional verification decision")
+                require(criterion["id"] in CONDITIONAL_VERIFICATION_CRITERIA,
+                        f"{criterion['id']}: conditional verification is not permitted")
+                require(criterion["kinds"] == ["device"],
+                        f"{criterion['id']}: conditional verification must remain device-only")
+                require(decision.get("status") in {"required", "approved-unverified"},
+                        f"{criterion['id']}: invalid conditional verification decision")
+                if decision["status"] == "approved-unverified":
+                    require(nonempty(decision.get("scope")) and nonempty(decision.get("reason")),
+                            f"{criterion['id']}: approved unverified scope/reason missing")
             criteria.append(criterion["id"])
     unique(criteria, "criterion")
     require(set(plan["milestones"]) == ({"0.7.0", "0.8.0", "1.0.0"} if v1 else {"0.7.0", "0.8.0"}), "unexpected milestones")
@@ -112,14 +131,21 @@ def validate_plan(plan):
 def active_criteria(unit):
     """Only an explicitly excluded optional scope can omit its execution checks."""
     excluded = unit.get("scope_decision", {}).get("status") == "excluded"
-    return [c for c in unit["criteria"] if not (excluded and c.get("adopted_only"))]
+    return [c for c in unit["criteria"] if not (excluded and c.get("adopted_only")) and
+            c.get("conditional_verification", {}).get("status") != "approved-unverified"]
+
+
+def approved_unverified_criteria(unit):
+    """Explicitly approved observation limits stay unverified and are never passed evidence."""
+    return [c for c in unit["criteria"]
+            if c.get("conditional_verification", {}).get("status") == "approved-unverified"]
 
 
 def current_docs(root, version):
     """Dynamic inventory: current prose, not archived research or historical release notes."""
     fixed = {"README.md", "CHANGELOG.md", "CONTRIBUTING.md", "SECURITY.md",
              "THIRD_PARTY_NOTICES.md", "docs/superpowers/plans/2026-09-08-jibunkit-1.0.md",
-             f"release-notes-{version}.md"}
+             f"docs/releases/release-notes-{version}.md"}
     for pattern in ("docs/*.md", "docs/guides/**/*.md", "docs/delivery/**/*.md", "Modules/**/README.md"):
         fixed.update(p.relative_to(root).as_posix() for p in root.glob(pattern))
     return sorted(fixed)
@@ -170,6 +196,18 @@ def validate_report(plan, report, stage, root=ROOT, version=None):
     else:
         members = wave["checks"]
     criteria = {c["id"]: c for u in members for c in active_criteria(units[u])}
+    approved = {c["id"]: c["conditional_verification"]
+                for u in members for c in approved_unverified_criteria(units[u])}
+    approvals = report.get("approved_unverified", [])
+    unique([item["criterion"] for item in approvals], "approved unverified criterion")
+    require({item["criterion"] for item in approvals} == set(approved),
+            "approved unverified report does not match plan")
+    for item in approvals:
+        decision = approved[item["criterion"]]
+        require(item.get("result") == "unverified-approved-exclusion",
+                f"{item['criterion']}: approved exclusion must remain unverified")
+        require(item.get("scope") == decision["scope"] and item.get("reason") == decision["reason"],
+                f"{item['criterion']}: approved exclusion scope/reason differs from plan")
     for uid in set(members) & CONDITIONAL_UNITS:
         require(units[uid]["scope_decision"]["status"] != "pending", f"{uid}: scope decision pending")
     contract = report["contract"]
@@ -256,6 +294,7 @@ def template(plan, wid, sha):
     units, waves = validate_plan(plan)
     require(wid in waves and source(sha), "template needs known wave and full source commit")
     wave = waves[wid]
+    approved = [c for u in wave["checks"] for c in approved_unverified_criteria(units[u])]
     return {"schema": 1, "wave": wid, "source": sha,
             "contract": {k: "" for k in ("baseline", "interfaces", "ownership", "failure_cases",
                          "normal_entrypoints", "invalidation", "review")},
@@ -263,6 +302,9 @@ def template(plan, wid, sha):
             "planned_ci_runs": wave["ci_budget"], "budget_exception": "", "jobs": [], "runs": [],
             "evidence": [], "deferred_device": {c["id"]: units[u]["milestone"]
                 for u in wave["checks"] for c in active_criteria(units[u]) if set(c["kinds"]) == {"device"}},
+            "approved_unverified": [{"criterion": c["id"], "result": "unverified-approved-exclusion",
+                "scope": c["conditional_verification"]["scope"],
+                "reason": c["conditional_verification"]["reason"]} for c in approved],
             "documents": [], "document_review": {"source": "", "summary": "", "unresolved": []},
             "release": {},
             "metrics": {"review_rounds": 0, "parent_messages": 0, "ci_job_minutes": 0},

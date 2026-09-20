@@ -1,0 +1,7 @@
+"counter.title" = "カウンター";
+"counter.status.removed" = "削除済み";
+"counter.status.disabled" = "無効";
+"counter.status.stopped" = "停止中";
+"counter.status.unavailable" = "読取不可";
+"counter.gallery.name" = "カウンター";
+"counter.gallery.description" = "アプリとショートカットが更新した値を表示します。";

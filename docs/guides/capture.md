@@ -1,4 +1,18 @@
-# Feature所有の撮影・文書／コードscan
+# Feature-owned capture, document scanning, and code scanning
+
+## Current integration contract
+
+Camera-backed operations are feature-owned but acquire the shared camera resource through the host coordinator. Admit an operation only while its runtime generation is active, present consent or system UI through the feature-owned presentation boundary, and reject late callbacks after cancellation or stop.
+
+Video with audio also requires the audio ownership and microphone-consent contracts. Copy results into feature-owned storage before dismissing temporary system resources. Build fixtures validate wiring; camera availability, permissions, interruptions, scanning accuracy, and capture quality require real-device verification.
+
+Inject `MiniAppCaptureCoordinator.shared` into feature factories (an isolated instance in tests), create `MiniAppCaptureOwner`, and connect it from `MiniAppFeatureLifetime.configure`. Declare the feature's camera permission and feed `onSceneActivityChange` plus the injected scene connection ID into each operation. Acquisition is serialized across AR, photo, video, document, and code scanning; a conflict is surfaced instead of stealing the camera. Stop closes admission, cancels/pause-dismisses the native producer, awaits completion, and only then releases the camera. Late callbacks are filtered by owner and operation generation.
+
+Feature code owns the concrete camera/session/controller, configuration, output types, UI, and business result. The common layer does not wrap every native option. System-presented document/code scanners go through feature-owned presentation and are dismissed on scene/lifetime stop. Copy security-scoped or controller-temporary results into the feature namespace before returning success. Cancellation and partial copy failures remove only operation staging and never publish an incomplete result.
+
+Audio capture first acquires the compatible audio profile and microphone consent, then camera ownership; unwind in reverse order. Revalidate both generations after awaited permission or presentation. Compose camera/microphone usage descriptions and required background modes through build requirements. Unsupported hardware or unavailable scanners return an explicit unsupported result, not a simulated success.
+
+## Japanese source notes and historical evidence
 
 対象はiOS 26以上。JibunKitはcameraのowner別受付と寿命を管理し、撮影構成、native object、成果物、保存形式はFeatureが所有する。cameraとmicrophoneは別資源で、camera-only操作はAudio調停を要求しない。
 

@@ -17,7 +17,8 @@ class ContinuingHostTests(unittest.TestCase):
         root = Path(temporary.name)
         for name in ["Package.swift", "Project.swift", "Sources/JibunKit/MiniAppRegistry.swift",
                      "Sources/JibunKitWidget/CounterWidget.swift", "Tests/ContinuingSurfaces/ContinuingProbe.swift",
-                     "Tests/ContinuingSurfaces/ContinuingHostUITests.swift"]:
+                     "Tests/ContinuingSurfaces/ContinuingHostUITests.swift",
+                     "Tuist/ProjectDescriptionHelpers/EnabledFeatureBuildRequirements.swift"]:
             target = root / name
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(ROOT / name, target)
@@ -37,13 +38,17 @@ class ContinuingHostTests(unittest.TestCase):
         self.assertIn('sources: ["Tests/ContinuingSurfaces/ContinuingStateNativeTests.swift"]', project)
         self.assertIn('testAction: .targets(["ContinuingStateNativeTests"]', project)
         self.assertIn('"NSSupportsLiveActivities": true', project)
-        self.assertIn('"NSAlarmKitUsageDescription"', project)
+        self.assertNotIn('"NSAlarmKitUsageDescription"', project)
+        requirements = (root / "Tuist/ProjectDescriptionHelpers/EnabledFeatureBuildRequirements.swift").read_text(encoding="utf-8")
+        self.assertIn('"NSAlarmKitUsageDescription": "ミニアプリで設定した予定やタイマーを知らせます。"', requirements)
+        self.assertIn('"en": ["NSAlarmKitUsageDescription": "Notifies you about schedules and timers set by mini apps."]', requirements)
+        self.assertIn('"ja": ["NSAlarmKitUsageDescription": "ミニアプリで設定した予定やタイマーを知らせます。"]', requirements)
         self.assertIn('.target(name: "JibunKitShare-Extension")', project)
         registry = (root / "Sources/JibunKit/MiniAppRegistry.swift").read_text(encoding="utf-8")
         self.assertIn("ContinuingProbe.definitions + [", registry)
         self.assertIn("CounterMiniApp.definition", registry)
         self.assertIn("ReminderMiniApp.definition", registry)
-        self.assertIn("externalAccess: definition.effectiveExternalAccess", registry)
+        self.assertIn("externalAccess: MiniAppWindowOwnership.externalAccess(for: definition)", registry)
         widget = (root / "Sources/JibunKitWidget/CounterWidget.swift").read_text(encoding="utf-8")
         self.assertEqual(widget.count("        CounterWidget()"), 1)
         self.assertIn("FeatureBAlarmLiveActivity()", widget)

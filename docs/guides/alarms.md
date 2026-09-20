@@ -1,6 +1,22 @@
-# AlarmKit 接続ガイド
+# AlarmKit integration
 
-状態: **0.8.2候補・対象別実機確認済み**。b1d379bでXcode26.6の独立/統合build・metadata・native2件が成功。5678a41診断版で許可、固定/繰返し/countdown、pause/resume、OS標準stop callback、cold復帰、片側管理/復元とB保持、上書き/Refresh/端末再起動、通常版復帰を確認。Focus/silent条件は独立に試していない。Live Bの単発差分は別途未解決として保持し、P2-5全体はpartial。[証拠](../verification/2026-09-16-p2-continuing-surfaces.md)。
+## Current integration contract
+
+`MiniAppAlarmCoordinator` owns AlarmKit registration identity, durable journal state, operation serialization, reconciliation, and lifecycle participation. Feature code retains typed alarm metadata, presentation, schedule, and business state. Do not flatten those values into a generic timer payload.
+
+Persist intent before native registration, reuse the same identity when retrying ambiguous starts, verify native state after operations, and preserve partial replacement state for recovery. Cold reconciliation must not guess ownership, recreate expired alarms, or delete another feature's alarms. AlarmKit is optional and requires iOS/Xcode support plus real-device validation; the documented 0.8.2 evidence does not cover every Focus or silent-mode condition.
+
+The product API is explicit about partial state. `schedule` journals `.starting` before native registration and commits `.active` only afterward; `retryPending` reuses the identity and UUID. `replace` registers the new UUID first and reports `partialReplacement` with both UUIDs, the failing stage, and original error. `current` validates OS presence under admission and fails closed on multiple usable matches or unknown state. `perform` validates the pre-operation snapshot and confirms stop, cancel, countdown, pause, or resume with bounded snapshot reads rather than treating the native return as an acknowledgement.
+
+`handleSystemIntent` validates admission and the complete identity before business mutation. It does not duplicate OS-standard stop/countdown work and allows a valid stop intent to consume a durable missing-OS callback tombstone; ending rows remain invalid. `reconcile` promotes only known starting rows that exist in the OS, preserves active/missing rows as tombstones, never recreates expired alarms, and quarantines duplicates. `retryEnding`/`endOwned` continue across malformed rows and cancellation failures and remove a row immediately when its alarm is already absent.
+
+Connect `surface(id: "alarmkit")` to `MiniAppContinuingSurfaceGroup`: reconciliation is passive, observation starts one producer only after admission, close drains normal operations before cancelling/draining observation, and open restores admission then observes. Feature state is durable (`MiniAppSharedState`), not `@State` or a process UUID. Configure the singleton synchronously for app/intent cold launch, reconcile before observing, and do not end alarms merely because a screen disappears. Disable/remove closes and drains before OS cleanup; restore never restores old UUIDs or fires expired schedules.
+
+The app needs localized `NSAlarmKitUsageDescription`. Countdown support needs `NSSupportsLiveActivities = YES` plus a widget extension registering the same package's typed `AlarmAttributes<Metadata>`. Do not invent an AlarmKit entitlement; an App Group is for JibunKit shared state/journal, not AlarmKit itself.
+
+## Japanese source notes and historical evidence
+
+状態: **0.8.2で公開済み・採用通常範囲完了**。b1d379bでXcode26.6の独立/統合build・metadata・native2件が成功。5678a41診断版で許可、固定/繰返し/countdown、pause/resume、OS標準stop callback、cold復帰、片側管理/復元とB保持、上書き/Refresh/端末再起動、通常版復帰を確認。Focus/silent条件は独立に試していない。Live Bの単発差分は別途未解決として保持し、実機証拠と31478f2/CI35075825942の実4Feature保持回帰を合わせP2-5採用通常範囲はcomplete。[証拠](../verification/2026-09-16-p2-continuing-surfaces.md)。
 
 JibunKitのAlarmKit境界は、Feature固有の`AlarmMetadata`、表示、schedule、業務状態を型付きのまま保つ。共通coordinatorはowner、local ID、業務世代、registration ID、AlarmKit UUID、操作排他、永続journal、OS集合との照合だけを扱う。汎用timerや任意payloadへ変換しない。
 

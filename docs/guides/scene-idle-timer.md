@@ -1,4 +1,16 @@
-# 選択中のFeatureだけ画面を点灯し続ける
+# Keeping the screen awake for the selected feature
+
+## Current integration contract
+
+A feature requests a scene-scoped screen-awake lease; it does not write `UIApplication.isIdleTimerDisabled` directly. The host computes the effective process value from currently active, selected scenes and applies it centrally.
+
+Release the lease on deselection, scene deactivation, runtime stop, failure, and owner removal. Preserve other valid leases so one feature cannot turn off a request still needed elsewhere.
+
+Create `MiniAppSceneIdleTimer` with the runtime and connect its `receive` method to `MiniAppDefinition.onSceneActivityChange`. Keep the scope where it receives scene events before the feature view opens. `setRequested(true)` starts a display-dependent request and `false` ends it. When rebuilding a runtime, create a new scope, replay the connection model's latest scene state, and only then admit work; a closed scope never reopens and returns `closed` from `setRequested`.
+
+In a multi-scene host, one inactive or disconnected scene must not release another active scene's lease. Ignore events for other features. The underlying `MiniAppIdleTimer` combines leases from other operations and owners. Runtime shutdown closes the scope synchronously; standalone users call `close()` explicitly when immediate release matters. Use `preventSleep(for:)` for work that is not selection-dependent. This API does not infer sheet/detail visibility or grant background time, brightness control, or permissions.
+
+## Japanese source notes and historical evidence
 
 独立アプリの画面を表示している間だけ必要だった自動ロック防止を、統合後の別Featureへ持ち越さないための任意接続。`MiniAppSceneIdleTimer`は要求そのものと実際のleaseを分ける。要求中でも、そのFeatureを選択したactiveなsceneが一つもなければleaseを解除する。再選択/復帰すると要求を再適用する。
 

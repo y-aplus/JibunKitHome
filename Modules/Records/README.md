@@ -1,4 +1,14 @@
-# Records参照Feature
+# Records reference feature
+
+Records is an independent Swift package for multi-screen structured records and attachments. It has no JibunKitCore dependency and is not automatically registered in the normal host. Its standalone app and host integration use the same feature code.
+
+On macOS run `swift test --package-path Modules/Records`, then `tuist generate --path Modules/Records --no-open` and the `RecordsExample` scheme. The app shell supplies navigation and the storage directory. For host integration, add the package/product and integration sources explicitly as described below and in [Adding a feature](../../docs/mini-apps.md).
+
+Use one `RecordStore` actor per directory; multiple actors/processes writing the same directory are not supported. The host injects store-access coordination for normal reads/writes, migration and reset. Backups stage and validate files before replacement; callers own overwrite confirmation and snapshot lifetime. Schema 2 preserves old IDs/content/attachments, reads missing schema-1 dates as unknown, rejects future schemas and does not silently replace corrupt data with an empty store. Restored records do not automatically recreate OS notification schedules.
+
+The following Japanese reference retains detailed integration, schema and historical verification notes. It supplements the English entry guides; source-specific test results are not claims about every build or device.
+
+## Detailed reference (Japanese)
 
 複数画面・構造化データ・添付を持つ独立Swift Package。JibunKitCoreへ依存せず、単独AppとJibunKitで同じFeatureを使用する。製品Registryへの自動登録はしない。
 

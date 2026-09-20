@@ -16,10 +16,15 @@ public final class MiniAppCaptureOwner {
     }
     @MainActor private final class Operation {
         let generation = UUID()
+        let sceneScope: MiniAppCaptureSceneScope
         var closed = false
         var startup: Task<Started, Error>?
         var nativeGeneration: UUID?
         var events: Task<Void, Never>?
+
+        init(sceneScope: MiniAppCaptureSceneScope) {
+            self.sceneScope = sceneScope
+        }
     }
     private let coordinator: MiniAppCaptureCoordinator
     private let permissions: any MiniAppCapturePermissionClient
@@ -61,25 +66,30 @@ public final class MiniAppCaptureOwner {
         guard activity.featureID == id else { return }
         if activity.isConnected { scenes[activity.sceneID] = activity }
         else { scenes[activity.sceneID] = nil }
-        guard !isVisible else { return }
+        guard let pending = operation,
+              shouldStop(pending, after: activity) else { return }
         let reason: MiniAppCaptureStopReason
         if activity.phase == nil { reason = .disconnected }
         else if activity.phase == .background { reason = .background }
         else if !activity.isSelected { reason = .notSelected }
         else { reason = .sceneInactive }
         Task { @MainActor [weak self] in
-            guard let self, !self.isVisible else { return }
+            guard let self, self.operation === pending,
+                  self.shouldStop(pending, after: activity) else { return }
             await self.suspend(reason)
         }
     }
 
     public func start(_ request: MiniAppCaptureOperation,
-                      switching: MiniAppCaptureSwitch = .reject) async throws {
+                      switching: MiniAppCaptureSwitch = .reject,
+                      sceneScope: MiniAppCaptureSceneScope = .anyVisible) async throws {
         while let stopTask { await stopTask.value }
         guard let runtimeGeneration, runtime?.isClosed == false else { throw MiniAppCaptureFailure.stopped }
         guard operation == nil else { throw MiniAppCaptureFailure.unavailable("capture already active") }
-        guard isVisible else { throw MiniAppCaptureFailure.unavailable("no active selected scene") }
-        let pending = Operation()
+        guard isVisible(in: sceneScope) else {
+            throw MiniAppCaptureFailure.unavailable("capture scene is not active and selected")
+        }
+        let pending = Operation(sceneScope: sceneScope)
         operation = pending
         explicitEnd = false
         state = .requesting(request.resources)
@@ -164,7 +174,7 @@ public final class MiniAppCaptureOwner {
     }
 
     public func handleInterruptionEnded(restart: @MainActor @Sendable () async throws -> Void) async throws {
-        guard !explicitEnd, isVisible, runtime?.isClosed == false,
+        guard let pending = operation, !explicitEnd, isVisible(in: pending.sceneScope), runtime?.isClosed == false,
               case .suspended(.interrupted(_)) = state else { return }
         try await restart()
     }
@@ -181,7 +191,8 @@ public final class MiniAppCaptureOwner {
                 }
             }
         case .interruptionEnded:
-            guard self.operation === pending, !pending.closed, !explicitEnd, isVisible,
+            guard self.operation === pending, !pending.closed, !explicitEnd,
+                  isVisible(in: pending.sceneScope),
                   runtime?.isClosed == false,
                   case .suspended(.interrupted(_)) = state,
                   let restart = request.restartNative else { return }
@@ -197,7 +208,8 @@ public final class MiniAppCaptureOwner {
             }
         case .runtimeFailed(_, let reason, let canRestart):
             state = .suspended(.failure(reason))
-            if canRestart, !explicitEnd, isVisible, let restart = request.restartNative {
+            if canRestart, !explicitEnd, isVisible(in: pending.sceneScope),
+               let restart = request.restartNative {
                 do {
                     try await restart()
                     guard self.operation === pending, !pending.closed else { return }
@@ -225,12 +237,31 @@ public final class MiniAppCaptureOwner {
 
     private var isVisible: Bool { scenes.values.contains { $0.phase == .active && $0.isSelected } }
 
+    private func isVisible(in scope: MiniAppCaptureSceneScope) -> Bool {
+        switch scope {
+        case .anyVisible: isVisible
+        case .scene(let sceneID):
+            scenes[sceneID]?.phase == .active && scenes[sceneID]?.isSelected == true
+        }
+    }
+
+    private func shouldStop(_ pending: Operation, after activity: MiniAppSceneActivity) -> Bool {
+        switch pending.sceneScope {
+        case .anyVisible:
+            return !isVisible
+        case .scene(let sceneID):
+            return activity.sceneID == sceneID && !isVisible(in: pending.sceneScope)
+        }
+    }
+
     private func check(_ pending: Operation, _ generation: UUID) throws {
         guard runtimeGeneration == generation else { throw MiniAppCaptureFailure.staleGeneration }
         guard operation === pending, !pending.closed, runtime?.isClosed == false else {
             throw MiniAppCaptureFailure.stopped
         }
-        guard isVisible else { throw MiniAppCaptureFailure.unavailable("no active selected scene") }
+        guard isVisible(in: pending.sceneScope) else {
+            throw MiniAppCaptureFailure.unavailable("capture scene is not active and selected")
+        }
         try Task.checkCancellation()
     }
 

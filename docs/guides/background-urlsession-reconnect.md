@@ -1,4 +1,16 @@
-# Background URLSession再接続
+# Background URLSession reconnection
+
+## Current integration contract
+
+Background URLSession work outlives both the visible screen and `MiniAppRuntime`. Give each feature a stable profile identifier, register its factory from `MiniAppDefinition.onHostLaunch`, and retain the process-level connection until the system finishes reconnecting events. Never register from `onAppear`.
+
+The delegate must call the supplied completion exactly once after `urlSessionDidFinishEvents`, while the coordinator owns admission, duplicate reconnect rejection, and shutdown ordering. Treat identifiers and callbacks from another owner or generation as invalid. Build and fixture evidence confirms composition; real background relaunch behavior remains a device-level verification item.
+
+Use a stable nonempty profile such as an account ID. `registerAtHostLaunch` rejects duplicate feature/profile factories instead of overwriting them. The application delegate forwards `handleEventsForBackgroundURLSession` to the registry, which builds the feature delegate without a screen and gives it a `MiniAppBackgroundURLSessionEvents` token owning the host completion.
+
+When callbacks overlap, retain every host completion and wait for the delegate's `finish()` before invoking any of them. Cancellation does not complete early; it keeps the token until the delegate finishes. Because `finish()` invokes the host synchronously and may reenter with a warm callback, first set the delegate's property to `nil`, then call `finish()` on the extracted old token. Reversing this order lets an old callback erase the newly connected token.
+
+## Japanese source notes and historical evidence
 
 background URLSessionは通常画面や`MiniAppRuntime`の寿命とは別にOSから再接続を
 要求されます。Featureは安定したprofile名を決め、host起動時にfactoryを登録して
@@ -79,3 +91,8 @@ tokenへ`finish()`を呼ぶ順序を維持してください。逆順にする�
 この基盤はOSがbackground転送を実行する時刻、強制終了後の継続、ネットワーク条件、
 再起動配送を保証しません。provider/unit試験とiOS buildはowner routingとnative API
 接続の検証であり、実際のOS転送・cold launch配送の実機証拠ではありません。
+
+2026-09-19、診断source `4a1340a` ではこれらの自動試験と別に、実機で診断終了後の別processの
+OS callback→owner再接続→同run/taskの10bytes保存→host completion返却を確認しました。
+永続証拠はrun `78450873`、task 1。起動契機は未判定で、OSによる自動起動時刻の証明ではありません。
+詳細は[実機記録](../verification/2026-09-19-background-http-device.md)。

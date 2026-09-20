@@ -176,6 +176,69 @@ final class MiniAppCaptureOwnerTests: XCTestCase {
         XCTAssertEqual(events.values, ["start-scene", "stop-scene-sceneInactive"])
     }
 
+    func testExplicitSceneScopeIgnoresOtherWindowAndStopsWhenOriginLeaves() async throws {
+        let coordinator = MiniAppCaptureCoordinator()
+        let owner = MiniAppCaptureOwner(id: MiniAppID("scene-bound"), coordinator: coordinator,
+                                        permissions: CapturePermissions(), consent: allow)
+        let runtime = MiniAppRuntime(); try owner.connect(to: runtime)
+        let origin = UUID(), other = UUID()
+        owner.receive(activity("scene-bound", origin, .active, true))
+        owner.receive(activity("scene-bound", other, .active, true))
+        let events = CaptureEvents()
+        try await owner.start(operation(events: events, label: "ar"), sceneScope: .scene(origin))
+
+        owner.receive(activity("scene-bound", other, .background, true))
+        await Task.yield()
+        XCTAssertEqual(owner.state, .running([.camera]))
+        owner.receive(activity("scene-bound", origin, .inactive, true))
+        await eventually { owner.state == .suspended(.sceneInactive) }
+        XCTAssertEqual(events.values, ["start-ar", "stop-ar-sceneInactive"])
+        XCTAssertNil(coordinator.currentCameraOwner)
+    }
+
+    func testExplicitSceneLeavingDuringPermissionRequestRejectsLateGrant() async throws {
+        let permissions = CapturePermissions(blocked: true)
+        let coordinator = MiniAppCaptureCoordinator()
+        let owner = MiniAppCaptureOwner(id: MiniAppID("scene-permission"), coordinator: coordinator,
+                                        permissions: permissions, consent: allow)
+        let runtime = MiniAppRuntime(); try owner.connect(to: runtime)
+        let origin = UUID(), other = UUID()
+        owner.receive(activity("scene-permission", origin, .active, true))
+        owner.receive(activity("scene-permission", other, .active, true))
+        let events = CaptureEvents()
+        let starting = Task { @MainActor in
+            try await owner.start(operation(events: events, label: "ar"), sceneScope: .scene(origin))
+        }
+        await permissions.waitUntilRequested()
+        owner.receive(activity("scene-permission", origin, .background, true))
+        await eventually { owner.state == .stopping(.background) || owner.state == .suspended(.background) }
+        permissions.resolve(true)
+        await XCTAssertThrowsErrorAsync(try await starting.value) { _ in }
+        await eventually { owner.state == .suspended(.background) }
+        XCTAssertTrue(events.values.isEmpty)
+        XCTAssertNil(coordinator.currentCameraOwner)
+    }
+
+    func testExplicitSceneMustBeActiveSelectedButOtherWindowMayShowSameFeature() async throws {
+        let owner = MiniAppCaptureOwner(id: MiniAppID("scene-selection"), coordinator: .init(),
+                                        permissions: CapturePermissions(), consent: allow)
+        let runtime = MiniAppRuntime(); try owner.connect(to: runtime)
+        let origin = UUID(), other = UUID()
+        owner.receive(activity("scene-selection", origin, .inactive, true))
+        owner.receive(activity("scene-selection", other, .active, true))
+        await XCTAssertThrowsErrorAsync(try await owner.start(
+            operation(events: .init(), label: "ar"), sceneScope: .scene(origin)
+        )) {
+            XCTAssertEqual(
+                $0 as? MiniAppCaptureFailure,
+                .unavailable("capture scene is not active and selected")
+            )
+        }
+        try await owner.start(operation(events: .init(), label: "ar"), sceneScope: .scene(other))
+        XCTAssertEqual(owner.state, .running([.camera]))
+        await owner.stop()
+    }
+
     func testRuntimeShutdownOnlyStopsItsOwnerAndPreservesOtherGeneration() async throws {
         let coordinator = MiniAppCaptureCoordinator()
         let permissions = CapturePermissions()
@@ -229,6 +292,40 @@ final class MiniAppCaptureOwnerTests: XCTestCase {
         await Task.yield()
         XCTAssertEqual(events.values, ["restart", "stop"])
         XCTAssertEqual(owner.state, .idle)
+    }
+
+    func testSceneBoundInterruptionRestartFailureReleasesCameraAndPreservesOtherOwner() async throws {
+        let coordinator = MiniAppCaptureCoordinator()
+        let a = MiniAppCaptureOwner(id: MiniAppID("ar-restart"), coordinator: coordinator,
+                                    permissions: CapturePermissions(), consent: allow)
+        let b = MiniAppCaptureOwner(id: MiniAppID("ar-other"), coordinator: coordinator,
+                                    permissions: CapturePermissions(), consent: allow)
+        let runtimeA = MiniAppRuntime(), runtimeB = MiniAppRuntime()
+        try a.connect(to: runtimeA); try b.connect(to: runtimeB)
+        let sceneID = UUID()
+        a.receive(activity("ar-restart", sceneID, .active, true))
+        b.receive(active("ar-other"))
+        let pair = AsyncStream<MiniAppCaptureNativeEvent>.makeStream()
+        let generation = UUID()
+        let otherState = CaptureEvents(); otherState.append("kept")
+        try await a.start(.init(
+            resources: [.camera],
+            nativeEvents: { .init(generation: generation, stream: pair.stream) },
+            restartNative: { throw MiniAppCaptureFailure.native("AR restart failed") },
+            startNative: { { _ in } }
+        ), sceneScope: .scene(sceneID))
+        pair.continuation.yield(.interrupted(generation: generation, reason: "camera"))
+        await eventually { a.state == .suspended(.interrupted("camera")) }
+        pair.continuation.yield(.interruptionEnded(generation: generation))
+        await eventually {
+            if case .failed(.runtime(let reason)) = a.state { return reason.contains("AR restart failed") }
+            return false
+        }
+        XCTAssertFalse(runtimeB.isClosed)
+        XCTAssertEqual(otherState.values, ["kept"])
+        XCTAssertNil(coordinator.currentCameraOwner)
+        try await b.start(operation(events: otherState, label: "b"))
+        XCTAssertEqual(coordinator.currentCameraOwner, b.id)
     }
 
     func testMovieStyleInterruptionStopsInsteadOfRestarting() async throws {

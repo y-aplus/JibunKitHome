@@ -1,4 +1,20 @@
-# Swift Package所有の静的Widget接続
+# Integrating static widgets owned by a Swift package
+
+## Current integration contract
+
+Define the widget, configuration, timeline provider, resources, and localization in the feature package. The host widget extension imports and composes that product; it should not duplicate feature implementation. Shared data requires an explicitly configured and signed App Group plus a small, versioned snapshot contract.
+
+Verify standalone and integrated builds, extension metadata, resource lookup, and removal of the feature contribution. Simulator or metadata success does not prove gallery discovery, timeline scheduling, App Group signing, or device rendering.
+
+Keep feature ID, widget `kind`, and storage namespace stable after release. `kind` is an extension-unique reverse-DNS string, not the feature ID. Put display name/description in package `Localizable.strings`. The feature exposes the same definition, lifetime, and removal provider used by its main UI. Prefix shared keys with `MiniAppContext.storageKey(_:)`, and configure the identical `JibunKitAppGroup` plus entitlement in app and extension.
+
+App writes go through shared store access. The widget reads `MiniAppManagement.savedStatus` from shared defaults and displays owner data only when enabled. If the App Group cannot be resolved, show unavailable instead of reading `.standard`. This status read is not a cross-process reservation, and write intents must use the normal external-access coordination. A timeline reload is only a scheduling request.
+
+The host creates management registrations from definitions and uses the same App Group for status and values. Initialize an owner value only when both its key and management history are absent and the owner is enabled. Never recreate a value during normal launch, repeated SwiftUI tasks, after removal, or while disabled. Disable retains value; removal deletes only that owner; re-enable restores admission without creating data or starting business work. One owner's rejection must not stop another's initialization.
+
+Acceptance compares independent and combined gallery metadata, timeline reads, localization, A/B isolation, management transitions, upgrade, and device gallery/rendering separately. Removing a widget type from a later binary does not guarantee an already placed widget disappears immediately; stale display is not evidence that its code or store remains active.
+
+## Japanese source notes and historical evidence
 
 このガイドは、通常の`MiniAppDefinition`と共有storeを持つFeatureが、静的Widgetを既存hostへ出荷するための0.8.0のP1接続を示す。2026-09-14時点でCI 34746211458のTimeline4件・独立/統合gallery3件と通常host管理UIが成功した（[source別の証拠](../verification/2026-09-13-p1-a.md)）。4e6a3f4（0.7.1/build9候補）の実機で追加/描画/更新、A管理/B保持、上書き/Refresh保持を確認済み（[実機記録](../verification/2026-09-14-0.8-device-check.md)）。0.8.0で正式公開した。0.7.0の実績へは追加しない。設定可能・操作可能WidgetとControlはP2であり、この手順の対象外とする。
 

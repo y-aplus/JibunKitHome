@@ -1,26 +1,23 @@
-# Security Policy
+# Security policy
 
-## 対応範囲
+## Supported scope
 
-最新の公開releaseと`main`について、可能な範囲で修正を検討します。未公開候補は該当commitを明記してください。実験的な個人プロジェクトのため、応答期限や修正版の提供期限は保証しません。
+We consider fixes for the latest published release and `main`. Identify an unpublished candidate by commit. This is an experimental personal project with no guaranteed response or fix deadline.
 
-JibunKitのsource、GitHub Actions、生成したIPA、bundle・App Group設定が原因となる問題を対象にします。iOS、Xcode、SideStoreそのものの問題は各提供元へ報告してください。ただし、JibunKit側の使い方や設定により問題が生じる場合は対象です。
+Report problems caused by JibunKit source, workflows, generated IPAs or bundle/App Group configuration. Report problems in iOS, Xcode or an installer to its provider; incorrect use or configuration by JibunKit remains in scope.
 
-## 脆弱性の報告
+## Report privately
 
-脆弱性の詳細を公開Issue、Pull request、Discussionへ投稿しないでください。
+Do not post vulnerability details in public issues, pull requests or discussions. Use [GitHub private vulnerability reporting](https://github.com/y-aplus/JibunKit/security/advisories/new). Collaborators can use a draft security advisory. If private reporting is unavailable, open an issue saying only that the private reporting channel is unavailable.
 
-- リポジトリ公開後は、GitHubの **Security → Report a vulnerability** から[非公開の脆弱性報告](https://github.com/y-aplus/JibunKit/security/advisories/new)を作成してください。
-- 非公開期間中にアクセス権を持つ共同作業者は、同じSecurity画面からdraft security advisoryを作成してください。
-- 非公開報告の入口が利用できない場合は、公開Issueへ詳細を書かず、「private reporting channelが利用できない」ことだけをIssueで知らせてください。
+Include the affected version/commit, reproduction conditions, expected and actual behavior, impact and minimal steps. Do not attach Apple account data, two-factor codes, tokens, signing keys, certificates, provisioning profiles, pairing files, Team IDs, device identifiers or real user content.
 
-報告には、影響する版またはcommit、再現条件、期待結果と実際の結果、想定する影響、最小限の再現手順を含めてください。Apple Account情報、2FA、token、署名鍵、証明書、provisioning profile、pairing file、Team ID、UDID、実際のリマインダー内容などは添付しないでください。
+## Distribution boundaries
 
-## 公開前の安全境界
+- The standard Actions build receives no Apple credentials or personal signing material. It produces an ad-hoc-signed IPA that still needs valid device provisioning and signing through the chosen installation method; SideStore is one tested example.
+- External Actions are pinned to reviewed commits.
+- Workflows inspect tracked files for credential, signing, pairing, SDK and IPA material before producing artifacts.
+- Reminder text is stored in UserDefaults and appears in local notifications. Do not use it to store secrets.
+- Feature namespaces coordinate trusted source code; they are not a security sandbox against malicious code within the same process.
 
-- GitHub ActionsへAppleの認証情報や個人の署名材料を渡しません。ActionsのIPAはad-hoc署名とし、SideStoreが端末側で最終署名します。
-- 外部GitHub Actionはreview済みの固定commitを参照します。
-- workflowは追跡済みのcredential・署名・pairing・SDK・IPA候補を検査し、見つけた場合はartifactを生成しません。
-- reminder文面はUserDefaultsへ保存され、ローカル通知へ表示されます。秘密情報の保存先としては使用しないでください。
-
-公開手順と最終確認は[docs/releasing.md](docs/releasing.md)を参照してください。
+See [release procedures](docs/releasing.md) for publication checks.

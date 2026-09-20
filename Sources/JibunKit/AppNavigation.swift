@@ -224,5 +224,6 @@ final class AppNavigation {
 @MainActor
 enum AppSceneRouting {
     static let shared = MiniAppSceneRouter()
+    static let windows = MiniAppWindowSceneRegistry()
 }
 #endif

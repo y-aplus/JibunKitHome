@@ -1,0 +1,7 @@
+"counter.title" = "Counter";
+"counter.status.removed" = "Removed";
+"counter.status.disabled" = "Disabled";
+"counter.status.stopped" = "Stopped";
+"counter.status.unavailable" = "Unavailable";
+"counter.gallery.name" = "Counter";
+"counter.gallery.description" = "Shows the value updated by the app and shortcuts.";

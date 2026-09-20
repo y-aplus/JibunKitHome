@@ -1,4 +1,18 @@
-# Core SpotlightのFeature所有権
+# Core Spotlight feature ownership
+
+## Current integration contract
+
+Namespace every searchable item with explicit feature and profile ownership, and retain stable domain/item identifiers for replacement and deletion. Indexing is feature-owned work admitted through its coordinator; the host provides composition and routes selected results back through the pure URL/route boundary.
+
+Disable, reset, and removal must delete only the owner's searchable items and report partial failure for retry. Metadata and simulator checks do not prove system indexing latency, ranking, or cold-launch routing.
+
+Use `MiniAppSpotlightNamespace` to derive owner-qualified `uniqueIdentifier` and `domainIdentifier`. Delete with `deleteSearchableItems(withDomainIdentifiers:)`; never call `deleteAllSearchableItems`. Pass native `CSSearchableItemAttributeSet`, copy it before assigning IDs/domain, and retain all native content type, title, keyword, thumbnail, URL, and ranking fields. Supply the same actual index for indexing and deletion.
+
+The host automatically removes only the owner's domain in `CSSearchableIndex.default()`. A custom index is allowed but its cleanup belongs in `MiniAppDefinition.onUnregister`. Close admission and stop lifetime writers before deletion so an old callback cannot re-index. Await the native completion: a pending callback is still deregistering, while a returned error becomes an incomplete management state that can be retried and survives process restart.
+
+For result routing, accept `CSSearchableItemActionType` activities only when their namespace and local-item format match a registered feature, then pass the local identifier to `appendDestination`. Declare the native Spotlight activity type through build requirements. Additional custom activity types need their own handler; this does not automatically implement Handoff or query continuation.
+
+## Japanese source notes and historical evidence
 
 更新日: 2026-09-15。公開版0.8.0の通常host接続と、0.7.0当時の実績を区別して記載する。
 

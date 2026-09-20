@@ -1,6 +1,6 @@
 # 大きなCI単位の準備・検証
 
-更新日: 2026-09-15。対象は[版ごとのCI境界](implementation-priorities.md)。P0/P1の5境界は完了し、承認済みP2は同じ運用で境界を先に固定する。計画の正本は[plan.json](delivery/plan.json)。
+更新日: 2026-09-19。対象は[版ごとのCI境界](implementation-priorities.md)。P0/P1/P2の採用範囲は1.0基準を満たし、1.0.0候補は最終公開承認済み・出荷照合中である。以下は今後も使うCI境界の運用と、完了したwaveの履歴例を含む。計画の正本は[plan.json](delivery/plan.json)、現在の公開状態は[status](status.md)。
 この手順は小変更ごとのCI・親子レビューを置き換える。試験を一つの巨大な直列jobへ詰め込む指示ではない。
 
 ## 境界を開始する前
@@ -88,8 +88,8 @@ python Tools/check-delivery.py --report .git/P0-A.json --stage ci
 ```
 
 途中のwaveではdevice専用条件だけを`deferred_device`で対象の完成版へ予約できる。P2の最終義務は1.0.0だが、実機を1.0直前へ一括延期せず、まとまりごとの0.8.x候補で確認する。
-P0-A/Bでは0.7.0、P1-Aでは0.8.0の候補にまとめる。CI合格でもそのP単位は実機未確認のままcompleteにしない。
-P0-C/P1-BのCI確認後、minor出荷gateを通すには全条件を閉じ、延期欄を空にする。
+完了済みの履歴では、P0-A/Bを0.7.0、P1-Aを0.8.0の候補にまとめた。一般則として、CI合格だけで実機条件が未確認のP単位をcompleteにしない。
+完了済みのP0-C/P1-Bと同様、minor出荷gateを通すには採用範囲の全条件を閉じ、延期欄を空にする。
 過去の実機証拠を再利用する場合もsource/差分レビューを必須にする。実機でしか決められない設計上の疑問が全体を止める場合は中間確認をまとめて依頼できる。
 
 ## 失敗後の再実行
@@ -154,7 +154,7 @@ python Tools/check-delivery.py --report .git/P0-C.json --stage release --release
 0.7.0の個別理由/hashを含む過去記録は変更せず保持する。当時のgate再現には当時のcommitのtoolを使い、今後の出荷で旧形式へ自動的に後退する経路は設けない。IPA等の配布物digestや証拠の`reuse_reason`はこの廃止の対象外。
 `release`にはcandidate_ipa、normal_regression、generated_host、metadata、compatibility、physical_reviewの証拠参照を入れる。
 planの対象単位をcompleteにする前に証拠をレビューし、[公開手順](releasing.md)の候補/公開後の二段階で文章を同期する。
-0.8.0ではP0も維持している証拠が必要。1.0は需要調査後のユーザー決定とgate更新まで通らない。
+0.8.0ではP0も維持している証拠を要求した。1.0の需要調査、ユーザーによる範囲決定、採用範囲のgate更新と基準充足判断は完了しているが、最終公開承認は別であり、未取得のまま公開しない。`check-delivery`が構造上通ることも、承認済みだが未観測の条件を成功証拠へ変えない。
 
 このツールはローカルの必須手順でありGitHub branch protectionや自動公開を設定するものではない。
 検査するのは計画構造・証拠の網羅/種別・source再利用理由・文書の確認漏れ/変更後失効。

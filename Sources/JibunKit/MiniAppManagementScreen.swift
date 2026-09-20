@@ -19,6 +19,11 @@ struct MiniAppManagementScreen: View {
                 }
                 ForEach(MiniAppRegistry.all) { definition in
                     Section {
+                        if let failure = MiniAppRegistry.launchState.errors[definition.id] {
+                            Text("起動時の登録に失敗しました: \(failure)").foregroundStyle(.red)
+                            Text("有効化では再登録しません。登録条件を修正した後、アプリを起動し直してください。")
+                                .font(.caption)
+                        }
                         Text(statusText(management.status(for: definition.id)))
                             .accessibilityIdentifier("management.status.\(definition.id.rawValue)")
                         if let failure = management.failures[definition.id] {
@@ -55,7 +60,13 @@ struct MiniAppManagementScreen: View {
                                 Text("拒否した場合: " + permission.deniedBehavior).font(.caption)
                                 Picker("このアプリでの利用", selection: Binding(
                                     get: { MiniAppRegistry.consents.consent(for: definition.id, permissionID: permission.id) },
-                                    set: { MiniAppRegistry.consents.setConsent($0, for: definition.id, permissionID: permission.id) }
+                                    set: { consent in
+                                        do {
+                                            try definition.setConsent(consent, permissionID: permission.id,
+                                                                      in: MiniAppRegistry.consents)
+                                            errorMessage = nil
+                                        } catch { errorMessage = String(describing: error) }
+                                    }
                                 )) {
                                     Text("未確認").tag(MiniAppConsent.notDetermined)
                                     Text("許可").tag(MiniAppConsent.allowed)

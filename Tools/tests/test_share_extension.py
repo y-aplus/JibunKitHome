@@ -28,6 +28,24 @@ class ShareExtensionMetadataTests(unittest.TestCase):
     def test_matching_embedded_product(self):
         share_extension.validate_metadata(self.host, self.share, self.entitlements)
 
+    def test_action_requires_its_own_identity_point_and_principal(self):
+        action = copy.deepcopy(self.share)
+        action["CFBundleIdentifier"] = self.host["CFBundleIdentifier"] + ".Action"
+        extension = action["NSExtension"]
+        extension["NSExtensionPointIdentifier"] = "com.apple.ui-services"
+        extension["NSExtensionPrincipalClass"] = "JibunKitAction_Extension.ActionViewController"
+        share_extension.validate_metadata(self.host, action, self.entitlements, "Action")
+        for key, wrong in [("NSExtensionPointIdentifier", "com.apple.share-services"),
+                           ("NSExtensionPrincipalClass", "Module.ShareViewController")]:
+            broken = copy.deepcopy(action)
+            broken["NSExtension"][key] = wrong
+            with self.assertRaises(AssertionError):
+                share_extension.validate_metadata(self.host, broken, self.entitlements, "Action")
+        with self.assertRaises(AssertionError):
+            share_extension.validate_metadata(self.host, self.share, self.entitlements, "Action")
+        with self.assertRaises(AssertionError):
+            share_extension.validate_metadata(self.host, action, self.entitlements)
+
     def test_wrong_product_version_identity_and_group_fail(self):
         for key in ("CFBundleIdentifier", "CFBundleShortVersionString", "CFBundleVersion", "JibunKitAppGroup"):
             with self.subTest(key=key):

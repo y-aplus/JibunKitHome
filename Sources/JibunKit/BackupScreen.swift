@@ -1,6 +1,7 @@
 #if os(iOS)
 import JibunKitCore
 import JibunKitBackup
+import OSLog
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -21,9 +22,12 @@ struct BackupScreen: View {
     @State private var status: String?
 
     private let definitions: [MiniAppDefinition]
+    private let lifecycleForDefinition: @MainActor (MiniAppDefinition) -> MiniAppRestoreLifecycle?
 
-    init(definitions: [MiniAppDefinition], importedBackup: MiniAppBackup? = nil, importedArchive: ImportedMiniAppBackup? = nil) {
+    init(definitions: [MiniAppDefinition], importedBackup: MiniAppBackup? = nil, importedArchive: ImportedMiniAppBackup? = nil,
+         lifecycleForDefinition: @escaping @MainActor (MiniAppDefinition) -> MiniAppRestoreLifecycle? = { $0.effectiveRestoreLifecycle }) {
         self.definitions = definitions
+        self.lifecycleForDefinition = lifecycleForDefinition
         _imported = State(initialValue: importedArchive ?? importedBackup.map { ImportedMiniAppBackup(legacy: $0) })
     }
     private var providers: [MiniAppBackupProvider] { definitions.compactMap(\.backup) }
@@ -47,10 +51,26 @@ struct BackupScreen: View {
             }
             .interactiveDismissDisabled(busy)
             .fileImporter(isPresented: $importing, allowedContentTypes: [.json, .zip]) { result in
+                #if DEBUG
+                Self.importLogger.info("completion entered")
+                #endif
                 switch result {
-                case .success(let url): load(url)
-                case .failure: status = "ファイルを読み込めませんでした。保存データは変更していません。"
+                case .success(let url):
+                    #if DEBUG
+                    Self.importLogger.info("completion success extension=\(url.pathExtension, privacy: .public)")
+                    #endif
+                    load(url)
+                case .failure(let error):
+                    #if DEBUG
+                    Self.importLogger.error("completion failure type=\(String(reflecting: type(of: error)), privacy: .public)")
+                    #endif
+                    status = "ファイルを読み込めませんでした。保存データは変更していません。"
                 }
+            }
+            .onChange(of: importing) { _, presented in
+                #if DEBUG
+                Self.importLogger.info("presentation changed presented=\(presented, privacy: .public)")
+                #endif
             }
             .background {
                 Color.clear.fileExporter(isPresented: $exporting, document: document, contentType: .json,
@@ -98,6 +118,9 @@ struct BackupScreen: View {
                 restoreIDs = []
                 pending = nil
                 status = nil
+                #if DEBUG
+                Self.importLogger.info("presentation requested types=json,zip")
+                #endif
                 importing = true
             }
             .accessibilityIdentifier("backup.import")
@@ -191,6 +214,9 @@ struct BackupScreen: View {
     }
 
     private func load(_ url: URL) {
+        #if DEBUG
+        Self.importLogger.info("load begin extension=\(url.pathExtension, privacy: .public)")
+        #endif
         busy = true
         Task {
             defer { busy = false }
@@ -200,10 +226,22 @@ struct BackupScreen: View {
                     defer { if access { url.stopAccessingSecurityScopedResource() } }
                     return try MiniAppBackupArchive.load(from: url)
                 }.value
+                #if DEBUG
+                Self.importLogger.info("load success entries=\(imported?.entries.count ?? 0, privacy: .public)")
+                #endif
                 status = "復元するアプリを選んでください。まだ保存データは変更していません。"
-            } catch { status = "対応するバックアップを読み込めませんでした。保存データは変更していません。" }
+            } catch {
+                #if DEBUG
+                Self.importLogger.error("load failure type=\(String(reflecting: type(of: error)), privacy: .public)")
+                #endif
+                status = "対応するバックアップを読み込めませんでした。保存データは変更していません。"
+            }
         }
     }
+
+    #if DEBUG
+    private static let importLogger = Logger(subsystem: "com.jibunkit.app", category: "BackupImport")
+    #endif
 
     private func prepareRestore(_ backup: ImportedMiniAppBackup) {
         let selected = restoreIDs
@@ -230,7 +268,7 @@ struct BackupScreen: View {
             defer { busy = false }
             do {
                 let lifecycles = Dictionary(uniqueKeysWithValues: definitions.compactMap { definition in
-                    definition.effectiveRestoreLifecycle.map { (definition.id, $0) }
+                    lifecycleForDefinition(definition).map { (definition.id, $0) }
                 })
                 try await plan.apply(lifecycles: lifecycles)
                 status = plan.ids.map(title).joined(separator: "、") + "を復元しました。"

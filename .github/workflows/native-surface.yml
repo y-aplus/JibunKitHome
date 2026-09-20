@@ -6,7 +6,7 @@ on:
       surface:
         required: true
         type: choice
-        options: [spotlight-cold-start, p1-input-repair, incoming-os, incoming-repair, interactive-widgets, continuing-surfaces, continuing-live-host, continuing-state, media]
+        options: [spotlight-cold-start, p1-input-repair, incoming-os, incoming-repair, interactive-widgets, continuing-surfaces, continuing-live-host, continuing-state, media, background-location, location-cold, identity-push, ble-scenes, ar-action, p2-combined]
       ios_major:
         description: Target OS major for native comparison; 27 uses the preview Xcode image
         type: choice
@@ -39,7 +39,7 @@ jobs:
         # One device-followup boundary; independent builds finish/report once.
         surface: ${{ fromJSON(inputs.surface == 'continuing-surfaces' && '["continuing-live","continuing-alarm","continuing-host"]' || inputs.surface == 'continuing-live-host' && '["continuing-live","continuing-host"]' || inputs.surface == 'interactive-widgets' && '["interactive-native","interactive-host"]' || inputs.surface == 'p1-input-repair' && '["incoming","intents"]' || inputs.surface == 'incoming-repair' && '["incoming","incoming-os"]' || format('["{0}"]', inputs.surface)) }}
     runs-on: ${{ inputs.ios_major == '27' && 'xcode-27' || 'macos-26' }}
-    timeout-minutes: 30
+    timeout-minutes: ${{ matrix.surface == 'location-cold' && 25 || 30 }}
     env:
       TUIST_VERSION: "4.207.0"
       TUIST_SHA256: 583fec75cc187bb84a30509ba5afe7455607547be0917fdcf5899a7ef338305e
@@ -56,7 +56,7 @@ jobs:
         shell: bash
         run: |
           case "$IOS_MAJOR" in 26|27) ;; *) echo "Unsupported iOS major" >&2; exit 2 ;; esac
-          case "$SURFACE" in media|continuing-live|continuing-alarm|continuing-host|continuing-state|interactive-native|interactive-host|intents|widgets|incoming|incoming-os|web-authentication|device-http|spotlight-cold-start) ;; *) exit 2 ;; esac
+          case "$SURFACE" in p2-combined|ar-action|ble-scenes|identity-push|background-location|location-cold|media|continuing-live|continuing-alarm|continuing-host|continuing-state|interactive-native|interactive-host|intents|widgets|incoming|incoming-os|web-authentication|device-http|spotlight-cold-start) ;; *) exit 2 ;; esac
 
       - name: Select matching Xcode
         env:
@@ -91,6 +91,7 @@ jobs:
       - name: Prepare simulator tests
         env:
           REQUESTED_RUNTIME: ${{ inputs.simulator_runtime }}
+          SURFACE: ${{ matrix.surface }}
           IOS_MAJOR: ${{ inputs.ios_major }}
         shell: bash
         run: |
@@ -108,10 +109,11 @@ jobs:
           if not runtimes:
               raise SystemExit('Requested iOS simulator runtime is not installed')
           runtime = max(runtimes, key=lambda value: tuple(map(int, value.split('iOS-')[1].split('-'))))
+          family = 'iPad' if os.environ.get('SURFACE') in {'ble-scenes', 'p2-combined', 'location-cold'} else 'iPhone'
           candidates = [d for d in devices[runtime]
-                        if d['name'].startswith('iPhone') and d['isAvailable']]
+                        if d['name'].startswith(family) and d['isAvailable']]
           if not candidates:
-              raise SystemExit('No available iPhone simulator for iOS ' + major)
+              raise SystemExit('No available ' + family + ' simulator for iOS ' + major)
           candidates.sort(key=lambda d: (d['name'] != 'iPhone 16e', d['name']))
           print(candidates[0]['udid'])
           PY
@@ -121,6 +123,29 @@ jobs:
           xcrun simctl boot "$sim_id"
           xcrun simctl bootstatus "$sim_id" -b
 
+      - name: Test BLE and scene shared logic
+        if: matrix.surface == 'ble-scenes' || matrix.surface == 'p2-combined'
+        timeout-minutes: 10
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/BluetoothScenes"
+          swift test --filter 'MiniAppBluetoothCoordinatorTests|MiniAppWindowSceneRegistryTests' 2>&1 | tee "$RUNNER_TEMP/BluetoothScenes/shared-tests.log"
+          python3 - <<'PY'
+          import os, re
+          from pathlib import Path
+          log = (Path(os.environ['RUNNER_TEMP']) / 'BluetoothScenes/shared-tests.log').read_text()
+          for folder, name in [('Bluetooth', 'MiniAppBluetoothCoordinatorTests'), ('WindowScenes', 'MiniAppWindowSceneRegistryTests')]:
+              source = Path(f'Tests/JibunKitCoreTests/{folder}/{name}.swift').read_text()
+              methods = re.findall(r'func (test\w+)\(', source)
+              if not methods:
+                  raise SystemExit(f'No expected shared tests: {name}')
+              for method in methods:
+                  pattern = rf"Test Case '-\[(?:\w+\.)?{name} {method}\]' passed"
+                  if len(re.findall(pattern, log)) != 1:
+                      raise SystemExit(f'Missing or duplicate passing test: {name}.{method}')
+          PY
+
       - name: Verify selected native surface
         env:
           SURFACE: ${{ matrix.surface }}
@@ -128,6 +153,97 @@ jobs:
         run: |
           set -euo pipefail
           case "$SURFACE" in
+            p2-combined)
+              python3 -m unittest discover -s Tools/tests -p 'test_p2_combined*.py'
+              python3 -m unittest discover -s Tools/tests -p 'test_media_verification.py'
+              python3 Tools/verify-media.py --surface p2-combined --simulator-id "$SIMULATOR_ID"
+              ;;
+            ar-action)
+              python3 -m unittest discover -s Tools/tests -p 'test_ar_action*.py'
+              python3 -m unittest discover -s Tools/tests -p 'test_share_extension.py'
+              python3 -m unittest discover -s Tools/tests -p 'test_media_verification.py'
+              python3 Tools/verify-media.py --surface ar-action --simulator-id "$SIMULATOR_ID"
+              ;;
+            ble-scenes)
+              python3 -m unittest discover -s Tools/tests -p 'test_ble_scenes*.py'
+              python3 Tools/verify-media.py --surface ble-scenes --simulator-id "$SIMULATOR_ID"
+              ;;
+            identity-push)
+              python3 -m unittest discover -s Tools/tests -p 'test_identity_push*.py'
+              python3 Tools/verify-media.py --surface identity-push --simulator-id "$SIMULATOR_ID"
+              ;;
+            background-location)
+              python3 -m unittest discover -s Tools/tests -p 'test_background_location*.py'
+              python3 -m unittest discover -s Tools/tests -p 'test_media*.py'
+              python3 Tools/verify-media.py --surface background-location --simulator-id "$SIMULATOR_ID"
+              ;;
+            location-cold)
+              mkdir -p "$RUNNER_TEMP/LocationCold"
+              python3 -m unittest Tools.tests.test_p2_combined_host
+              python3 Tools/prepare-p2-combined-host.py --host .
+              tuist generate --no-open
+              xcodebuild build-for-testing -workspace JibunKit.xcworkspace -scheme P2LocationColdOSUITests \
+                -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+                -derivedDataPath "$RUNNER_TEMP/LocationColdDerivedData" \
+                CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual \
+                2>&1 | tee "$RUNNER_TEMP/LocationCold/build.log"
+              xcrun simctl install "$SIMULATOR_ID" "$RUNNER_TEMP/LocationColdDerivedData/Build/Products/Debug-iphonesimulator/JibunKit_App.app"
+              xcrun simctl privacy "$SIMULATOR_ID" grant location-always com.jibunkit.app
+              set +e
+              xcodebuild test-without-building -workspace JibunKit.xcworkspace -scheme P2LocationColdOSUITests \
+                -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+                -derivedDataPath "$RUNNER_TEMP/LocationColdDerivedData" \
+                -resultBundlePath "$RUNNER_TEMP/LocationCold/tests.xcresult" \
+                -only-testing:P2LocationColdOSUITests/P2LocationColdOSUITests/testTerminatedGeofenceEnterAndExitPersistFromNewProcesses \
+                -parallel-testing-enabled NO -test-timeouts-enabled YES \
+                -default-test-execution-time-allowance 240 \
+                -maximum-test-execution-time-allowance 240 \
+                CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=- CODE_SIGN_STYLE=Manual \
+                2>&1 | tee "$RUNNER_TEMP/LocationCold/tests.log"
+              test_status=${PIPESTATUS[0]}
+              set -e
+              if [[ -d "$RUNNER_TEMP/LocationCold/tests.xcresult" ]]; then
+                set +e
+                xcrun xcresulttool get test-results summary \
+                  --path "$RUNNER_TEMP/LocationCold/tests.xcresult" \
+                  > "$RUNNER_TEMP/LocationCold/xcresult-summary.json"
+                summary_status=$?
+                set -e
+                if [[ "$summary_status" -ne 0 ]]; then
+                  rm -f "$RUNNER_TEMP/LocationCold/xcresult-summary.json"
+                fi
+              fi
+              TEST_STATUS="$test_status" python3 - <<'PY'
+          import json, os
+          from pathlib import Path
+          root = Path(os.environ['RUNNER_TEMP']) / 'LocationCold'
+          status = int(os.environ['TEST_STATUS'])
+          raw_path = root / 'xcresult-summary.json'
+          raw = json.loads(raw_path.read_text()) if raw_path.is_file() else {}
+          passed = raw.get('passedTests', 0)
+          skipped = raw.get('skippedTests', 0)
+          failed = raw.get('failedTests', 0)
+          total = raw.get('totalTestCount', 0)
+          if status != 0 or failed or total != 1:
+              outcome = 'failure'
+          elif passed == 1 and skipped == 0:
+              outcome = 'observed-passed'
+          elif passed == 0 and skipped == 1:
+              outcome = 'unobserved-skip'
+          else:
+              outcome = 'failure'
+          summary = {'outcome': outcome, 'xcodebuild_exit': status,
+                     'passed': passed, 'skipped': skipped, 'failed': failed, 'total': total}
+          (root / 'summary.json').write_text(json.dumps(summary, indent=2) + '\n')
+          github = Path(os.environ['GITHUB_STEP_SUMMARY'])
+          with github.open('a') as target:
+              target.write(f"## Cold geofence diagnostic\n\nOutcome: **{outcome}**\n")
+          if outcome == 'unobserved-skip':
+              print('::warning title=Cold geofence unobserved::Simulator did not expose terminated-app Region delivery; this is not a product gate pass.')
+          elif outcome == 'failure':
+              raise SystemExit('Cold geofence diagnostic failed to compile, execute, or produce one valid result')
+          PY
+              ;;
             media)
               python3 -m unittest discover -s Tools/tests -p 'test_media*.py'
               python3 Tools/verify-media.py --simulator-id "$SIMULATOR_ID"
@@ -226,6 +342,12 @@ jobs:
             ${{ runner.temp }}/Continuing-host
             ${{ runner.temp }}/Continuing-state
             ${{ runner.temp }}/Media
+            ${{ runner.temp }}/BackgroundLocation
+            ${{ runner.temp }}/LocationCold
+            ${{ runner.temp }}/P2Combined
+            ${{ runner.temp }}/ARAction
+            ${{ runner.temp }}/BluetoothScenes
+            ${{ runner.temp }}/IdentityPush
             ${{ runner.temp }}/Interactive-native
             ${{ runner.temp }}/Interactive-host
             ${{ runner.temp }}/platform.txt

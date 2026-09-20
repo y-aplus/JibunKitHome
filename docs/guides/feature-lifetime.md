@@ -1,4 +1,18 @@
-# Featureの起動・終了と復元
+# Feature startup, shutdown, and restoration
+
+## Current integration contract
+
+Treat screen visibility, runtime lifetime, and durable state as separate concerns. `start` opens admission for one runtime generation; `stop` closes admission, cancels producers, drains accepted work, persists required state, and then releases resources. Late callbacks from an older generation must not mutate the restarted feature.
+
+Restoration and migration run before normal work is admitted. Reset and removal are explicit maintenance operations, not side effects of stopping. Use the coordinated stopped-operation path for exclusive maintenance, and reopen only after it succeeds or reaches a recoverable state.
+
+Create one `MiniAppFeatureLifetime` in the feature integration and pass it to `MiniAppDefinition(lifetime:)`. The host awaits `start()` before building the root and presents startup failure with retry. Navigation and `onDisappear` do not call `stop()`. In the configure closure, register cleanup before starting dependent work, put blocking CPU/file/database work on its own executor, and register owned tasks, HTTP clients, observations, and connections with the runtime. Cancellation of a task handle is not completion: shutdown waits for actual termination and release.
+
+Concurrent starts share one configuration. Explicit stop cancels configuration and drains registered resources; configuration failure also drains them before returning. A retry gets a new runtime generation. Call `lifetime.stop`, not `runtime.shutdown`, from an outside coordinator; awaiting stop from an owned task would self-deadlock. The lifetime cannot forcibly terminate noncooperative work or a synchronous main-thread hang.
+
+The host backup screen uses `effectiveRestoreLifecycle`: an explicit adapter wins, otherwise the lifetime adapter is used. Restore resumes only a feature that was running before suspension. Starts are rejected during suspension; cancellation or apply failure does not skip recovery, and an explicit stop cancels automatic resume. Connect store access to the same owner/coordinator because lifetime cannot detect unregistered transactions. `withStoppedOperation` holds restart and management while an external operation such as logout runs; its callback must not await another start/stop on the same lifetime.
+
+## Japanese source notes and historical evidence
 
 P0-Aの通常・生成CIで非実機条件を確認済み。対象sourceと試験範囲は[P0-A検証記録](../verification/2026-09-12-p0-a.md)を参照する。0.7.0候補の実機確認も2026-09-13に完了（[結果](../verification/2026-09-13-0.7-device-check.md)）。
 

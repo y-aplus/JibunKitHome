@@ -42,6 +42,20 @@ class DeliveryTests(unittest.TestCase):
                 for i in range(result["planned_ci_runs"])]
         return result
 
+    def test_owner_accepted_observations_are_not_device_passes(self):
+        units, _ = delivery.validate_plan(self.plan)
+        for uid in ("P2-3", "P2-4", "P2-11", "P2-12"):
+            excluded = delivery.approved_unverified_criteria(units[uid])
+            self.assertEqual([c["id"] for c in excluded], [uid + ".device"])
+            active = {c["id"] for c in delivery.active_criteria(units[uid])}
+            self.assertTrue({uid + ".ownership", uid + ".integration", uid + ".docs"} <= active)
+        unit = units["P2-9"]
+        criterion = next(c for c in unit["criteria"] if c["id"] == "P2-9.device")
+        criterion["conditional_verification"] = {
+            "status": "approved-unverified", "scope": "unapproved BLE omission", "reason": "not accepted"}
+        with self.assertRaisesRegex(ValueError, "conditional verification is not permitted"):
+            delivery.validate_plan(self.plan)
+
     def test_real_plan_and_incomplete_template(self):
         delivery.validate_plan(self.plan)
         with self.assertRaisesRegex(ValueError, "contract/review"):
@@ -239,12 +253,81 @@ class DeliveryTests(unittest.TestCase):
             delivery.validate_plan(self.plan)
 
     def test_pending_conditional_scope_cannot_be_complete_or_enter_final_ci(self):
+        unit = next(u for u in self.plan["units"] if u["id"] == "P2-12")
+        # Exercise an undecided fixture even after the real plan adopts AR.
+        unit["scope_decision"] = {"status": "pending", "reason": "", "adopted_scope": ""}
+        unit["state"] = "partial"
         report = self.report("P2-F", with_device=True)
         with self.assertRaisesRegex(ValueError, "scope decision pending"):
             delivery.validate_report(self.plan, report, "ci")
-        next(u for u in self.plan["units"] if u["id"] == "P2-12")["state"] = "complete"
+        unit["state"] = "complete"
         with self.assertRaisesRegex(ValueError, "undecided scope"):
             delivery.validate_plan(self.plan)
+
+    def test_signed_service_verification_can_be_approved_unverified_without_waiving_unit(self):
+        decisions = {
+            "P2-8": ("CloudKit live communication using a paid signing and service environment",
+                     "Free-signing normal use does not provide the required CloudKit environment"),
+            "P2-10": ("APNs registration and live delivery using provider credentials",
+                      "Free-signing normal use does not provide the required APNs environment"),
+        }
+        for uid, (scope, reason) in decisions.items():
+            unit = next(u for u in self.plan["units"] if u["id"] == uid)
+            unit["criteria"] = [c for c in unit["criteria"] if c["id"] != f"{uid}.signed-service"]
+            unit["criteria"].append({
+                "id": f"{uid}.signed-service",
+                "description": scope,
+                "kinds": ["device"],
+                "conditional_verification": {
+                    "status": "approved-unverified", "scope": scope, "reason": reason,
+                },
+            })
+        delivery.validate_plan(self.plan)
+        report = self.report("P2-I", with_device=True)
+        delivery.validate_report(self.plan, report, "ci")
+        self.assertEqual({item["criterion"] for item in report["approved_unverified"]},
+                         {"P2-8.signed-service", "P2-10.signed-service"})
+        self.assertTrue(any(e["criterion"] == "P2-8.device" for e in report["evidence"]))
+        self.assertTrue(any(e["criterion"] == "P2-10.integration" for e in report["evidence"]))
+        self.assertFalse(any(e["criterion"].endswith(".signed-service") for e in report["evidence"]))
+
+        missing = copy.deepcopy(report)
+        missing["approved_unverified"].pop()
+        with self.assertRaisesRegex(ValueError, "does not match plan"):
+            delivery.validate_report(self.plan, missing, "ci")
+        disguised = copy.deepcopy(report)
+        disguised["approved_unverified"][0]["result"] = "passed"
+        with self.assertRaisesRegex(ValueError, "must remain unverified"):
+            delivery.validate_report(self.plan, disguised, "ci")
+        passed = copy.deepcopy(report)
+        passed["evidence"].append({"criterion": "P2-8.signed-service", "kind": "device",
+            "source": SHA, "result": "passed", "reference": "not actually run",
+            "observation": "not actually observed", "review": "not accepted"})
+        with self.assertRaisesRegex(ValueError, "unknown evidence criterion"):
+            delivery.validate_report(self.plan, passed, "ci")
+
+    def test_conditional_verification_cannot_waive_general_or_nonservice_criteria(self):
+        unit = next(u for u in self.plan["units"] if u["id"] == "P2-8")
+        unit["criteria"][0]["conditional_verification"] = {
+            "status": "approved-unverified", "scope": "all ownership", "reason": "too broad",
+        }
+        with self.assertRaisesRegex(ValueError, "not permitted"):
+            delivery.validate_plan(self.plan)
+
+        del unit["criteria"][0]["conditional_verification"]
+        unit["criteria"] = [c for c in unit["criteria"] if c["id"] != "P2-8.signed-service"]
+        unit["criteria"].append({"id": "P2-8.signed-service", "description": "CloudKit live service",
+            "kinds": ["device"], "conditional_verification": {
+                "status": "approved-unverified", "scope": "", "reason": "approved"}})
+        with self.assertRaisesRegex(ValueError, "scope/reason missing"):
+            delivery.validate_plan(self.plan)
+
+        unit["criteria"][-1]["conditional_verification"] = {"status": "required"}
+        delivery.validate_plan(self.plan)
+        report = self.report("P2-I", with_device=True)
+        report["evidence"] = [e for e in report["evidence"] if e["criterion"] != "P2-8.signed-service"]
+        with self.assertRaisesRegex(ValueError, "missing passed evidence: P2-8.signed-service"):
+            delivery.validate_report(self.plan, report, "ci")
 
     def test_p1_release_requires_p0_and_missing_dependency(self):
         self.plan["units"][0]["state"] = "partial"

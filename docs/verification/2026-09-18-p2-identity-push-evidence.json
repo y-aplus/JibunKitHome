@@ -1,0 +1,568 @@
+{
+  "schema": 1,
+  "wave": "P2-I",
+  "source": "c4703a1b6b2b1b9efbdc1e3755c6db47ecead0d2",
+  "contract": {
+    "baseline": "7347b483936e7f8bfe45d36984c32390cdcae2b3",
+    "interfaces": "docs/delivery/P2-identity-push-contract.md; standard Feature lifetime/runtime, management/externalAccess, host launch and notification route. Additive owner-scoped external identity and app-token/owner-server push APIs.",
+    "ownership": "Sol low identity and push project threads own separate Core, tests and guides. Parent owns actual delegate, combined host, workflows and evidence. No worker CI.",
+    "failure_cases": "Closed runtime, stop/join, old-generation result, account replacement and removal snapshot, same-token registration recovery, stale service unregister, malformed and exact numeric payload, cold owner admission, A removal with B nondefault state retained.",
+    "normal_entrypoints": "MiniAppDefinition/lifetime/management/restore, synchronous host launch and actual UIApplicationDelegate callbacks. Native CloudKit API is compiled but real signed communication is separate; injected token/payload is not APNs delivery.",
+    "invalidation": "Close owner admission before cancelling/joining operations. Generation and lease checks reject stale results/cleanup. Account match required before destructive external data access; already committed server mutations are not rollbackable.",
+    "review": "Two full submissions and first repairs reviewed jointly before CI. A second grouped follow-up covers account-switch deletion safety and large JSON integer preservation. Parent adds real delegate dormant-owner test. Local host/verifier regression 11 tests passed; Swift/Xcode unavailable on Windows. Both second follow-ups reviewed and integrated; final source to be frozen before dispatch. CI compiler evidence reduced to one unique error and one warning; both repaired in the same change. Native cancelled because it shares the known failing Core source."
+  },
+  "dependencies": {
+    "P2-B": "Inherited 7347b48; native run35243182556 at f6f6c04 and normal/shared35235454126 at82f61bb passed. Physical background URLSession callback/save/completion passed; same-process only. Continued OS start and beacon/background location remain open; not a completed P2-B or v1 acceptance."
+  },
+  "planned_ci_runs": 7,
+  "budget_exception": "Initial two-job boundary exposed one Core actor-isolation compile failure. Cancel companion native run using the same invalid source; repeat the same full normal/native pair after one grouped initialization/warning repair. Four run IDs but only two implementation validation boundaries; no additional functionality or per-test dispatch. Fifth run is native-only after diagnostic escaping-closure compiler errors. Normal/shared35249566535 uses identical production sources and remains reusable; do not rerun it for a fixture-only correction. Sixth run follows explicit three-failure diagnosis: initial Core lazy-initializer actor error, fixture capture-list errors, then test helper isolation. These are three compiler layers, not OS/runtime failures. All current native error lines deduplicated; only two helper call sites remain. Remove helper/inline assertions and review new fixtures/helpers together. Production sources unchanged since42bb373; retain ongoing normal run. Seventh run follows native execution evidence: management disable waits in existing Spotlight cleanup139s, exceeding60s test allowance. Prior P1/P2 logs also show88s/120s+ native delays. Raise only this test to240s and its surface cap; preserve all assertions and native cleanup. Normal source unchanged and prior success reused.",
+  "jobs": [
+    {
+      "id": "normal-shared",
+      "kind": "unit",
+      "command": "build-ios.yml unfiltered shared Swift tests via network_server.py; independent Modules tests",
+      "expected_minutes": 22,
+      "timeout_minutes": 45,
+      "criteria": [
+        "P0-1.lifetime",
+        "P0-3.failure",
+        "P0-5.ownership",
+        "P0-6.diagnostics",
+        "P1-3.routing",
+        "P1-4.ownership",
+        "P1-5.http",
+        "P2-8.ownership",
+        "P2-10.ownership"
+      ]
+    },
+    {
+      "id": "normal-host",
+      "kind": "simulator",
+      "command": "build-ios.yml normal IPA plus MigrationUITests/MigrationUITests/testMiniAppSearchFiltersAndOpensResults",
+      "expected_minutes": 22,
+      "timeout_minutes": 45,
+      "criteria": [
+        "P0-1.integration"
+      ]
+    },
+    {
+      "id": "combined-native",
+      "kind": "simulator",
+      "command": "native-surface.yml surface=identity-push ios_major=26; all P2IdentityNativeTests/P2PushNativeTests/P2IdentityPushHostNativeTests, then diagnostic Release IPA. Signed CloudKit source explicitly excluded. Fake callbacks prove ownership/host integration only.",
+      "expected_minutes": 20,
+      "timeout_minutes": 30,
+      "criteria": [
+        "P2-8.integration",
+        "P2-10.integration"
+      ]
+    },
+    {
+      "id": "connection-docs",
+      "kind": "inspection",
+      "command": "Review external-data-identity.md and remote-push.md against final source/native compile and distinguish actual signed OS communication from fixtures",
+      "expected_minutes": 10,
+      "timeout_minutes": 15,
+      "criteria": [
+        "P2-8.docs",
+        "P2-10.docs"
+      ]
+    }
+  ],
+  "runs": [
+    {
+      "id": "35249120439",
+      "url": "https://github.com/y-aplus/JibunKit/actions/runs/35249120439",
+      "source": "ba13b5f96312b8902e507606b0c73e28d122f2f4",
+      "conclusion": "failure: shared Core compilation stopped on lazy lifetime initialization with conflicting actor isolation at MiniAppExternalIdentityFeature.swift:9. No tests or IPA. Unique secondary diagnostic: unused MainActor.run result. Both repaired together by explicit MainActor initializer and discarded task handle."
+    },
+    {
+      "id": "35249124064",
+      "url": "https://github.com/y-aplus/JibunKit/actions/runs/35249124064",
+      "source": "ba13b5f96312b8902e507606b0c73e28d122f2f4",
+      "conclusion": "cancelled: known Core compiler failure in identical source; no success inferred."
+    },
+    {
+      "id": "35249566535",
+      "url": "https://github.com/y-aplus/JibunKit/actions/runs/35249566535",
+      "source": "42bb373f54f6f52bfefe1b12ad4809c0327ac219",
+      "conclusion": "success: shared415 tests (2 existing Keychain skips, zero failure), Records11, normal Release IPA verification/signing, standalone Counter and backup UI harness builds, Search UI45.296s. Job18m12 including preparation/upload. Native diagnostic source excluded."
+    },
+    {
+      "id": "35249569786",
+      "url": "https://github.com/y-aplus/JibunKit/actions/runs/35249569786",
+      "source": "42bb373f54f6f52bfefe1b12ad4809c0327ac219",
+      "conclusion": "failure: Core/iOS host compilation progressed past prior actor error; diagnostic P2IdentityProbe escaping save/load/accountChanged closures lack explicit self capture. 10 diagnostics share these 3 sites. No test executed. Repair only fixture capture lists; normal product source unchanged."
+    },
+    {
+      "id": "35250318217",
+      "url": "https://github.com/y-aplus/JibunKit/actions/runs/35250318217",
+      "source": "602bb2aff3d4a93c2067da0645137ac3afffba51",
+      "conclusion": "failure: test target now compiled far enough to expose 2 Swift6 isolation errors in nonisolated XCTAssertThrowsErrorAsync helper; production Core and diagnostic app passed compilation. No XCTest execution. Replace helper with inline do/catch in MainActor test methods; keep full test scope."
+    },
+    {
+      "id": "35251510227",
+      "url": "https://github.com/y-aplus/JibunKit/actions/runs/35251510227",
+      "source": "03ae2aa388578e1e71b616a103223d376a65e59b",
+      "conclusion": "failure: Core/app/test compilation passed. Native12 methods executed with passing assertions but actual-host disable exceeded60s allowance while awaiting Spotlight. Trace reached feature hook and notification completion then spotlight-begin; method returned after138.976s and XCTest reported timeout/relaunch. Not a passing run; Release IPA not produced."
+    },
+    {
+      "id": "35253192466",
+      "url": "https://github.com/y-aplus/JibunKit/actions/runs/35253192466",
+      "source": "c4703a1b6b2b1b9efbdc1e3755c6db47ecead0d2",
+      "conclusion": "success: native12/12 passed, zero skips/failures, Release diagnostic IPA and signature checks passed. Job13m27 including setup/upload. Source c4703a1. Physical APNs/CloudKit actions not exercised."
+    }
+  ],
+  "evidence": [
+    {
+      "criterion": "P0-2.presentation",
+      "kind": "simulator",
+      "source": "7906bd9b774c76cf24e19daf6fc0e4710b3b394f",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/34746211458/job/103694516186",
+      "observation": "P0BPresentationUITests both owned presentation/external route and generation replacement/B preservation passed.",
+      "review": "Two XCTest pass markers and native presentation fixture assertions reviewed. Inbox interaction was corrected and verified in later source-scoped followup; no pending inbox check remains.",
+      "reuse_reason": "Prior source evidence retained, not a rerun. Core Audio/Capture, storage/schema/Feature management/backup/widgets/intents/network unchanged from306874f. Host scene registration and scanner presentation anchor changed; fullScreen/re-presentation/scene disconnect native regressions and normal notification routing UI passed in repair run35102558612. Existing physical recording/video success is scoped to306874f. Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. P2-B delta against559e95e adds background/location Core and diagnostic fixtures plus optional consent-change hook. Existing notification/inbox/Web/widget/intent/storage/presentation/generator runtime paths and identifiers are unchanged. Shared tests rerun. Consent picker keeps the existing choice UI; saved-consent-before-hook/failure denial is newly tested by P2LocationNativeTests; prior manual management success covers existing controls only, not new location effects. Launch repair retains prior successful physical behavior only for unchanged features; new failed-owner start gate and host labels are pending full shared/native and normal Search regression. It does not claim the crashed P2 candidate works on device. P2-I adds isolated identity/push modules and delegate callbacks; existing Feature UI/storage/metadata, notification tap/presentation and web implementations are unchanged from inherited P2-B. Ordinary host navigation and full shared tests rerun; no signed APNs/CloudKit success inferred."
+    },
+    {
+      "criterion": "P0-2.uikit",
+      "kind": "simulator",
+      "source": "7906bd9b774c76cf24e19daf6fc0e4710b3b394f",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/34746211458/job/103694516186",
+      "observation": "P0BPresentationUITests owned SwiftUI/UIKit presentation paths passed.",
+      "review": "Tests exercise presentation probe native UIViewController and ownership teardown, not OS share-sheet handoff.",
+      "reuse_reason": "Prior source evidence retained, not a rerun. Core Audio/Capture, storage/schema/Feature management/backup/widgets/intents/network unchanged from306874f. Host scene registration and scanner presentation anchor changed; fullScreen/re-presentation/scene disconnect native regressions and normal notification routing UI passed in repair run35102558612. Existing physical recording/video success is scoped to306874f. Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. P2-B delta against559e95e adds background/location Core and diagnostic fixtures plus optional consent-change hook. Existing notification/inbox/Web/widget/intent/storage/presentation/generator runtime paths and identifiers are unchanged. Shared tests rerun. Consent picker keeps the existing choice UI; saved-consent-before-hook/failure denial is newly tested by P2LocationNativeTests; prior manual management success covers existing controls only, not new location effects. Launch repair retains prior successful physical behavior only for unchanged features; new failed-owner start gate and host labels are pending full shared/native and normal Search regression. It does not claim the crashed P2 candidate works on device. P2-I adds isolated identity/push modules and delegate callbacks; existing Feature UI/storage/metadata, notification tap/presentation and web implementations are unchanged from inherited P2-B. Ordinary host navigation and full shared tests rerun; no signed APNs/CloudKit success inferred."
+    },
+    {
+      "criterion": "P0-3.integration",
+      "kind": "simulator",
+      "source": "7906bd9b774c76cf24e19daf6fc0e4710b3b394f",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/34746211458/job/103694516186",
+      "observation": "P0ARecordsUITests and P0ASQLiteUITests actual host maintenance passed.",
+      "review": "Records attachment restore/B preservation and native DB close/reopen/rollback/B preservation checked via actual probe assertions.",
+      "reuse_reason": "Prior source evidence retained, not a rerun. Core Audio/Capture, storage/schema/Feature management/backup/widgets/intents/network unchanged from306874f. Host scene registration and scanner presentation anchor changed; fullScreen/re-presentation/scene disconnect native regressions and normal notification routing UI passed in repair run35102558612. Existing physical recording/video success is scoped to306874f. Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. P2-B delta against559e95e adds background/location Core and diagnostic fixtures plus optional consent-change hook. Existing notification/inbox/Web/widget/intent/storage/presentation/generator runtime paths and identifiers are unchanged. Shared tests rerun. Consent picker keeps the existing choice UI; saved-consent-before-hook/failure denial is newly tested by P2LocationNativeTests; prior manual management success covers existing controls only, not new location effects. Launch repair retains prior successful physical behavior only for unchanged features; new failed-owner start gate and host labels are pending full shared/native and normal Search regression. It does not claim the crashed P2 candidate works on device. P2-I adds isolated identity/push modules and delegate callbacks; existing Feature UI/storage/metadata, notification tap/presentation and web implementations are unchanged from inherited P2-B. Ordinary host navigation and full shared tests rerun; no signed APNs/CloudKit success inferred."
+    },
+    {
+      "criterion": "P0-3.device",
+      "kind": "device",
+      "source": "baa041f2115d84ddb94ae4d8e6882c7eea29e9b7",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-13-0.7-device-check.md",
+      "observation": "User confirmed selected Counter restore, JSON/attachment and SQLite diagnostic expected strings, B preservation; normal IPA update retains changed Counter/Reminder.",
+      "review": "User reports on2026-09-13 refer to both verified baa041f IPAs. No Widget latency measured; Records/SQLite checks are expected-string observation, not independent internal analysis. Parent reconciled fixture assertions and CI evidence.",
+      "reuse_reason": "Prior source evidence retained, not a rerun. Core Audio/Capture, storage/schema/Feature management/backup/widgets/intents/network unchanged from306874f. Host scene registration and scanner presentation anchor changed; fullScreen/re-presentation/scene disconnect native regressions and normal notification routing UI passed in repair run35102558612. Existing physical recording/video success is scoped to306874f. Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. P2-B delta against559e95e adds background/location Core and diagnostic fixtures plus optional consent-change hook. Existing notification/inbox/Web/widget/intent/storage/presentation/generator runtime paths and identifiers are unchanged. Shared tests rerun. Consent picker keeps the existing choice UI; saved-consent-before-hook/failure denial is newly tested by P2LocationNativeTests; prior manual management success covers existing controls only, not new location effects. Launch repair retains prior successful physical behavior only for unchanged features; new failed-owner start gate and host labels are pending full shared/native and normal Search regression. It does not claim the crashed P2 candidate works on device. P2-I adds isolated identity/push modules and delegate callbacks; existing Feature UI/storage/metadata, notification tap/presentation and web implementations are unchanged from inherited P2-B. Ordinary host navigation and full shared tests rerun; no signed APNs/CloudKit success inferred."
+    },
+    {
+      "criterion": "P0-4.diagnostics",
+      "kind": "inspection",
+      "source": "baa041f2115d84ddb94ae4d8e6882c7eea29e9b7",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/34705653297",
+      "observation": "Six actual Swift/Tuist declaration cases pass; build requirement/privacy conflicts reject; Registry omission/recovery verified in generated UI.",
+      "review": "Parent reviewed actual full log, source invariants, downloaded native results and iOS v1/v2 A/B JSON bytes. docs/verification/2026-09-12-p0-c.md.",
+      "reuse_reason": "Prior source evidence retained, not a rerun. Core Audio/Capture, storage/schema/Feature management/backup/widgets/intents/network unchanged from306874f. Host scene registration and scanner presentation anchor changed; fullScreen/re-presentation/scene disconnect native regressions and normal notification routing UI passed in repair run35102558612. Existing physical recording/video success is scoped to306874f. Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. P2-B delta against559e95e adds background/location Core and diagnostic fixtures plus optional consent-change hook. Existing notification/inbox/Web/widget/intent/storage/presentation/generator runtime paths and identifiers are unchanged. Shared tests rerun. Consent picker keeps the existing choice UI; saved-consent-before-hook/failure denial is newly tested by P2LocationNativeTests; prior manual management success covers existing controls only, not new location effects. Launch repair retains prior successful physical behavior only for unchanged features; new failed-owner start gate and host labels are pending full shared/native and normal Search regression. It does not claim the crashed P2 candidate works on device. P2-I adds isolated identity/push modules and delegate callbacks; existing Feature UI/storage/metadata, notification tap/presentation and web implementations are unchanged from inherited P2-B. Ordinary host navigation and full shared tests rerun; no signed APNs/CloudKit success inferred."
+    },
+    {
+      "criterion": "P0-4.onboarding",
+      "kind": "simulator",
+      "source": "baa041f2115d84ddb94ae4d8e6882c7eea29e9b7",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/34705653297",
+      "observation": "Notes standalone and host build/launch; v1 actual A/B files, A-source-only v2 update in same installed container, old defaults/write/relaunch/corrupt rejection/preservation/repair and unchanged B/resources pass.",
+      "review": "Parent reviewed actual full log, source invariants, downloaded native results and iOS v1/v2 A/B JSON bytes. docs/verification/2026-09-12-p0-c.md.",
+      "reuse_reason": "Prior source evidence retained, not a rerun. Core Audio/Capture, storage/schema/Feature management/backup/widgets/intents/network unchanged from306874f. Host scene registration and scanner presentation anchor changed; fullScreen/re-presentation/scene disconnect native regressions and normal notification routing UI passed in repair run35102558612. Existing physical recording/video success is scoped to306874f. Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. P2-B delta against559e95e adds background/location Core and diagnostic fixtures plus optional consent-change hook. Existing notification/inbox/Web/widget/intent/storage/presentation/generator runtime paths and identifiers are unchanged. Shared tests rerun. Consent picker keeps the existing choice UI; saved-consent-before-hook/failure denial is newly tested by P2LocationNativeTests; prior manual management success covers existing controls only, not new location effects. Launch repair retains prior successful physical behavior only for unchanged features; new failed-owner start gate and host labels are pending full shared/native and normal Search regression. It does not claim the crashed P2 candidate works on device. P2-I adds isolated identity/push modules and delegate callbacks; existing Feature UI/storage/metadata, notification tap/presentation and web implementations are unchanged from inherited P2-B. Ordinary host navigation and full shared tests rerun; no signed APNs/CloudKit success inferred."
+    },
+    {
+      "criterion": "P0-4.docs",
+      "kind": "inspection",
+      "source": "31478f2da9f4262e36e84b6ec4e4c9c1b1685c78",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-16-0.8.2-release.md",
+      "observation": "README links to mini-app integration/build/update/restore/compatibility remain valid; added Live/Alarm guides and versioned scope. Changed relative links inspected.",
+      "review": "Affected-path patch review at31478f2 with release followup. Not a full minor audit. Reviewed changed docs, all touched relative links and verified runtime/source scope.",
+      "reuse_reason": "Prior source evidence retained, not a rerun. Core Audio/Capture, storage/schema/Feature management/backup/widgets/intents/network unchanged from306874f. Host scene registration and scanner presentation anchor changed; fullScreen/re-presentation/scene disconnect native regressions and normal notification routing UI passed in repair run35102558612. Existing physical recording/video success is scoped to306874f. Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. P2-B delta against559e95e adds background/location Core and diagnostic fixtures plus optional consent-change hook. Existing notification/inbox/Web/widget/intent/storage/presentation/generator runtime paths and identifiers are unchanged. Shared tests rerun. Consent picker keeps the existing choice UI; saved-consent-before-hook/failure denial is newly tested by P2LocationNativeTests; prior manual management success covers existing controls only, not new location effects. Launch repair retains prior successful physical behavior only for unchanged features; new failed-owner start gate and host labels are pending full shared/native and normal Search regression. It does not claim the crashed P2 candidate works on device. P2-I adds isolated identity/push modules and delegate callbacks; existing Feature UI/storage/metadata, notification tap/presentation and web implementations are unchanged from inherited P2-B. Ordinary host navigation and full shared tests rerun; no signed APNs/CloudKit success inferred."
+    },
+    {
+      "criterion": "P0-5.ui",
+      "kind": "simulator",
+      "source": "4eb784d3f8f313eef9c6566f5729006e655af164",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/34979381516; docs/verification/2026-09-15-p2-widget-control.md",
+      "observation": "Normal combined passed: full shared290 with2 skipped/0failures, including all8 new management/shared-state tests; Records11, separate-process300 updates/interrupted writer, normal UI13 and separate Files selected-Counter JSON roundtrip1. Normal IPA/native metadata/signatures passed.",
+      "review": "Inspected complete log and individual8 management pass markers, suite summaries13+1, process result and successful normal job steps. Interactive compilation failures are separate and not reported as integration success.",
+      "reuse_reason": "Prior source evidence retained, not a rerun. Core Audio/Capture, storage/schema/Feature management/backup/widgets/intents/network unchanged from306874f. Host scene registration and scanner presentation anchor changed; fullScreen/re-presentation/scene disconnect native regressions and normal notification routing UI passed in repair run35102558612. Existing physical recording/video success is scoped to306874f. Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. P2-B delta against559e95e adds background/location Core and diagnostic fixtures plus optional consent-change hook. Existing notification/inbox/Web/widget/intent/storage/presentation/generator runtime paths and identifiers are unchanged. Shared tests rerun. Consent picker keeps the existing choice UI; saved-consent-before-hook/failure denial is newly tested by P2LocationNativeTests; prior manual management success covers existing controls only, not new location effects. Launch repair retains prior successful physical behavior only for unchanged features; new failed-owner start gate and host labels are pending full shared/native and normal Search regression. It does not claim the crashed P2 candidate works on device. P2-I adds isolated identity/push modules and delegate callbacks; existing Feature UI/storage/metadata, notification tap/presentation and web implementations are unchanged from inherited P2-B. Ordinary host navigation and full shared tests rerun; no signed APNs/CloudKit success inferred."
+    },
+    {
+      "criterion": "P0-5.device",
+      "kind": "device",
+      "source": "baa041f2115d84ddb94ae4d8e6882c7eea29e9b7",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-13-0.7-device-check.md",
+      "observation": "User confirmed consent rejection, disable/enable with Widget/Shortcut status, cancel/delete/failure/retry/reregister and other Feature preservation; presentation external URL and lifetime failure/restart also confirmed.",
+      "review": "User reports on2026-09-13 refer to both verified baa041f IPAs. No Widget latency measured; Records/SQLite checks are expected-string observation, not independent internal analysis. Parent reconciled fixture assertions and CI evidence.",
+      "reuse_reason": "Prior source evidence retained, not a rerun. Core Audio/Capture, storage/schema/Feature management/backup/widgets/intents/network unchanged from306874f. Host scene registration and scanner presentation anchor changed; fullScreen/re-presentation/scene disconnect native regressions and normal notification routing UI passed in repair run35102558612. Existing physical recording/video success is scoped to306874f. Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. P2-B delta against559e95e adds background/location Core and diagnostic fixtures plus optional consent-change hook. Existing notification/inbox/Web/widget/intent/storage/presentation/generator runtime paths and identifiers are unchanged. Shared tests rerun. Consent picker keeps the existing choice UI; saved-consent-before-hook/failure denial is newly tested by P2LocationNativeTests; prior manual management success covers existing controls only, not new location effects. Launch repair retains prior successful physical behavior only for unchanged features; new failed-owner start gate and host labels are pending full shared/native and normal Search regression. It does not claim the crashed P2 candidate works on device. P2-I adds isolated identity/push modules and delegate callbacks; existing Feature UI/storage/metadata, notification tap/presentation and web implementations are unchanged from inherited P2-B. Ordinary host navigation and full shared tests rerun; no signed APNs/CloudKit success inferred."
+    },
+    {
+      "criterion": "P0-6.local",
+      "kind": "inspection",
+      "source": "cd45ea814e7160bfe0e6843d955bee2299806832",
+      "result": "passed",
+      "reference": "docs/guides/runtime-shutdown-progress.md; docs/guides/feature-lifetime.md",
+      "observation": "Bounded in-memory validation/formatting/value transforms own no persistent/global/native resource. Unbounded CPU/I/O/callback lifetime is separated and requires owned asynchronous handling. No wrapper added for pure transforms.",
+      "review": "Parent source/doc review at cd45ea8; not runtime or device evidence.",
+      "reuse_reason": "Prior source evidence retained, not a rerun. Core Audio/Capture, storage/schema/Feature management/backup/widgets/intents/network unchanged from306874f. Host scene registration and scanner presentation anchor changed; fullScreen/re-presentation/scene disconnect native regressions and normal notification routing UI passed in repair run35102558612. Existing physical recording/video success is scoped to306874f. Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. P2-B delta against559e95e adds background/location Core and diagnostic fixtures plus optional consent-change hook. Existing notification/inbox/Web/widget/intent/storage/presentation/generator runtime paths and identifiers are unchanged. Shared tests rerun. Consent picker keeps the existing choice UI; saved-consent-before-hook/failure denial is newly tested by P2LocationNativeTests; prior manual management success covers existing controls only, not new location effects. Launch repair retains prior successful physical behavior only for unchanged features; new failed-owner start gate and host labels are pending full shared/native and normal Search regression. It does not claim the crashed P2 candidate works on device. P2-I adds isolated identity/push modules and delegate callbacks; existing Feature UI/storage/metadata, notification tap/presentation and web implementations are unchanged from inherited P2-B. Ordinary host navigation and full shared tests rerun; no signed APNs/CloudKit success inferred."
+    },
+    {
+      "criterion": "P1-1.os",
+      "kind": "device",
+      "source": "4e6a3f4b1358ea4859aa70cc119fc9d58f2d6dac",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-14-0.8-device-check.md",
+      "observation": "Earlier6beb877 OS discovery/positive-negative add/owner entity candidates/saved workflow/relaunch/management were successful.4e6a3f4 adds real20sec-delay cancellation old A/B retention, injected save error old values and next identical run A-only Amount increment.",
+      "review": "User reports received stepwise; unreported intermediate states/absolute values are not invented. Canonical record separates old candidate and4e6a3f4 results.",
+      "reuse_reason": "Prior source evidence retained, not a rerun. Core Audio/Capture, storage/schema/Feature management/backup/widgets/intents/network unchanged from306874f. Host scene registration and scanner presentation anchor changed; fullScreen/re-presentation/scene disconnect native regressions and normal notification routing UI passed in repair run35102558612. Existing physical recording/video success is scoped to306874f. Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. P2-B delta against559e95e adds background/location Core and diagnostic fixtures plus optional consent-change hook. Existing notification/inbox/Web/widget/intent/storage/presentation/generator runtime paths and identifiers are unchanged. Shared tests rerun. Consent picker keeps the existing choice UI; saved-consent-before-hook/failure denial is newly tested by P2LocationNativeTests; prior manual management success covers existing controls only, not new location effects. Launch repair retains prior successful physical behavior only for unchanged features; new failed-owner start gate and host labels are pending full shared/native and normal Search regression. It does not claim the crashed P2 candidate works on device. P2-I adds isolated identity/push modules and delegate callbacks; existing Feature UI/storage/metadata, notification tap/presentation and web implementations are unchanged from inherited P2-B. Ordinary host navigation and full shared tests rerun; no signed APNs/CloudKit success inferred."
+    },
+    {
+      "criterion": "P1-1.metadata",
+      "kind": "unit",
+      "source": "6dd95ccc1861d4609747d1f3f7227885e5d55109",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/34881183837; docs/verification/2026-09-15-p1-input-native-evidence.json",
+      "observation": "8 native execution tests including reconstructed diagnostic controls and1 managed UI pass. IndependentA/B metadata matches combined actions and both App Shortcuts.",
+      "review": "Dedicated source/run evidence records8+1 zero failures and native identities. git diff6dd95cc..71ef1ff shows no PackageAppIntents/CounterIntent source changes. Device OS results separate.",
+      "reuse_reason": "Prior source evidence retained, not a rerun. Core Audio/Capture, storage/schema/Feature management/backup/widgets/intents/network unchanged from306874f. Host scene registration and scanner presentation anchor changed; fullScreen/re-presentation/scene disconnect native regressions and normal notification routing UI passed in repair run35102558612. Existing physical recording/video success is scoped to306874f. Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. P2-B delta against559e95e adds background/location Core and diagnostic fixtures plus optional consent-change hook. Existing notification/inbox/Web/widget/intent/storage/presentation/generator runtime paths and identifiers are unchanged. Shared tests rerun. Consent picker keeps the existing choice UI; saved-consent-before-hook/failure denial is newly tested by P2LocationNativeTests; prior manual management success covers existing controls only, not new location effects. Launch repair retains prior successful physical behavior only for unchanged features; new failed-owner start gate and host labels are pending full shared/native and normal Search regression. It does not claim the crashed P2 candidate works on device. P2-I adds isolated identity/push modules and delegate callbacks; existing Feature UI/storage/metadata, notification tap/presentation and web implementations are unchanged from inherited P2-B. Ordinary host navigation and full shared tests rerun; no signed APNs/CloudKit success inferred."
+    },
+    {
+      "criterion": "P1-2.widget",
+      "kind": "device",
+      "source": "4e6a3f4b1358ea4859aa70cc119fc9d58f2d6dac",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-14-0.8-device-check.md",
+      "observation": "Both Widget kinds added and match app values, A/B changes render; A disable hides/re-enable retains, removal/reregister empty with B retained. No precise latency measurement. App update/Refresh reopens preserve A-empty/B values.",
+      "review": "User reports received stepwise; unreported intermediate states/absolute values are not invented. Canonical record separates old candidate and4e6a3f4 results.",
+      "reuse_reason": "Prior source evidence retained, not a rerun. Core Audio/Capture, storage/schema/Feature management/backup/widgets/intents/network unchanged from306874f. Host scene registration and scanner presentation anchor changed; fullScreen/re-presentation/scene disconnect native regressions and normal notification routing UI passed in repair run35102558612. Existing physical recording/video success is scoped to306874f. Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. P2-B delta against559e95e adds background/location Core and diagnostic fixtures plus optional consent-change hook. Existing notification/inbox/Web/widget/intent/storage/presentation/generator runtime paths and identifiers are unchanged. Shared tests rerun. Consent picker keeps the existing choice UI; saved-consent-before-hook/failure denial is newly tested by P2LocationNativeTests; prior manual management success covers existing controls only, not new location effects. Launch repair retains prior successful physical behavior only for unchanged features; new failed-owner start gate and host labels are pending full shared/native and normal Search regression. It does not claim the crashed P2 candidate works on device. P2-I adds isolated identity/push modules and delegate callbacks; existing Feature UI/storage/metadata, notification tap/presentation and web implementations are unchanged from inherited P2-B. Ordinary host navigation and full shared tests rerun; no signed APNs/CloudKit success inferred."
+    },
+    {
+      "criterion": "P1-2.device",
+      "kind": "device",
+      "source": "4e6a3f4b1358ea4859aa70cc119fc9d58f2d6dac",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-14-0.8-device-check.md",
+      "observation": "Same diagnosticIPA overwrite and Refresh retain Widget A-empty/B; return to normal retains CounterWidget matching/tap and CounterShortcut. Diagnostic home widgets retain old display and tap top; binary normal has no diagnostic kind/resource, cache cause unproven.",
+      "review": "User reports received stepwise; unreported intermediate states/absolute values are not invented. Canonical record separates old candidate and4e6a3f4 results.",
+      "reuse_reason": "Prior source evidence retained, not a rerun. Core Audio/Capture, storage/schema/Feature management/backup/widgets/intents/network unchanged from306874f. Host scene registration and scanner presentation anchor changed; fullScreen/re-presentation/scene disconnect native regressions and normal notification routing UI passed in repair run35102558612. Existing physical recording/video success is scoped to306874f. Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. P2-B delta against559e95e adds background/location Core and diagnostic fixtures plus optional consent-change hook. Existing notification/inbox/Web/widget/intent/storage/presentation/generator runtime paths and identifiers are unchanged. Shared tests rerun. Consent picker keeps the existing choice UI; saved-consent-before-hook/failure denial is newly tested by P2LocationNativeTests; prior manual management success covers existing controls only, not new location effects. Launch repair retains prior successful physical behavior only for unchanged features; new failed-owner start gate and host labels are pending full shared/native and normal Search regression. It does not claim the crashed P2 candidate works on device. P2-I adds isolated identity/push modules and delegate callbacks; existing Feature UI/storage/metadata, notification tap/presentation and web implementations are unchanged from inherited P2-B. Ordinary host navigation and full shared tests rerun; no signed APNs/CloudKit success inferred."
+    },
+    {
+      "criterion": "P1-3.os",
+      "kind": "device",
+      "source": "4e6a3f4b1358ea4859aa70cc119fc9d58f2d6dac",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-14-0.8-device-check.md",
+      "observation": "Text/URL/file share saved then imported A1->3, B imported; destination-before-selection cancel no extra pending; after injected post-save failure/retry A4/B unchanged and no pending; force relaunch and overwrite/Refresh retained. Files direct-open cancel no extra, direct import A5/B unchanged. Intermediate failed pending row not explicitly observed separately; full-host CI34958712557 covers failure/retry assertions.",
+      "review": "User reports received stepwise; unreported intermediate states/absolute values are not invented. Canonical record separates old candidate and4e6a3f4 results.",
+      "reuse_reason": "Prior source evidence retained, not a rerun. Core Audio/Capture, storage/schema/Feature management/backup/widgets/intents/network unchanged from306874f. Host scene registration and scanner presentation anchor changed; fullScreen/re-presentation/scene disconnect native regressions and normal notification routing UI passed in repair run35102558612. Existing physical recording/video success is scoped to306874f. Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. P2-B delta against559e95e adds background/location Core and diagnostic fixtures plus optional consent-change hook. Existing notification/inbox/Web/widget/intent/storage/presentation/generator runtime paths and identifiers are unchanged. Shared tests rerun. Consent picker keeps the existing choice UI; saved-consent-before-hook/failure denial is newly tested by P2LocationNativeTests; prior manual management success covers existing controls only, not new location effects. Launch repair retains prior successful physical behavior only for unchanged features; new failed-owner start gate and host labels are pending full shared/native and normal Search regression. It does not claim the crashed P2 candidate works on device. P2-I adds isolated identity/push modules and delegate callbacks; existing Feature UI/storage/metadata, notification tap/presentation and web implementations are unchanged from inherited P2-B. Ordinary host navigation and full shared tests rerun; no signed APNs/CloudKit success inferred."
+    },
+    {
+      "criterion": "P1-4.os",
+      "kind": "device",
+      "source": "6beb87760ffbd0dedd7aab9f98dee3dcde6b8604",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-14-0.8-device-check.md",
+      "observation": "At6beb877: delivered attachment, mark/reply, A unregister/removal preserves B delivered notification card, A/B foreground silent/banner policies. Focus-mode delivery was unconfirmed and excluded.",
+      "review": "User reports received stepwise; unreported intermediate states/absolute values are not invented. Canonical record separates old candidate and4e6a3f4 results.",
+      "reuse_reason": "Prior source evidence retained, not a rerun. Core Audio/Capture, storage/schema/Feature management/backup/widgets/intents/network unchanged from306874f. Host scene registration and scanner presentation anchor changed; fullScreen/re-presentation/scene disconnect native regressions and normal notification routing UI passed in repair run35102558612. Existing physical recording/video success is scoped to306874f. Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. P2-B delta against559e95e adds background/location Core and diagnostic fixtures plus optional consent-change hook. Existing notification/inbox/Web/widget/intent/storage/presentation/generator runtime paths and identifiers are unchanged. Shared tests rerun. Consent picker keeps the existing choice UI; saved-consent-before-hook/failure denial is newly tested by P2LocationNativeTests; prior manual management success covers existing controls only, not new location effects. Launch repair retains prior successful physical behavior only for unchanged features; new failed-owner start gate and host labels are pending full shared/native and normal Search regression. It does not claim the crashed P2 candidate works on device. P2-I adds isolated identity/push modules and delegate callbacks; existing Feature UI/storage/metadata, notification tap/presentation and web implementations are unchanged from inherited P2-B. Ordinary host navigation and full shared tests rerun; no signed APNs/CloudKit success inferred."
+    },
+    {
+      "criterion": "P1-5.device",
+      "kind": "device",
+      "source": "6beb87760ffbd0dedd7aab9f98dee3dcde6b8604",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-14-0.8-device-check.md",
+      "observation": "At6beb877: local HTTP login/cache, relaunch Cookie/password retention, cancellation/logout/B preservation, same diagnosticIPA overwrite and Refresh credentials retention. Precommit fault injection is CI evidence; no independent device failure-injection claim. URLCache durability across relaunch is not required.",
+      "review": "User reports received stepwise; unreported intermediate states/absolute values are not invented. Canonical record separates old candidate and4e6a3f4 results.",
+      "reuse_reason": "Prior source evidence retained, not a rerun. Core Audio/Capture, storage/schema/Feature management/backup/widgets/intents/network unchanged from306874f. Host scene registration and scanner presentation anchor changed; fullScreen/re-presentation/scene disconnect native regressions and normal notification routing UI passed in repair run35102558612. Existing physical recording/video success is scoped to306874f. Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. P2-B delta against559e95e adds background/location Core and diagnostic fixtures plus optional consent-change hook. Existing notification/inbox/Web/widget/intent/storage/presentation/generator runtime paths and identifiers are unchanged. Shared tests rerun. Consent picker keeps the existing choice UI; saved-consent-before-hook/failure denial is newly tested by P2LocationNativeTests; prior manual management success covers existing controls only, not new location effects. Launch repair retains prior successful physical behavior only for unchanged features; new failed-owner start gate and host labels are pending full shared/native and normal Search regression. It does not claim the crashed P2 candidate works on device. P2-I adds isolated identity/push modules and delegate callbacks; existing Feature UI/storage/metadata, notification tap/presentation and web implementations are unchanged from inherited P2-B. Ordinary host navigation and full shared tests rerun; no signed APNs/CloudKit success inferred."
+    },
+    {
+      "criterion": "P1-6.storage",
+      "kind": "simulator",
+      "source": "b62a2e635993900b47cf3738570b3f1d2825893b",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/34819734774/job/103898309278; docs/verification/2026-09-14-p1-b.md",
+      "observation": "Actual embedded-loopback WKWebView storage/restart/removal219.107s, held-writer cancellation136.873s and management drain/removal152.546s passed. Separate disable205.202s passed on0a3fb21/run34823801940. Other owner preserved.",
+      "review": "Individual pass lines and assertions checked. The failed run9 disable is retained; run11 first disable passed without prewarming and auth succeeded. Native cleanup delay remains unexplained, physical result at6beb877 recorded separately.",
+      "reuse_reason": "Prior source evidence retained, not a rerun. Core Audio/Capture, storage/schema/Feature management/backup/widgets/intents/network unchanged from306874f. Host scene registration and scanner presentation anchor changed; fullScreen/re-presentation/scene disconnect native regressions and normal notification routing UI passed in repair run35102558612. Existing physical recording/video success is scoped to306874f. Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. P2-B delta against559e95e adds background/location Core and diagnostic fixtures plus optional consent-change hook. Existing notification/inbox/Web/widget/intent/storage/presentation/generator runtime paths and identifiers are unchanged. Shared tests rerun. Consent picker keeps the existing choice UI; saved-consent-before-hook/failure denial is newly tested by P2LocationNativeTests; prior manual management success covers existing controls only, not new location effects. Launch repair retains prior successful physical behavior only for unchanged features; new failed-owner start gate and host labels are pending full shared/native and normal Search regression. It does not claim the crashed P2 candidate works on device. P2-I adds isolated identity/push modules and delegate callbacks; existing Feature UI/storage/metadata, notification tap/presentation and web implementations are unchanged from inherited P2-B. Ordinary host navigation and full shared tests rerun; no signed APNs/CloudKit success inferred."
+    },
+    {
+      "criterion": "P1-6.auth",
+      "kind": "simulator",
+      "source": "0a3fb2148986070b4f7311ae9351e655564891d4",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/34823801940/job/103911167894; docs/verification/2026-09-14-p1-b.md",
+      "observation": "Normal host A/B real ASWebAuthenticationSession callback, OS B cancellation and retained A completed result passed128.630s. Prior independent native5 proof retained separately.",
+      "review": "Selected normal-host method passed; callbacks require Return to App link and proper owner; B uses OS close control. Authentication preparation did not fail this run.",
+      "reuse_reason": "Prior source evidence retained, not a rerun. Core Audio/Capture, storage/schema/Feature management/backup/widgets/intents/network unchanged from306874f. Host scene registration and scanner presentation anchor changed; fullScreen/re-presentation/scene disconnect native regressions and normal notification routing UI passed in repair run35102558612. Existing physical recording/video success is scoped to306874f. Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. P2-B delta against559e95e adds background/location Core and diagnostic fixtures plus optional consent-change hook. Existing notification/inbox/Web/widget/intent/storage/presentation/generator runtime paths and identifiers are unchanged. Shared tests rerun. Consent picker keeps the existing choice UI; saved-consent-before-hook/failure denial is newly tested by P2LocationNativeTests; prior manual management success covers existing controls only, not new location effects. Launch repair retains prior successful physical behavior only for unchanged features; new failed-owner start gate and host labels are pending full shared/native and normal Search regression. It does not claim the crashed P2 candidate works on device. P2-I adds isolated identity/push modules and delegate callbacks; existing Feature UI/storage/metadata, notification tap/presentation and web implementations are unchanged from inherited P2-B. Ordinary host navigation and full shared tests rerun; no signed APNs/CloudKit success inferred."
+    },
+    {
+      "criterion": "P0-1.lifetime",
+      "kind": "unit",
+      "source": "42bb373f54f6f52bfefe1b12ad4809c0327ac219",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35249566535",
+      "observation": "Unfiltered shared415 tests, 2 existing Keychain skips and zero failures. New identity9 and Push9 owner/lifetime/account/payload tests passed. Records11 passed independently.",
+      "review": "Full successful job log inspected, not workflow status alone. This is unit evidence; no real APNs/CloudKit communication inferred.",
+      "reuse_reason": "After42bb373 only diagnostic fixture capture/assertion code and evidence docs changed. Sources/, Package.swift and normal build configuration are identical."
+    },
+    {
+      "criterion": "P0-3.failure",
+      "kind": "unit",
+      "source": "42bb373f54f6f52bfefe1b12ad4809c0327ac219",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35249566535",
+      "observation": "Unfiltered shared415 tests, 2 existing Keychain skips and zero failures. New identity9 and Push9 owner/lifetime/account/payload tests passed. Records11 passed independently.",
+      "review": "Full successful job log inspected, not workflow status alone. This is unit evidence; no real APNs/CloudKit communication inferred.",
+      "reuse_reason": "After42bb373 only diagnostic fixture capture/assertion code and evidence docs changed. Sources/, Package.swift and normal build configuration are identical."
+    },
+    {
+      "criterion": "P0-5.ownership",
+      "kind": "unit",
+      "source": "42bb373f54f6f52bfefe1b12ad4809c0327ac219",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35249566535",
+      "observation": "Unfiltered shared415 tests, 2 existing Keychain skips and zero failures. New identity9 and Push9 owner/lifetime/account/payload tests passed. Records11 passed independently.",
+      "review": "Full successful job log inspected, not workflow status alone. This is unit evidence; no real APNs/CloudKit communication inferred.",
+      "reuse_reason": "After42bb373 only diagnostic fixture capture/assertion code and evidence docs changed. Sources/, Package.swift and normal build configuration are identical."
+    },
+    {
+      "criterion": "P0-6.diagnostics",
+      "kind": "unit",
+      "source": "42bb373f54f6f52bfefe1b12ad4809c0327ac219",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35249566535",
+      "observation": "Unfiltered shared415 tests, 2 existing Keychain skips and zero failures. New identity9 and Push9 owner/lifetime/account/payload tests passed. Records11 passed independently.",
+      "review": "Full successful job log inspected, not workflow status alone. This is unit evidence; no real APNs/CloudKit communication inferred.",
+      "reuse_reason": "After42bb373 only diagnostic fixture capture/assertion code and evidence docs changed. Sources/, Package.swift and normal build configuration are identical."
+    },
+    {
+      "criterion": "P1-3.routing",
+      "kind": "unit",
+      "source": "42bb373f54f6f52bfefe1b12ad4809c0327ac219",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35249566535",
+      "observation": "Unfiltered shared415 tests, 2 existing Keychain skips and zero failures. New identity9 and Push9 owner/lifetime/account/payload tests passed. Records11 passed independently.",
+      "review": "Full successful job log inspected, not workflow status alone. This is unit evidence; no real APNs/CloudKit communication inferred.",
+      "reuse_reason": "After42bb373 only diagnostic fixture capture/assertion code and evidence docs changed. Sources/, Package.swift and normal build configuration are identical."
+    },
+    {
+      "criterion": "P1-4.ownership",
+      "kind": "unit",
+      "source": "42bb373f54f6f52bfefe1b12ad4809c0327ac219",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35249566535",
+      "observation": "Unfiltered shared415 tests, 2 existing Keychain skips and zero failures. New identity9 and Push9 owner/lifetime/account/payload tests passed. Records11 passed independently.",
+      "review": "Full successful job log inspected, not workflow status alone. This is unit evidence; no real APNs/CloudKit communication inferred.",
+      "reuse_reason": "After42bb373 only diagnostic fixture capture/assertion code and evidence docs changed. Sources/, Package.swift and normal build configuration are identical."
+    },
+    {
+      "criterion": "P1-5.http",
+      "kind": "unit",
+      "source": "42bb373f54f6f52bfefe1b12ad4809c0327ac219",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35249566535",
+      "observation": "Unfiltered shared415 tests, 2 existing Keychain skips and zero failures. New identity9 and Push9 owner/lifetime/account/payload tests passed. Records11 passed independently.",
+      "review": "Full successful job log inspected, not workflow status alone. This is unit evidence; no real APNs/CloudKit communication inferred.",
+      "reuse_reason": "After42bb373 only diagnostic fixture capture/assertion code and evidence docs changed. Sources/, Package.swift and normal build configuration are identical."
+    },
+    {
+      "criterion": "P2-8.ownership",
+      "kind": "unit",
+      "source": "42bb373f54f6f52bfefe1b12ad4809c0327ac219",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35249566535",
+      "observation": "Unfiltered shared415 tests, 2 existing Keychain skips and zero failures. New identity9 and Push9 owner/lifetime/account/payload tests passed. Records11 passed independently.",
+      "review": "Full successful job log inspected, not workflow status alone. This is unit evidence; no real APNs/CloudKit communication inferred.",
+      "reuse_reason": "After42bb373 only diagnostic fixture capture/assertion code and evidence docs changed. Sources/, Package.swift and normal build configuration are identical."
+    },
+    {
+      "criterion": "P2-10.ownership",
+      "kind": "unit",
+      "source": "42bb373f54f6f52bfefe1b12ad4809c0327ac219",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35249566535",
+      "observation": "Unfiltered shared415 tests, 2 existing Keychain skips and zero failures. New identity9 and Push9 owner/lifetime/account/payload tests passed. Records11 passed independently.",
+      "review": "Full successful job log inspected, not workflow status alone. This is unit evidence; no real APNs/CloudKit communication inferred.",
+      "reuse_reason": "After42bb373 only diagnostic fixture capture/assertion code and evidence docs changed. Sources/, Package.swift and normal build configuration are identical."
+    },
+    {
+      "criterion": "P2-8.docs",
+      "kind": "inspection",
+      "source": "c4703a1b6b2b1b9efbdc1e3755c6db47ecead0d2",
+      "result": "passed",
+      "reference": "docs/guides/external-data-identity.md; docs/guides/remote-push.md; docs/delivery/P2-identity-push-contract.md",
+      "observation": "Connection, owner lifecycle, signing/container/provider requirements, cooperative cancellation limits and fake-versus-real communication explicitly documented.",
+      "review": "Parent reviewed final API and actual delegate opt-in against source, normal compile and native12 results. No current release or complete OS acceptance claimed."
+    },
+    {
+      "criterion": "P2-10.docs",
+      "kind": "inspection",
+      "source": "c4703a1b6b2b1b9efbdc1e3755c6db47ecead0d2",
+      "result": "passed",
+      "reference": "docs/guides/external-data-identity.md; docs/guides/remote-push.md; docs/delivery/P2-identity-push-contract.md",
+      "observation": "Connection, owner lifecycle, signing/container/provider requirements, cooperative cancellation limits and fake-versus-real communication explicitly documented.",
+      "review": "Parent reviewed final API and actual delegate opt-in against source, normal compile and native12 results. No current release or complete OS acceptance claimed."
+    }
+  ],
+  "deferred_device": {
+    "P2-8.device": "1.0.0",
+    "P2-10.device": "1.0.0"
+  },
+  "documents": [],
+  "document_review": {
+    "source": "",
+    "summary": "",
+    "unresolved": []
+  },
+  "release": {},
+  "metrics": {
+    "review_rounds": 4,
+    "parent_messages": 6,
+    "ci_job_minutes": 0
+  },
+  "acceptance": {
+    "P0-1.lifetime": "開始・非選択・取消・終了・再開、購読/HTTP/採用DB解放とB継続",
+    "P0-1.integration": "通常Feature経路でA終了/失敗/再開、Bの処理と保存を保持",
+    "P0-2.presentation": "画面切替・戻る・提示中外部遷移・取消で所有先と保持状態が一貫",
+    "P0-2.uikit": "UIKit提示/終了を同じ所有契約へ接続、A終了時のB保持",
+    "P0-3.failure": "破損・取消・stop/apply/resume失敗、移行/リセット、通常アクセス競合とB保持",
+    "P0-3.integration": "JSON/添付とSQLiteの実接続で保存・復元・移行・リセットを通す",
+    "P0-3.device": "候補IPAで選択復元/リセットの通常操作と他Feature保持をまとめて確認",
+    "P0-4.diagnostics": "欠けた依存/登録・異値設定の拒否と解消手順、互換更新",
+    "P0-4.onboarding": "手順だけで独立Featureを追加・単独/host build・更新。二Packageの資源保持",
+    "P0-4.docs": "READMEから追加・更新・復旧・衝突解消まで辿れる",
+    "P0-5.ownership": "所有登録/処理/データの後始末、失敗/再試行、他owner保持",
+    "P0-5.ui": "アプリ内の同意説明、無効化/再有効化/削除確認・取消・失敗を通常経路で操作",
+    "P0-5.device": "候補IPAで同意拒否・無効化・削除・他Feature保持を一括確認",
+    "P0-6.diagnostics": "終了待ちが続く所有処理を識別、虚偽の完了や他owner取消なし",
+    "P0-6.local": "global/登録/外部資源のない具体的な局所処理を比較し補完不要の根拠を残す",
+    "P1-1.os": "OS Shortcutsの発見/候補/引数/実行/戻り値と他owner保持。直接performのみ不可",
+    "P1-1.metadata": "独立A/Bと統合の識別子・参照・削除後保持",
+    "P1-2.widget": "二静的Widgetの追加・描画・A更新/削除後B保持、出荷構成の接続",
+    "P1-2.device": "候補IPAでWidgetの通常追加/更新/他方保持",
+    "P1-3.routing": "所有先・曖昧/未知/取消・権限解放・一時ファイル寿命とB保持",
+    "P1-3.os": "OS外部ファイル/共有シートから受信先選択・成功/取消/失敗と再起動保持",
+    "P1-4.ownership": "foreground方針/添付削除寿命/予約と取消の交差でB保持",
+    "P1-4.os": "通知action/文字入力/foreground表示/添付・他方通知と画面の保持",
+    "P1-5.http": "実HTTPの認証/Cookie/cache、終了後logout、取消/失敗とB保持",
+    "P1-5.device": "候補IPAの再起動・上書き更新/署名更新で資格情報/状態保持とlogout",
+    "P1-6.storage": "通常Webデータの再起動保持と片側削除、書込中・取消・失敗時B保持",
+    "P1-6.auth": "OS Web認証の開始/取消/返却先と他ownerの要求・状態保持",
+    "P2-8.ownership": "利用可能な署名構成でcontainer/account/data所有、同期中の削除/復帰・B保持。条件の根拠を明示。独立時との差分と通常同時要求・片側失敗/取消・終了の所有を検証",
+    "P2-8.integration": "通常Featureと実OS入口で利用可能な署名構成でcontainer/account/data所有、同期中の削除/復帰・B保持。条件の根拠を明示",
+    "P2-8.device": "宣言した署名/OS/機器構成で通常入口・必要な背景/中断/復帰・上書き/Refresh・片側管理とB保持をまとめて実機確認",
+    "P2-8.docs": "独立/統合の接続手順、対象source別証拠、未対応と署名/OS制約、互換性と回復手順を同期",
+    "P2-10.ownership": "app tokenとFeature/server identity、正しい配送・必要extension、失敗/取消/再登録のB維持、署名/server条件説明。独立時との差分と通常同時要求・片側失敗/取消・終了の所有を検証",
+    "P2-10.integration": "通常Featureと実OS入口でapp tokenとFeature/server identity、正しい配送・必要extension、失敗/取消/再登録のB維持、署名/server条件説明",
+    "P2-10.device": "宣言した署名/OS/機器構成で通常入口・必要な背景/中断/復帰・上書き/Refresh・片側管理とB保持をまとめて実機確認",
+    "P2-10.docs": "独立/統合の接続手順、対象source別証拠、未対応と署名/OS制約、互換性と回復手順を同期"
+  },
+  "ci_execution": [
+    {
+      "id": "normal-shared",
+      "inputs_and_filters": "build-ios.yml simulator_tests=true ui_test_filter=MigrationUITests/MigrationUITests/testMiniAppSearchFiltersAndOpensResults; other defaults, no Feature/native optional jobs. Same source as combined-native.",
+      "expected_elapsed_minutes": 24,
+      "estimate_basis": "Prior normal/shared35235454126 18m06 including preparation/upload; 6min reserve for new tests and CloudKit compilation."
+    },
+    {
+      "id": "combined-native",
+      "inputs_and_filters": "native-surface.yml surface=identity-push ios_major=26; no test-method filter, unsigned combined diagnostic. Parallel with normal-shared.",
+      "expected_elapsed_minutes": 22,
+      "estimate_basis": "Previous similarly sized background-location native35243182556 12m48 including setup/test/Release/upload; 9min reserve for new host compilation/tests."
+    },
+    {
+      "id": "normal-shared-retry1",
+      "inputs_and_filters": "build-ios.yml simulator_tests=true ui_test_filter=MigrationUITests/MigrationUITests/testMiniAppSearchFiltersAndOpensResults; other defaults, no Feature/native optional jobs. Same source as combined-native. Retry same scope after actor-isolation repair.",
+      "expected_elapsed_minutes": 24,
+      "estimate_basis": "Prior normal/shared35235454126 18m06 including preparation/upload; 6min reserve for new tests and CloudKit compilation."
+    },
+    {
+      "id": "combined-native-retry1",
+      "inputs_and_filters": "native-surface.yml surface=identity-push ios_major=26; no test-method filter, unsigned combined diagnostic. Parallel with normal-shared. Retry same scope after actor-isolation repair.",
+      "expected_elapsed_minutes": 22,
+      "estimate_basis": "Previous similarly sized background-location native35243182556 12m48 including setup/test/Release/upload; 9min reserve for new host compilation/tests."
+    },
+    {
+      "id": "combined-native-retry2",
+      "inputs_and_filters": "native-surface.yml surface=identity-push ios_major=26; no test-method filter, unsigned combined diagnostic. Parallel with normal-shared. Diagnostic-only retry after 3 explicit capture lists; normal35249566535 continues on identical product source.",
+      "expected_elapsed_minutes": 22,
+      "estimate_basis": "Previous similarly sized background-location native35243182556 12m48 including setup/test/Release/upload; 9min reserve for new host compilation/tests."
+    },
+    {
+      "id": "combined-native-retry3",
+      "inputs_and_filters": "native-surface.yml surface=identity-push ios_major=26; no test-method filter, unsigned combined diagnostic. Parallel with normal-shared. Native-only retry after removing nonisolated async assertion helper. Full12 native methods unchanged; no test skip/filter weakening.",
+      "expected_elapsed_minutes": 22,
+      "estimate_basis": "Previous similarly sized background-location native35243182556 12m48 including setup/test/Release/upload; 9min reserve for new host compilation/tests."
+    },
+    {
+      "id": "combined-native-retry4",
+      "inputs_and_filters": "native-surface.yml surface=identity-push ios_major=26; no test-method filter, unsigned combined diagnostic. Parallel with normal-shared. Same12 methods; only actual management-disable test gets240s allowance (native Spotlight139s observed). Default60s remains; runner cap240 only for identity-push.",
+      "expected_elapsed_minutes": 24,
+      "estimate_basis": "Previous similarly sized background-location native35243182556 12m48 including setup/test/Release/upload; 9min reserve for new host compilation/tests. Allow up to2min extra for observed first-request Spotlight delay; no prewarm or skip."
+    }
+  ],
+  "pending": [
+    "Actual signed CloudKit/APNs communication and associated physical observations remain open. Do not claim P2-8/P2-10 complete from injected fixtures.",
+    "P2-B remaining beacon/background/cold observations remain open. No user request while asleep.",
+    "Implementation, shared regression and native host fixtures verified; continue independent P2-S preparation without main merge or release."
+  ],
+  "failure_triage": {
+    "after_failure_count": 3,
+    "layers": [
+      "Core lazy initializer actor isolation (repaired42bb373)",
+      "Diagnostic UI escaping captures (repaired602bb2a)",
+      "Native test nonisolated async assertion helper (current repair)"
+    ],
+    "evidence": "Private full failed logs35249120439/35249569786/35250318217; last native build compiled Core and diagnostic host, failed test module only. No runtime failure inferred.",
+    "scope": "Review all new native fixtures/host tests and async helpers. Keep all12 methods and normal/shared run. No Xcode on Windows; local generation tests do not validate Swift isolation.",
+    "runtime_followup": "35251510227: native spotlight cleanup delay, distinct from earlier compiler failures; isolated per-test time allowance, no production workaround or claim OS delay fixed."
+  },
+  "normal_regression": {
+    "source": "42bb373f54f6f52bfefe1b12ad4809c0327ac219",
+    "run": "35249566535",
+    "elapsed_seconds": 1092,
+    "search_seconds": 45.296,
+    "shared_tests": 415,
+    "shared_skips": 2,
+    "records_tests": 11
+  },
+  "native_verification": {
+    "source": "c4703a1b6b2b1b9efbdc1e3755c6db47ecead0d2",
+    "run": "35253192466",
+    "methods": 12,
+    "skips": 0,
+    "elapsed_seconds": 807,
+    "ipa_sha256": "7815bcfa5473a43a5bd33e029c6cfdb96dc51ea1edd6d7c78a2611e5ab127e79",
+    "ipa_bytes": 4211909,
+    "bundles": [
+      "com.jibunkit.app",
+      "com.jibunkit.app.Widget",
+      "com.jibunkit.app.Share"
+    ],
+    "version": "0.8.3",
+    "build": "13",
+    "review": "Downloaded artifact; independently matched all12 method names/results to source, CRC and3 plist IDs/version. CI signature steps passed. Product sources identical to42bb373 normal/shared success. Real APNs/CloudKit communication remains unverified."
+  },
+  "planned_device_checks": [
+    {
+      "criterion": "P2-8.integration",
+      "source": "c4703a1b6b2b1b9efbdc1e3755c6db47ecead0d2",
+      "checkpoint": "1.0.0",
+      "procedure": "Use entitled signed configuration for actual CloudKit account/record update and removal or APNs registration/provider delivery. Preserve other owner through interruption/resume. Fake native fixture success covers lifecycle/host wiring only."
+    },
+    {
+      "criterion": "P2-10.integration",
+      "source": "c4703a1b6b2b1b9efbdc1e3755c6db47ecead0d2",
+      "checkpoint": "1.0.0",
+      "procedure": "Use entitled signed configuration for actual CloudKit account/record update and removal or APNs registration/provider delivery. Preserve other owner through interruption/resume. Fake native fixture success covers lifecycle/host wiring only."
+    }
+  ]
+}

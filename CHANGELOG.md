@@ -2,7 +2,31 @@
 
 このプロジェクトの利用者に影響する変更を記録します。
 
-## [Unreleased]
+## [1.0.0] — 2026-09-19
+
+- The owner accepted the v1 coexistence criteria and publication on 2026-09-19 after the final document and artifact audit.
+- Consolidates the verified P0/P1/P2 ownership and lifecycle APIs delivered in 0.x. Normal product code is unchanged from 0.8.5 apart from version/build metadata.
+- Adds evidence for cross-process background HTTP restoration on device and terminated-process Region entry/exit on Simulator.
+- Explicitly retains unobserved OS/device conditions and optional, unverified signed CloudKit/APNs integrations. See [release notes](docs/releases/release-notes-1.0.0.md).
+- Reorganizes developer-facing documentation and release history for the public repository.
+
+## [0.8.5] - 2026-09-19
+
+- windowごとに最後に選んだFeatureを保存し、OS sessionの再接続時に復元する。無効・未登録の保存先は消去し、再導入時の意図しない再表示を防ぐ。任意の画面階層全体を自動保存する機構ではない。
+- BLEの新process復元と同一世代Notifyを実機で確認し、診断に過去processの完全な復元証拠を別表示する。OS自動起動の契機や配送時刻は未判定・非保証。
+- iPad Simulatorで二windowの別owner/値の終了後復元、片側破棄後の他方保持、無効保存先の消去を自動検証。実背景位置callbackと英語Widget/代表camera許可文言も確認。物理iPadの検証へ読み替えない。
+- 0.8.5/build15はCI35357260854の通常版build・限定回帰が成功。通常IPA上書き後のCounter/Reminder保持と前景復帰後の表示・操作を実機確認し、同一IPAを正式公開。
+
+## [0.8.4] - 2026-09-18
+
+0.8.4/build14を公開。出荷CI35333186866、対象別実機と公開IPA再取得を確認。1.0は未完。
+
+- 背景処理・位置・BLE・外部データidentity/APNs・複数windowのFeature所有/寿命とhost接続を追加。署名条件付き通信やOSのcold復元等は未確認として明示する。
+- 前景ARSessionの所有・scene離脱停止、任意採用の保存専用Action extension、Feature外観/idleの接続例、通常Widgetのen/ja文言を追加。
+- BLE診断ボタンの同時操作を避ける配置に修正。nativeのscan時delegate再設定と接続object置換を除去し、復元されたGATT objectの世代索引・Feature起動前の通知保留を補う。保留超過は明示失敗とする。
+- 再署名後の背景登録ID整合とFeature別起動エラー処理を追加し、起動クラッシュ後に実機起動成功を確認。背景HTTPは同一processでOS callbackから保存/completionまで実測。継続処理code1の根本原因とcold配送は未確認。
+- AR・Action・idle、BLE通常通信/両Feature受信/片側停止後維持/再接続を診断IPAで実機確認。iPad実機は今回見送り、実二windowはSimulatorの証拠のみ。
+- 通常候補IPAで既存Counter/Reminder保持とJSON書き出し・読込を実機確認。Files自動UIの失敗は未解決として保持し、出荷CIは成功。診断Featureを通常IPAへ含めず、既存Counter/Reminderの保存IDを維持する。
 
 ## [0.8.3] - 2026-09-17
 

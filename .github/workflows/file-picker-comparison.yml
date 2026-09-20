@@ -1,0 +1,75 @@
+name: File picker independent comparison
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  comparison:
+    runs-on: macos-26
+    timeout-minutes: 25
+    env:
+      TUIST_VERSION: "4.207.0"
+      TUIST_SHA256: 583fec75cc187bb84a30509ba5afe7455607547be0917fdcf5899a7ef338305e
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+        with:
+          persist-credentials: false
+      - name: Set up Xcode and Tuist
+        run: |
+          set -euo pipefail
+          sudo xcode-select --switch /Applications/Xcode_26.6.app/Contents/Developer
+          xcodebuild -version
+          curl --fail --location --retry 3 --output "$RUNNER_TEMP/tuist.zip" "https://github.com/tuist/tuist/releases/download/$TUIST_VERSION/tuist.zip"
+          echo "$TUIST_SHA256  $RUNNER_TEMP/tuist.zip" | shasum --algorithm 256 --check
+          mkdir -p "$RUNNER_TEMP/tuist"
+          ditto -x -k "$RUNNER_TEMP/tuist.zip" "$RUNNER_TEMP/tuist"
+          echo "$RUNNER_TEMP/tuist" >> "$GITHUB_PATH"
+      - name: Create comparison device
+        run: |
+          set -euo pipefail
+          xcrun simctl list devices available --json > "$RUNNER_TEMP/devices.json"
+          read -r device_type runtime < <(python3 - "$RUNNER_TEMP/devices.json" <<'PY'
+          import json, sys
+          devices = json.load(open(sys.argv[1]))['devices']
+          runtimes = [r for r in devices if 'iOS-26-' in r]
+          runtime = max(runtimes, key=lambda r: tuple(map(int, r.split('iOS-')[1].split('-'))))
+          phones = [d for d in devices[runtime] if d['isAvailable'] and d['name'].startswith('iPhone')]
+          phone = sorted(phones, key=lambda d: d['name'])[0]
+          print(phone['deviceTypeIdentifier'], runtime)
+          PY
+          )
+          sim_id="$(xcrun simctl create "FilePicker-${GITHUB_RUN_ID}" "$device_type" "$runtime")"
+          echo "SIMULATOR_ID=$sim_id" >> "$GITHUB_ENV"
+          xcrun simctl boot "$sim_id"
+          xcrun simctl bootstatus "$sim_id" -b
+      - name: Run independent picker comparison
+        run: |
+          set -euo pipefail
+          tuist generate --no-open
+          xcodebuild test -workspace JibunKit.xcworkspace -scheme FilePickerComparisonUITests \
+            -configuration Debug -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
+            -derivedDataPath "$RUNNER_TEMP/PickerDerivedData" \
+            -resultBundlePath "$RUNNER_TEMP/Picker.xcresult" \
+            -parallel-testing-enabled NO CODE_SIGNING_ALLOWED=NO 2>&1 | tee "$RUNNER_TEMP/picker-tests.log"
+      - name: Collect comparison evidence
+        if: always()
+        run: |
+          if [[ -n "${SIMULATOR_ID:-}" ]]; then
+            xcrun simctl spawn "$SIMULATOR_ID" log show --last 25m --style compact --info --debug \
+              --predicate 'process == "FilePickerComparison" OR process CONTAINS[c] "DocumentManager" OR subsystem CONTAINS[c] "FileProvider" OR process == "fileproviderd"' \
+              > "$RUNNER_TEMP/picker-os.log" || true
+          fi
+          if [[ -d "$RUNNER_TEMP/Picker.xcresult" ]]; then
+            xcrun xcresulttool get test-results summary --path "$RUNNER_TEMP/Picker.xcresult" > "$RUNNER_TEMP/picker-summary.json" || true
+          fi
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        if: always()
+        with:
+          name: FilePicker-comparison-evidence
+          path: |
+            ${{ runner.temp }}/Picker.xcresult
+            ${{ runner.temp }}/picker-tests.log
+            ${{ runner.temp }}/picker-os.log
+            ${{ runner.temp }}/picker-summary.json
+            ${{ runner.temp }}/devices.json
+          retention-days: 7

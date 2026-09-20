@@ -1,51 +1,41 @@
-# Sceneとナビゲーションの所有権
+# Scene and navigation ownership
 
-## 現在の契約
+## Current contract
 
-`JibunKitApp`のWindowGroup内にある`MiniAppSceneRoot`が、自分の`AppNavigation`を`@State`で保持する。App単位のsingleton NavigationPathを廃止した。各rootの検索・backup sheetも既存のview状態としてそのsceneに属する。sceneに届いた`onOpenURL`は、そのsceneのnavigationへ直接渡す。
+Each `MiniAppSceneRoot` inside `JibunKitApp`'s `WindowGroup` owns its own `AppNavigation` in `@State`; there is no process-global `NavigationPath`. Search and backup sheets are likewise scene-local view state. A URL received by a scene is routed directly into that scene's navigation.
 
-process単位の通知には対象sceneが直接渡されないため、`AppSceneRouting.shared`が`MiniAppSceneRouter`で配送先を選ぶ。これは経路そのものを共有するオブジェクトではない。各rootはwindowへの接続時に登録し、sceneのactive変化を更新する。全画面提示で背後のrootが非表示になっても登録を維持する。登録解除は実際のUIScene切断またはrootの破棄で行い、同じsceneの再接続では再登録する（開発branchの修正。下記実機不具合の再検証待ち）。handlerはnavigationを弱参照し、登録が画面の寿命を延ばさない。
+Process-level notifications do not identify a target scene, so `AppSceneRouting.shared` selects a destination through `MiniAppSceneRouter`; it does not share navigation state. A root registers when attached to its window and updates its active phase. It remains registered while a feature-owned full-screen presentation hides the root. Unregister only on actual `UIScene` disconnection or root destruction, and register again on a later connection. Handlers weakly reference navigation.
 
-配送規則は次のとおり。
+The router applies these rules:
 
-- 登録中でactiveなsceneを優先し、複数あるときは直近にactiveへ移ったsceneを選ぶ。同じactive値の再通知では順序を変えない。
-- activeがなければ、最後に登録またはactive化された残存sceneへ渡す。これはwindowをOS上で前面にする操作ではない。
-- sceneがまだない場合、最後に要求された行先を保留し、最初の登録時に渡す。nilは「一覧へ」の明示要求として保持する。
-- 一件の要求を複数sceneへ同報しない。handler中の追加要求は現在の配送後に再選択する。解除された登録は次の選択に使わない。
-- 通知のcustom action/dismissは既存のFeature所有者配送を保ち、画面選択処理へ渡さない。
+- Prefer active registered scenes; among several, choose the most recently transitioned to active. Duplicate active notifications do not reorder them.
+- If none is active, use the most recently registered or activated remaining scene. This does not bring the OS window to the foreground.
+- If no scene exists, retain the last request and deliver it to the first registration. A `nil` destination is a real request for the feature list.
+- Deliver once, never broadcast. A reentrant request is queued and selects again after the current delivery. A removed registration cannot win later selection.
+- Notification custom actions and dismissals remain routed to their feature owner and do not enter screen selection.
 
-## 同じscene内のFeature切替
+## Navigation inside one scene
 
-選択中FeatureのViewがNavigationStackのrootとなり、Feature固有の`navigationDestination`はそのstack内へ登録する。pathには詳細値だけを保持し、空はFeature rootを意味する。`MiniAppDefinition.navigationPath(for:)`/`appendDestination`へ渡すpathも空から開始する。Feature作者がhostのMiniAppIDをpathへ追加する必要はない。rootの「ミニアプリ」buttonで一覧へ戻り、詳細画面からrootへの戻りは通常のnative navigationで行う。
+The selected feature view is the `NavigationStack` root and registers its destinations inside that stack. The path contains detail values only; an empty path means the feature root. `MiniAppDefinition.navigationPath(for:)` and `appendDestination` receive an initially empty path, so features do not append their `MiniAppID`.
 
-`AppNavigation`はMiniAppID別の`NavigationPath`をscene内で所有する。画面下部の「ミニアプリを切り替え」から他Featureを選ぶと、対象の最後の値ベースの経路へ戻る。「ミニアプリ一覧」も経路を保持し、一覧から再度選択すると復帰する。通常の戻る操作は経路を一段ずつ戻す操作であり、戻した詳細を自動的に復活させない。「このアプリの最初の画面へ」は選択中のFeatureだけをrootへ戻す。
+`AppNavigation` stores a separate value path for every feature in the scene. Switching from the bottom menu returns to the target feature's last value-based path; returning through the feature list also preserves it. Native Back pops normally and does not resurrect popped details. “This app's first screen” clears only the selected feature path.
 
-行先なしのURL/通知は従来どおり対象Featureのrootを明示的に開く（切替メニューによる経路再開とは区別する）。具体的なdestinationを持つURL/通知は、Integrationによる検証に成功した場合だけ、そのFeatureの経路を指定先へ置換する。不正/非対応のdestinationは表示中・保存中の経路を変更しない。他Featureの経路は維持する。
+A destination-free URL/notification explicitly opens the target root rather than resuming its switcher path. A destination-bearing event replaces that feature's path only after integration validation succeeds. Invalid or unsupported destinations preserve the current and stored paths, and never alter another feature. Keep the switcher outside the `NavigationStack` in a reserved safe-area region so it does not depend on feature toolbars or cover content.
 
-切替メニューはNavigationStack外のsafe areaに置き、Featureの詳細画面やtoolbar構成に依存せず表示する。Featureの内容へ重ねず、その表示領域を確保する。
+Update the stack identity and binding generation when switching. This prevents two features using the same Swift navigation-value type from reusing destination registrations, and prevents a departed stack's late binding write from mutating the new path after returning.
 
-Stackの識別子とbindingの世代を切替時に更新する。同じSwift型のnavigation valueを異なるFeatureが使っても、前のstackのdestination登録を再利用しない。離脱したstackのbinding更新は、同じFeatureへ戻った後も新しい経路へ適用しない。
+This is in-memory value navigation for `NavigationLink(value:)` and `navigationDestination(for:)`. It does not preserve destination-view links, view-local input, sheets, arbitrary UIKit stacks, or paths across application termination; feature values need only be `Hashable`, not `Codable`.
 
-これはメモリ上の値ベースの経路保持であり、`NavigationLink(value:)`と`navigationDestination(for:)`を対象とする。Viewを直接指定するNavigationLink、View内の入力状態やsheet、任意のUIKit stack、アプリ終了後の経路復元は今回の補完範囲ではない。`Hashable`値に`Codable`を要求せず、Featureの画面型をhostで列挙しない。34484074366で専用UI（79.425秒）と通常通知・Records回帰が成功。統合sourceの検証状況は[Feature経路保持](verification/2026-09-10-feature-navigation.md)に記録する。
+## Scene lifetime and full-screen presentation
 
-## 根拠と検証
+A feature-owned full-screen UI can temporarily remove the presenting view from the hierarchy without disconnecting its `UIScene`. Do not disconnect on `onDisappear` or temporary `view.window == nil`. `MiniAppSceneConnection` closes when its `UIWindowScene` disconnects or the root is destroyed. Background/inactive and actual feature-selection events still flow normally, and camera stop rules are unchanged. This boundary was added after document scanning exposed `unavailable("no active selected scene")`/`stopped` on source 306874f.
 
-[Apple WindowGroup](https://developer.apple.com/documentation/swiftui/windowgroup)はwindowのview階層内に置いたStateへwindow別のstorageを割り当てる。[ScenePhase](https://developer.apple.com/documentation/swiftui/scenephase)はView内で読むと当該scene、App内では全sceneの集約になる。Featureへの既存host phase配送はApp内の集約を維持する。root view内のphaseは通知先選択と[Feature別のscene活動通知](guides/scene-feature-activity.md)へ用いる。
+SwiftUI [`WindowGroup`](https://developer.apple.com/documentation/swiftui/windowgroup) provides per-window state for state stored in the window hierarchy. [`ScenePhase`](https://developer.apple.com/documentation/swiftui/scenephase) is scene-specific when read in a view, while the app-level value remains aggregated. Root phase drives routing selection and [feature scene activity](guides/scene-feature-activity.md).
 
-[MiniAppSceneRouterTests](../Tests/JibunKitCoreTests/MiniAppSceneRouterTests.swift)は選択・非同報・phase変化・登録解除・起動前の保留・再入時の順序を検証する。CI専用iOS画面は実際のAppNavigationを二つ作り、片方の詳細pathや通知先の変更が他方のpathを消さないことを確認する。通常hostでは実通知からの遷移を回帰検証する。[34440565104](https://github.com/y-aplus/JibunKit/actions/runs/34440565104)でunit、iOSの二navigation実体の非干渉（52.260秒）、通常hostの通知遷移（68.971秒）、IPA/Feature/Records検証が成功。
+## Evidence and remaining limits
 
-## 残る差分
+[`MiniAppSceneRouterTests`](../Tests/JibunKitCoreTests/MiniAppSceneRouterTests.swift) cover selection, single delivery, phase changes, removal, prelaunch pending state, and reentrancy. CI 34440565104 verified two independent navigation objects and normal notification routing. CI 35102558612 verified UIKit full-screen presentation/re-presentation and disconnect/reconnect behavior. The corrected document-scan flow has not yet been rechecked on a device.
 
-二navigation実体の試験は、OSの二つのwindowを操作する試験ではない。iPadOSの複数windowを有効にするscene manifest、window生成・破棄・前面化の運用、scene session identifierを用いた明示配送は未実装/未検証。これはOSにより不可能と判定した制約ではない。
+These tests do not operate two real iPadOS windows. Multiple-window manifests, creation/destruction/foreground policy, session-identifier delivery, arbitrary UIKit roots, and persistent full-screen restoration are separate scope. Feature-owned sheet/full-screen/UIKit presentation cleanup shipped in 0.7.0, but it does not preserve arbitrary view `@State`. See [navigation evidence](verification/2026-09-10-feature-navigation.md) and [feature-owned presentations](guides/feature-owned-presentations.md).
 
-P0-Bでは[Feature所有の提示](guides/feature-owned-presentations.md)を追加し、sheet/full-screen/UIKit提示の取消・終了と外部遷移前の終了待ちを接続した。0.7.0でCI・実機確認済み。Feature切替をまたぐ入力はFeature所有モデルへ保持できるが、任意のView内`@State`やOSによる永続的な全画面状態保存を自動保証するものではない。任意UIKit rootや複数OS window全体の調停は残り、D04全体を完了とはしない。
-
-## 検証経過
-
-[34440305199](https://github.com/y-aplus/JibunKit/actions/runs/34440305199)（source `26a5d45`）は共有テストのコンパイルで失敗。CoreだけをimportするテストがCounterFeatureで定義されるMiniAppID.counterを参照していた。Coreテストは専用の明示IDへ変更し、同じ参照を持つiOS確認画面もMiniAppID("counter")へ変更した。CoreにCounterFeatureの依存は追加しない。このrunではscene routerの実行試験・iOS build/UIへ到達しておらず、当時は変更全体が検証待ちだった。次のrunで解消している。
-
-34440565104（source `6a4d2fd`）で修正後のCIが成功。scene routerのcold start・選択/解除・再入の3unitも成功した。実window操作の証拠へ読み替えない。
-
-### P2-Cで見つかった全画面提示時の切断
-
-306874fの文書scan実機で`unavailable("no active selected scene")`と`stopped`を観測した。旧hostは`onDisappear`からsceneを切断していた。Appleの[全画面提示の説明](https://developer.apple.com/library/archive/featuredarticles/ViewControllerPGforiPhoneOS/PresentingaViewController.html)では、fullScreen提示は背後のviewを一時的に階層から外す。これは[UISceneの切断](https://developer.apple.com/documentation/uikit/uiscenedelegate/scenediddisconnect(_:))とは別である。開発branchはこの境界を分離し、実UIKit全画面提示と再提示、同一sceneの切断/再接続と他scene通知の無視をnative回帰へ追加した。CI35102558612で実UIKit全画面表示/再表示・切断/再接続の追加2試験と通常通知UIが成功。修正IPAでの実文書scanの再確認は未完。
+Historical CI 34440305199 failed before router/UI tests because a Core-only test referenced `MiniAppID.counter` from CounterFeature. The correction uses explicit IDs and does not add a CounterFeature dependency to Core; 34440565104 is the succeeding run.

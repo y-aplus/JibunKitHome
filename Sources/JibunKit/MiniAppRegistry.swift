@@ -32,13 +32,15 @@ enum MiniAppRegistry {
     static let management = makeManagement()
     private static var continuingTasks: [MiniAppID: Task<Void, Never>] = [:]
     static let continuingStatus = ContinuingSurfaceStatus()
+    static let launchState = MiniAppLaunchState()
 
     /// App-scoped work: leaving a Feature screen must not cancel OS activities.
     /// A cold launch or foreground transition rechecks daemon state. Per-owner
     /// tasks avoid duplicate subscriptions and do not make A wait for B.
     static func reconcileContinuingSurfaces(for owner: MiniAppID? = nil) {
         for definition in all where !definition.continuingSurfaces.isEmpty
-            && (owner == nil || definition.id == owner) && management.isEnabled(definition.id) {
+            && (owner == nil || definition.id == owner) && management.isEnabled(definition.id)
+            && launchState.errors[definition.id] == nil {
             let id = definition.id
             guard continuingTasks[id] == nil else { continue }
             let group = definition.continuingSurfaceGroup
@@ -66,7 +68,7 @@ enum MiniAppRegistry {
         let registrations: [MiniAppManagement.Registration] = all.map { definition in
             MiniAppManagement.Registration(
                 id: definition.id, lifetime: definition.lifetime, removal: incomingRemoval(for: definition),
-                externalAccess: definition.effectiveExternalAccess,
+                externalAccess: MiniAppWindowOwnership.externalAccess(for: definition),
                 unregister: {
                     #if DEBUG
                     let started = Date()
@@ -112,6 +114,7 @@ enum MiniAppRegistry {
                 ControlCenter.shared.reloadAllControls()
             }
         )
+        AppSceneRouting.windows.bootstrapSuspendedOwners(all.filter { !result.isEnabled($0.id) }.map(\.id))
         do {
             try incomingStore.get().publish(all.filter { result.isEnabled($0.id) }.compactMap(incomingDestination))
         } catch { incomingCatalogError = error.localizedDescription }
@@ -143,7 +146,7 @@ enum MiniAppRegistry {
         for definition in all {
             guard let handler = definition.onHostPhaseChange else { continue }
             let gated: @MainActor (MiniAppHostPhase) -> Void = { phase in
-                if management.isEnabled(definition.id) { handler(phase) }
+                if management.isEnabled(definition.id), launchState.errors[definition.id] == nil { handler(phase) }
             }
             handlers.append(gated)
         }
@@ -155,7 +158,7 @@ enum MiniAppRegistry {
         for definition in all {
             guard let handler = definition.onSceneActivityChange else { continue }
             handlers.append(.init(id: definition.id) { activity in
-                if management.isEnabled(definition.id) { handler(activity) }
+                if management.isEnabled(definition.id), launchState.errors[definition.id] == nil { handler(activity) }
             })
         }
         return MiniAppSceneActivityDispatcher(handlers: handlers)
@@ -165,7 +168,7 @@ enum MiniAppRegistry {
     static var registeredIDs: Set<MiniAppID> { Set(enabled.map(\.id)) }
 
     static func definition(for id: MiniAppID) -> MiniAppDefinition? {
-        guard management.isEnabled(id) else { return nil }
+        guard management.isEnabled(id), launchState.errors[id] == nil else { return nil }
         return all.first { $0.id == id }
     }
 

@@ -1,4 +1,20 @@
-# Swift PackageにApp Intentsを置く
+# Defining App Intents in a Swift package
+
+## Current integration contract
+
+Keep App Intents, App Entities, queries, and stable identifiers in the feature package, then link the package product into every target that must expose them. The host composes metadata and lifecycle wiring; it must not copy the declarations into application code.
+
+Intent execution is a separate process/lifetime boundary. Resolve durable identifiers, open only the required feature operation, and use normal admission, storage, consent, and error handling. Compare standalone and integrated metadata and verify that removing the product removes its contribution.
+
+Declare the standard `AppIntentsPackage` in both package and host and add the feature product to every app/extension target that exposes it, including `includedPackages`. This is independent of runtime `MiniAppDefinition` registration. In the verified route, the host's single `AppShortcutsProvider` references package intent types; use the feature shortcut-fragment guide when the feature owns the expressions.
+
+Give every OS-visible intent, entity, and query a feature-owned stable `persistentIdentifier`; package separation alone did not prevent same-named entity/query metadata from collapsing. Keep entity and query identifiers distinct. Do not create an intent-only store. Inject a small async/throwing operation boundary into Core-independent packages and connect it to the same owner in `MiniAppRestoreCoordinator.withStoreAccess`. Hold the reservation until awaited persistence/cancellation finishes.
+
+Initialize saved management state before injecting boundaries, including on cold launch, rather than from an enabled-only hook. Reads, writes, and entity queries reject disabled/removed owners. Commit a new value once, preserve the old value on throw/cancel, and never touch another owner. Removal callbacks already hold exclusive admission and therefore call reserved low-level deletion without reentering `withStoreAccess`.
+
+Compare standalone and combined generated metadata for identifiers, types, parameters, results, modes, entities, and queries. Direct `perform()` tests cover business/storage behavior only. Test OS discovery, picker choices, saved workflows, cancellation UI, relaunch, management rejection, and Siri separately. Also scan the combined metadata for a definition that disappeared through collision; a successful build alone is insufficient.
+
+## Japanese source notes and historical evidence
 
 FeatureのIntent実装はapp targetへ移動せず、Swift Packageの公開型として置ける。標準`AppIntentsPackage`をpackage側とhost側で宣言して接続する。JibunKit独自のメタデータ生成やIntent wrapperは不要。
 

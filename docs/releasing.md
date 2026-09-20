@@ -1,6 +1,9 @@
 # 公開・release手順
 
-更新日: 2026-09-17。公開VERSIONは0.8.3/build13、PREVIOUSは0.8.2/build12。音声・撮影/scanの対象別CI・実機、版変更後CI、main統合と公開IPA/ZIP取得検査を完了。[出荷照合](verification/2026-09-17-0.8.3-release.md)。最新公開版はGitHub Releasesを正本とする。
+
+更新日: 2026-09-20。公開VERSIONは1.0.0/build16、PREVIOUSは0.8.5/build15。1.0の基準充足と最終公開は2026-09-19にユーザー承認済み、出荷照合を完了した。[今回の出荷照合](verification/2026-09-19-1.0-release.md)。最新公開版はGitHub Releasesを正本とする。
+
+0.8.5はCIと代表実機確認を終えて公開済みのpatch。[変更と検証範囲](releases/release-notes-0.8.5.md)。
 
 ## 版ごとの出荷判断
 
@@ -52,6 +55,10 @@ PATH_TO_REVIEWED_REPORTには今回の0.8.0出荷reportを指定する。toolの
 
 publication boundaryは追跡ファイルの鍵・証明書・provisioning・pairing材料、SDK archive、IPA等を検査する。ignoredの個人Featureや実データを出荷物へ含めない。通常IPAはCounter/Reminder、Recordsは参照ソース。CI専用Featureを含む確認用構成と区別する。
 
+## Release notesの責務
+
+GitHub Releasesは公開asset/公開済みnotesの正本、CHANGELOGは利用者向け変更の要約、`docs/releases/`は版別notesの入力原稿を保持する。未公開候補は表題に明記する。過去tag/Releaseは変更しない。旧1.0原稿は日付付きverificationへ保存し現在候補と区別する。
+
 ## 公開と確認
 
 検証済みcommitに新規tagを作り、同じIPAとnotesを公開する。tag形式は既存の`0.1.0`/`0.2.0`に合わせる。1.0には上記の利用者判断も必要。
@@ -62,6 +69,6 @@ git push origin VERSION
 gh release create VERSION PATH_TO_IPA --repo y-aplus/JibunKit --verify-tag --title "JibunKit VERSION" --notes-file PATH_TO_NOTES
 ```
 
-公開前にVERSION/VERIFIED_COMMIT/各PATHを具体値へ置き換える。既存tagを移動せず、既存assetを差し替えない。公開後はtagのcommit、公開assetのdigest、releaseページ/IPA取得を確認する。README・CHANGELOG・検証記録の公開状態を更新する。ユーザーにはIPAの直接リンクも示し、外側のActions artifact ZIPを必須にしない。
+公開前にVERSION/VERIFIED_COMMIT/各PATHを具体値へ置き換える。既存tagを移動せず、既存assetを差し替えない。公開後はtagのcommit、公開assetのdigest、releaseページ/IPA取得を確認する。README・CHANGELOG・検証記録の公開状態を更新する。ユーザーにはIPAの直接リンクも示し、外側のActions artifact ZIPを必須にしない。以後のユーザー向け配布はIPAを標準とし、IPAを包む追加ZIPは必要な場合だけ作る。既存公開ZIPは保持する。IPA自体のZIP構造・CRC検査とActions内部のartifact梱包は継続する。
 
 0.7.0の公開物・参照証拠は[公開記録](verification/2026-09-13-0.7-release.md)で管理する。過去の[0.3.0公開記録](verification/2026-09-10-0.3-release.md)も保持する。

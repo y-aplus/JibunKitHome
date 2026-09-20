@@ -1,41 +1,71 @@
-# JibunKitへの貢献
+# Contributing to JibunKit
 
-開発順は[優先実装と版の到達条件](docs/implementation-priorities.md)に従います。CIは[事前に定めた大きな境界](docs/ci-boundaries.md)でまとめ、minor更新ごとに現在状態の文書を全件確認・更新します。
+Thank you for improving JibunKit. This document is for changes to the framework, host, templates, tests, and project documentation. If you only want to add a feature to your own build, start with [Adding a feature](docs/mini-apps.md).
 
-JibunKitは、SideStoreで使う個人向けミニアプリ基盤を、小さく保ちながら育てる実験的なプロジェクトです。変更は現在の設計と完成条件に直接つながる範囲へ絞ってください。
+## Before you change code
 
-## 変更を始める前に
+1. Read the [current status](docs/status.md), [coexistence boundaries](docs/coexistence-boundaries.md), and [compatibility policy](docs/compatibility.md).
+2. Search existing issues. Use a GitHub issue for a bug or proposal; discuss large contract changes before implementing them.
+3. Keep one branch and pull request focused on one purpose.
+4. Never commit credentials, Apple account data, signing keys, certificates, provisioning profiles, pairing files, Team IDs, device identifiers, real user data, or Apple SDK files.
 
-- 現在状態は[状態一覧](docs/status.md)と[統合差分台帳](docs/coexistence-ledger.md)、補完責任は[共存原則](docs/coexistence-boundaries.md)、版の出荷条件は[優先実装計画](docs/implementation-priorities.md)を優先します。初期設計・過去の計画・元の検討メモは履歴資料です。
-- 通常の不具合や提案は[GitHub Issues](https://github.com/y-aplus/JibunKit/issues)へ送ってください。脆弱性は公開Issueへ書かず、[SECURITY.md](SECURITY.md)に従ってください。
-- 大きな仕様変更は、実装前にIssueで完成条件、利用者への影響、代案を確認してください。
-- 認証情報、Apple Account情報、署名鍵、証明書、provisioning profile、SideStore pairing file、Team ID、端末識別子、実データ、Apple SDKを投稿しないでください。
+Report vulnerabilities privately according to [SECURITY.md](SECURITY.md), not in a public issue.
 
-## 実装の原則
+## Design rules
 
-- ミニアプリ固有の処理はfeatureへ置き、共通基盤の変更を必要最小限にします。
-- 複雑な独立Featureを制約なく接続する目的に必要なら、共通接続の先行実装を認めます。目的・責任境界・検証方法を説明し、サンプルが未作成という理由だけで必要な基盤を保留しません。Feature固有の不具合を基盤で肩代わりすることとは区別します。
-- 統合差分台帳を複数エージェントで進める場合は、[台帳実装の並列運用](docs/parallel-implementation.md)に従います。最大3並列とし、常時3実装を維持するのではなく、実装・検証・統合のボトルネックに応じて枠を再配置します。
-- テストは仕様と不具合の再発防止に使います。テスト駆動の手順自体を目的にはしません。
-- 保存キー、bundle ID、App Group、App Intent、Widget、通知routeの変更は、既存利用者の更新・署名更新後の継続性へ影響するものとして扱います。
+- Keep feature-specific behavior in the feature. Add shared infrastructure only when integration genuinely requires shared ownership, isolation, or arbitration.
+- Preserve stable IDs, storage namespaces, bundle IDs, App Groups, notification routes, widget kinds, App Intent identities, and backup schemas. If a change is unavoidable, include a migration and describe its user impact.
+- Keep feature APIs owner-scoped. Stopping, disabling, deleting, or failing one feature must not silently change another feature's state.
+- Treat cancellation and shutdown as completion boundaries. Shared native resources are not available to a new owner until the old owner has actually released them.
+- Do not describe unit tests, injected callbacks, Simulator runs, physical-device runs, and live Apple-service results as interchangeable evidence.
+- Do not broaden a verified claim beyond its tested OS, device, signing, radio, account, or service conditions.
 
-## 確認方法
+The focused contracts under [docs/guides](docs/guides/) and the [coexistence ledger](docs/coexistence-ledger.md) contain the detailed rules for individual system surfaces.
 
-SwiftのあるmacOS／Linux／WSLで次を実行できます。WindowsではActionsを使えます。Apple frameworkに依存するテストとiOSビルドはmacOS／XcodeのCIで確認します。
+## Build and test
+
+Run the root package tests on macOS. The root `JibunKitCore` package currently uses Apple-specific APIs and does not build on Linux/WSL, so merely having Swift installed there is not sufficient:
 
 ```bash
 swift test
 ```
 
-iOS本体、App Intent、Widget、通知、plist、entitlements、workflowへ影響する変更は、maintainerが[GitHub Actionsの確定経路](docs/build.md)を実行します。Actionsの成功は実機検証の代わりではありません。SideStoreでの導入・更新やsystem surfaceの確認が必要な変更は、対象端末・OS・SideStore版と操作結果を別に記録します。
+An independent package under `Modules/` may support local Linux/WSL tests when its own dependencies are portable. Test it explicitly with `swift test --package-path Modules/NAME`; do not infer root-package support from that result.
 
-文書だけの変更でも、リンク、記載したコマンド、実際の構成との一致を確認してください。
+iOS builds and Apple-framework tests require macOS and Xcode, or the repository's GitHub Actions workflows:
 
-## Pull request
+```bash
+tuist generate --no-open
+xcodebuild build \
+  -workspace JibunKit.xcworkspace \
+  -scheme JibunKit-App \
+  -configuration Release \
+  -destination 'generic/platform=iOS' \
+  CODE_SIGNING_ALLOWED=NO
+```
 
-1. forkまたは作業用branchで、1つの目的に絞って変更します。
-2. 変更理由、仕様への影響、実行した確認、未確認の範囲を説明します。
-3. 必要な文書と変更履歴を同じPull requestで更新します。
-4. 秘密情報や生成物を含めていないことを確認します。
+See [Build, sign, and install](docs/build.md) for pinned versions, CI inputs, artifacts, and verification boundaries.
 
-互換性を壊す変更や、実機でしか確かめられない変更は、その事実を明示してください。maintainerは設計との一致、最小性、自動チェック、必要な実機結果を分けて審査します。
+Choose tests in proportion to the change:
+
+- Run package tests for shared logic and feature behavior.
+- Generate the workspace after changing Tuist manifests, targets, extensions, resources, entitlements, or build settings.
+- Exercise the standalone example and integrated host when changing a feature template or integration contract.
+- Use the relevant native or UI diagnostic for Apple system behavior. Do not replace required physical or service-backed evidence with a fake callback.
+- For documentation-only changes, validate local links, commands, filenames, and release-state wording.
+
+Maintainers group expensive CI at reviewed boundaries. A contributor should report what was run and what remains unverified, rather than starting every workflow for every small commit.
+
+## Pull requests
+
+Include:
+
+- the problem and why the change belongs in JibunKit;
+- the contract and compatibility impact;
+- the tests or inspections performed;
+- any unverified device, OS, signing, radio, account, or service condition;
+- user-facing documentation when behavior changes.
+
+The current stable version is 1.0.0. Keep release claims tied to the published tag and its source-specific verification; historical candidate records remain dated evidence.
+
+Maintainers review design fit, compatibility, isolation between owners, automated evidence, and any necessary device evidence separately. A successful build proves compilation; it does not by itself prove installation, migration, background delivery, radio behavior, or a live Apple service.

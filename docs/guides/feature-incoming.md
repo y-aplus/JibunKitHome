@@ -1,4 +1,18 @@
-# 共有入力と外部ファイルの受信
+# Receiving shared input and external files
+
+## Current integration contract
+
+The host accepts incoming URLs, documents, and share payloads, records them in a durable inbox, and routes them to the selected feature by explicit ownership rules. Copy security-scoped or temporary input into owned storage before the source lifetime ends. Never pass a transient provider URL directly into long-lived feature work.
+
+Admission, cancellation, deduplication, and cold-launch retry belong to the incoming coordinator. A feature consumes only entries for its owner and generation, records completion durably, and leaves failed entries retryable. Build declarations and extension wiring do not by themselves prove provider or device behavior.
+
+Attach an optional incoming adapter to `MiniAppDefinition`; keep business models and storage in the feature. Declare accepted UTTypes (including inheritance) and accept a destination only when it can handle every selected item—never silently import a subset. If several features qualify, ask the user; `incoming == nil` is never an implicit recipient. The user can inspect, choose, save, discard, or retry an item, and cancellation must leave a coherent durable state.
+
+Stage content and its manifest under the owner namespace and receipt ID in the App Group Application Support directory. Publish the catalog entry only after every copy completes. Serialize the short catalog mutation separately from owner file I/O so A does not unnecessarily block B. Recheck the management/runtime generation before publication and reject an old copy after disable/re-enable. Save uses the same receipt for an idempotent retry when business persistence succeeded but acknowledgement failed.
+
+The provider/host boundary owns security-scope access and temporary source lifetime; the feature receives stable staged files. Removal and discard delete only the owner's receipt directory after active work drains. Validate standalone, integrated, cross-process, UI, and real share-sheet/Files behavior as separate evidence.
+
+## Japanese source notes and historical evidence
 
 0.8.0で公開したP1接続。0.7.0には含まれない。native provider/所有試験は4e6a3f4で32件成功し、macOS別process試験も確認済み。本体UIで判明した受信/破棄ボタンの干渉を修正し、破棄確認を明示的な取消があるalertへ揃えた。修正後の本体UIはrun34794545131で、破棄取消・A保存後失敗・再起動・冪等再試行とB取込みが成功。4e6a3f4の実機で文字列/URL/ファイル共有、Files直接入力、取消、再試行後の重複なし/B保持、再起動・上書き/Refresh保持を確認済み。失敗直後の未取込み行は独立観測しておらず、CIの保持確認と区別する。Swift/iOS・OS共有シートの受入結果は[検証記録](../verification/2026-09-13-p1-a.md)で区別する。
 

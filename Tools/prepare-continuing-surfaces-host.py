@@ -50,12 +50,23 @@ def prepare(host):
     text = once(package.read_text(encoding="utf-8"), "    products: [\n", "    products: [\n" + products)
     changes[package] = once(text, "    targets: [\n", "    targets: [\n" + "".join(targets))
 
+    requirements = host / "Tuist/ProjectDescriptionHelpers/EnabledFeatureBuildRequirements.swift"
+    changes[requirements] = once(requirements.read_text(encoding="utf-8"),
+        "public static let app = FeatureBuildConfiguration()",
+        '''public static let app = FeatureBuildConfiguration(features: [
+        FeatureBuildRequirement(owner: "p2-continuing-alarm-probe", infoPlist: [
+            "NSAlarmKitUsageDescription": "ミニアプリで設定した予定やタイマーを知らせます。",
+        ], localizedInfoPlist: [
+            "en": ["NSAlarmKitUsageDescription": "Notifies you about schedules and timers set by mini apps."],
+            "ja": ["NSAlarmKitUsageDescription": "ミニアプリで設定した予定やタイマーを知らせます。"],
+        ]),
+    ])''')
+
     project = host / "Project.swift"
     text = project.read_text(encoding="utf-8")
     text = once(text, 'let appBuild = try EnabledFeatureBuildRequirements.app.compose(infoPlist: [',
         'let appBuild = try EnabledFeatureBuildRequirements.app.compose(infoPlist: [\n'
-        '    "NSSupportsLiveActivities": true,\n'
-        '    "NSAlarmKitUsageDescription": "ミニアプリで設定した予定やタイマーを知らせます。",')
+        '    "NSSupportsLiveActivities": true,')
     dependencies = "".join(f', .package(product: "{m}")' for m in MODULES)
     text = once(text, '.target(name: "JibunKitShare-Extension")',
                 '.target(name: "JibunKitShare-Extension")' + dependencies)

@@ -1,50 +1,42 @@
-# Runtimeと復元の接続ガイド
+# Runtime and restore integration
 
-## 利用できる能力
+## Available behavior
 
-共有バックアップ画面は、選択されたFeatureの停止→適用→再開を呼ぶ。同一Featureの復元・snapshot書出しはプロセス内で重複を拒否し、他Featureの処理を一括停止しない。Runtimeは新規Task受付を閉じ、既存Taskの終了と同期/非同期の資源解放を待つ。
+The shared backup screen stops each selected feature, applies its prepared restore, and resumes it. Restore and snapshot operations for the same feature are rejected when they overlap, without stopping unrelated features. `MiniAppRuntime` closes task admission and waits for accepted tasks plus synchronous and asynchronous cleanup.
 
-これはDBエンジンの選択を制限しない。個別DBの接続解放、購読解除、通常書込みの受付停止はFeatureが実装する。Runtimeへ未登録の仕事は自動検出できない。
+This contract does not choose a database engine. Feature code still closes database connections, unsubscribes observers, and blocks synchronous or callback-based writes. Work that was never registered with the runtime or store coordinator cannot be discovered automatically.
 
-## 所有者から再開まで
+## Connect an owner through resume
 
-1. Featureの所有者を画面の一時的な再生成より長く保持し、その所有者が現在のRuntimeと保存層を保持する。同じFeatureの複数画面はこの所有者を共有する。
-2. 資源を取得した時点で`onShutdown`または`onShutdownAsync`へ解放を登録する。その後に資源を使うTaskを`start`で登録する。Taskの中断処理は取消に協調して終了する。
-3. UI以外の書込み入口も同じ所有者を通す。Runtimeを使うTask受付はshutdown時に閉じるが、同期メソッドや外部callbackの受付は所有者側でも閉じる。
-   通常の読書きを`withStoreAccess`へ登録すれば、共有coordinatorの復元/snapshotと交差する処理を受付前に拒否できる。[保存操作の接続ガイド](guides/store-access-coordination.md)を参照。
-4. `MiniAppDefinition.restoreLifecycle.stop`から受付を閉じ、`await runtime.shutdown()`を待つ。所有Taskの終了後、解放hookが逆順で完了する。解放hookから自分のshutdownを待つと自己待ちになるため避ける。
-5. backup providerのprepareは検証と準備だけを行う。返したapplyが、停止完了後の保存先を置き換える。Files/JSONを扱う共有画面はこの順序で呼ぶ。
-6. resumeで保存層を再接続し、新しいRuntimeへ所有者の参照を差し替えて受付を再開する。画面は古いRuntimeを個別に保持せず、所有者経由で処理を始める。
-7. 直接planを使う経路では`apply(lifecycles:)`にhookを渡す。共有画面ではDefinitionから収集済みなので別のhost内Feature分岐は不要。
+1. Keep one feature owner alive longer than temporary view instances. It holds the current runtime and store; multiple screens for that feature share it.
+2. Immediately after acquiring a resource, register its release with `onShutdown` or `onShutdownAsync`. Only then register dependent work with `start`. Tasks must cooperate with cancellation and actually finish.
+3. Route non-UI write entry points through the same owner. Runtime shutdown closes task admission, but the owner must also close synchronous and external-callback admission. Wrap ordinary store work in `withStoreAccess` so restore and snapshot conflicts are rejected before execution; see [store access coordination](guides/store-access-coordination.md).
+4. In `MiniAppDefinition.restoreLifecycle.stop`, close feature admission and `await runtime.shutdown()`. Cleanup hooks run in reverse registration order after owned tasks finish. Never await the same shutdown from one of its owned tasks or cleanup hooks.
+5. A backup provider's `prepare` validates and stages only. Its returned `apply` replaces storage after stop has completed. The shared Files/JSON flow follows this order.
+6. In `resume`, reconnect the store, construct a new runtime generation, replace the owner's runtime reference, and reopen admission. Views obtain the runtime through the owner rather than retaining an old generation.
+7. A direct restore-plan caller passes hooks to `apply(lifecycles:)`. The shared backup screen already gathers them from definitions and needs no host-specific feature switch.
 
-## 実際の接続例
+[`LifecycleProbeIntegration.swift`](../Tests/TemplateIntegration/LifecycleProbeIntegration.swift) is a two-feature CI example. `LifecycleProbeState` owns runtime replacement across `start`, `shutdown`, and `resumeAfterRestore`; its definition registers both provider and lifecycle, and `applyRestored` verifies shutdown before mutation. It is not a database adapter. A real database must implement connection drain/reopen, transactions, and external-process locking. Runtime/plan behavior is covered by [`MiniAppRuntimeTests`](../Tests/JibunKitCoreTests/MiniAppRuntimeTests.swift).
 
-[LifecycleProbeIntegration.swift](../Tests/TemplateIntegration/LifecycleProbeIntegration.swift)はCI専用の小さな二Feature接続例。`LifecycleProbeState`がRuntimeを保持し、`start`、`shutdown`、`resumeAfterRestore`で受付と差替えを行う。Definitionにはbackup providerとrestoreLifecycleの両方を登録し、実際のBackupScreenへ接続している。`applyRestored`はRuntimeの停止完了を確認してから値を変更する。
+## Failure and conflict behavior
 
-この例はDB製品ではない。実DBでは、接続解放と再接続、トランザクション、外部プロセスのロックを保存層に合わせて実装する。非同期解放と復元planの結合は[MiniAppRuntimeTests](../Tests/JibunKitCoreTests/MiniAppRuntimeTests.swift)にある。
-
-## 失敗と競合
-
-| 状況 | 現在の共有経路の動作 | Feature側の責任 |
+| Condition | Shared-path behavior | Feature responsibility |
 | --- | --- | --- |
-| 別の復元・snapshot作成・登録済み通常操作と対象が重複 | 停止・適用前にConflictを返す | 同じ保存先には同じcoordinatorを使う |
-| stopがthrow | 任意のrecoverAfterFailedStopを待ち、apply/resumeを呼ばない | callbackを登録するか、stop自身で利用可能な状態へ戻す |
-| stop後の回復もthrow | 両方の理由を保持し、stopAndRecoveryとして未復元・利用状態への回復失敗を報告 | 部分停止した資源を診断し、利用受付を安全な状態に保つ |
-| applyがthrow | resumeを試み、後続Featureは変更しない | 部分変更を想定した保存層の回復 |
-| resumeがthrow | データ適用済みと再開失敗を区別して報告 | 再接続失敗後の利用制限・回復 |
-| 取消済みで開始前 | 何も変更せず終了 | 取消を無視する独自入口を作らない |
-| 複数Feature途中で取消 | 着手済みの再開を終え、次の着手前に中止 | 完了済みを全体rollbackと誤認しない |
+| Same owner overlaps restore, snapshot, maintenance, or registered ordinary work | Return `Conflict` before stop/apply | Use the same coordinator for the same store |
+| `stop` throws | Await optional `recoverAfterFailedStop`; do not apply or resume | Register recovery or restore usability inside `stop` |
+| Recovery after failed stop also throws | Report `stopAndRecovery` with both causes | Diagnose partially stopped resources and keep admission safe |
+| `apply` throws | Attempt resume; do not modify later features | Recover from partially changed storage |
+| `resume` throws | Report applied data separately from restart failure | Restrict use and provide reconnection recovery |
+| Cancelled before admission | Change nothing | Do not create a cancellation-bypassing entry point |
+| Cancelled between multiple features | Finish recovery/resume for work already started, then stop before the next feature | Do not describe completed work as globally rolled back |
 
-## 検証済みの範囲と残件
+`recoverAfterFailedStop` handles a resource left in a partial stop and is distinct from normal `resume`. Even when recovery succeeds, the restore remains failed and later features are not started. The coordinator reservation remains held until recovery completes, including after caller cancellation. Inspect which database connections remain alive before constructing replacements; do not recreate everything blindly in a mixed state. See [failed-stop recovery evidence](verification/2026-09-11-restore-stop-recovery.md).
 
-`recoverAfterFailedStop`は停止途中で失敗した資源のための任意callbackで、正常に停止した後の`resume`とは別である。登録しなければ従来通りstop自身が回復する。callbackが成功しても復元は失敗として終了し、後続Featureは開始しない。実行中は同じcoordinatorの復元・snapshot予約を保持し、取消されても回復の完了を待つ。callback内の取消に弱いAPIはFeatureが扱う必要がある。通常書込みの受付までこの予約で自動制御するものではない。
+## Evidence and remaining limits
 
-DB接続の状態確認、必要な再接続、新しいRuntime作成、UI以外の受付再開をこの順序で行う。閉じられた接続も生きた接続もある途中状態から、検査なしに一律再生成してはならない。[停止失敗回復の検証記録](verification/2026-09-11-restore-stop-recovery.md)を参照。
+- Unit coverage verifies admission closure, task drain, reverse cleanup, concurrent shutdown joining, duplicate reservation rejection, cancellation, snapshot conflicts, and continued operation of another owner.
+- The CI UI covers selected restore, four failure paths, A runtime restart, and preservation of B tasks/data.
+- Device evidence covers Counter JSON export, import, selection, and overwrite restore.
+- P0-A connects Records JSON/attachments and native SQLite to ordinary access, stop/resume, migration, and reset. See [P0-A evidence](verification/2026-09-12-p0-a.md) and the separate [SQLite evidence](verification/2026-09-11-sqlite-isolation.md).
 
-- unit: 受付閉鎖、Task完了待ち、同期/非同期解放順序、同時shutdown合流、重複予約拒否、取消、snapshotとの競合、他owner継続。
-- CIの実画面: 選択復元の成功と4つの失敗経路、AのRuntime再開とBのTask/データ維持。
-- ユーザー実機: カウンターJSONの書出し・読込み・選択・上書き復元。
-- P0-AではRecordsのJSON/添付とnative SQLiteを通常保存・停止復帰・移行/リセットへ接続してCIで確認し、0.7.0候補の一括実機も確認済み（[P0-A記録](verification/2026-09-12-p0-a.md)）。native SQLiteのWAL・片側削除/復元・BUSY closeの独立比較は[以前の記録](verification/2026-09-11-sqlite-isolation.md)に保持する。
-- 残件: 採用方式以外のDBへのadapter接続、任意の通常書込み・購読・別process writerまでの一般化。P0の移行/リセット接続が未実装という意味ではなく、D02/D07全体の完成は未達。
-
-現在の出荷証拠は[0.7.0公開記録](verification/2026-09-13-0.7-release.md)を参照する。0.6.0のFiles経由JSON選択復元と添付ZIP往復の成功、以前の[Files操作失敗](verification/2026-09-10-runtime-lifetime.md)はsource付き履歴として保持し、現在の待機対象にはしない。領域全体の判定は[統合差分台帳](coexistence-ledger.md)を参照。
+Adapters for every database and automatic coverage of unregistered writers, subscriptions, and other-process writers are not claimed. Current release evidence is in the [0.7.0 release record](verification/2026-09-13-0.7-release.md); older successful and failed Files flows remain historical evidence, not current blockers. Overall scope remains tracked in the [coexistence ledger](coexistence-ledger.md).

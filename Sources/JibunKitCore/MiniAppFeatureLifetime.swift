@@ -15,7 +15,10 @@ public final class MiniAppFeatureLifetime {
         case stopped, starting, running, stopping
         case failed(String)
     }
-    public enum Failure: Error { case suspendedForRestore, startsDisabled, stoppedOperationInProgress }
+    public enum Failure: Error {
+        case suspendedForRestore, startsDisabled, stoppedOperationInProgress
+        case launchRegistrationFailed(String)
+    }
 
     public nonisolated let id: MiniAppID
     public private(set) var state: State = .stopped
@@ -29,6 +32,7 @@ public final class MiniAppFeatureLifetime {
     private var stoppedOperation: Task<Void, Never>?
     private var suspendedForRestore = false
     private var resumeAfterRestore = false
+    private var launchRegistrationFailure: String?
 
     public init(id: MiniAppID,
                 configure: @escaping @MainActor @Sendable (MiniAppRuntime) async throws -> Void = { _ in }) {
@@ -41,6 +45,7 @@ public final class MiniAppFeatureLifetime {
     /// task does not cancel Feature-owned startup/work; explicit stop does.
     public func start() async throws {
         try Task.checkCancellation()
+        if let launchRegistrationFailure { throw Failure.launchRegistrationFailed(launchRegistrationFailure) }
         guard isStartAllowed else { throw Failure.startsDisabled }
         while stoppedOperation != nil || stopping != nil {
             if let stoppedOperation { await stoppedOperation.value }
@@ -94,6 +99,15 @@ public final class MiniAppFeatureLifetime {
     public func setStartAllowed(_ allowed: Bool) {
         isStartAllowed = allowed
         if !allowed { resumeAfterRestore = false }
+    }
+
+    /// Called synchronously by the host's launch-registration boundary, before
+    /// admitting Feature work. Management enable/restore cannot repair a failed
+    /// OS launch registration; retry on a fresh process after fixing its cause.
+    public func recordLaunchRegistrationFailure(_ error: Error) {
+        let message = String(describing: error)
+        launchRegistrationFailure = message
+        if runtime == nil { state = .failed(message) }
     }
 
     /// Closes this owner only. No view disappearance automatically calls this.

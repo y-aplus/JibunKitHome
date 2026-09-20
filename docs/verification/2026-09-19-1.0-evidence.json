@@ -1,0 +1,1396 @@
+{
+  "schema": 1,
+  "wave": "P2-F",
+  "source": "82553cfe2c81cd83111cd2a247c90f87bd1015ac",
+  "contract": {
+    "baseline": "feab1702777c4f49cde4145faab93fe9dbfb4747",
+    "interfaces": "Adopted P0/P1/P2 contracts in plan.json and guides; normal code unchanged from physically checked 0.8.5 apart from version metadata.",
+    "ownership": "Owner identity, lifetime, generation, admission, cancellation and cleanup; parent consolidates reviewed source-specific submissions before CI.",
+    "failure_cases": "Prior source-specific failure/cancellation/old-generation/other-owner preservation tests retained. Unobserved OS conditions are explicit approved exclusions, never passes.",
+    "normal_entrypoints": "Normal Counter/Reminder host, generated independent feature and native system integration fixtures. Device results remain source-specific.",
+    "invalidation": "Stop closes admission and drains accepted work before release; destructive operations remain scoped to selected owner.",
+    "review": "Final consolidation of existing evidence plus candidate normal CI. No new implementation/device claim. Earlier generated integration scopes reused; newer native87 and current shared443 cover integrated ownership paths."
+  },
+  "dependencies": {
+    "P2-S": "BLE device connection/notify/restoration and Simulator scene restoration completed; physical iPad exclusion approved. See 2026-09-18-ar-followup.md and final-observation-boundary.md."
+  },
+  "planned_ci_runs": 1,
+  "budget_exception": "One final version/build run. Earlier failed/successful implementation runs remain in original wave reports and dated records; consolidation does not reset their history or claim one run for development.",
+  "jobs": [
+    {
+      "id": "candidate-shared",
+      "kind": "unit",
+      "command": "build-ios.yml Test shared feature logic and Modules tests",
+      "expected_minutes": 10,
+      "timeout_minutes": 15,
+      "criteria": [
+        "P0-1.lifetime",
+        "P0-3.failure",
+        "P0-5.ownership",
+        "P0-6.diagnostics",
+        "P1-3.routing",
+        "P1-4.ownership",
+        "P1-5.http"
+      ]
+    }
+  ],
+  "runs": [
+    {
+      "id": "35409750733",
+      "source": "82553cfe2c81cd83111cd2a247c90f87bd1015ac",
+      "url": "https://github.com/y-aplus/JibunKit/actions/runs/35409750733",
+      "conclusion": "success"
+    }
+  ],
+  "evidence": [
+    {
+      "criterion": "P0-1.lifetime",
+      "kind": "unit",
+      "source": "42bb373f54f6f52bfefe1b12ad4809c0327ac219",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35249566535",
+      "observation": "Unfiltered shared415 tests, 2 existing Keychain skips and zero failures. New identity9 and Push9 owner/lifetime/account/payload tests passed. Records11 passed independently.",
+      "review": "Full successful job log inspected, not workflow status alone. This is unit evidence; no real APNs/CloudKit communication inferred.",
+      "reuse_reason": "At the historical c4703a1 boundary, production sources matched42bb373. For this report, ExternalIdentity/RemotePush remain unchanged throughac29d5c; later shared management/scene changes are covered by CI35357260854 and CI35365770330. Do not interpret this as all Sources being unchanged since42bb373. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P0-1.integration",
+      "kind": "simulator",
+      "source": "0d255f2b83d72a17da549a0489f73b66e8d5907f",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/34814352424/job/103881819596; https://github.com/y-aplus/JibunKit/actions/runs/35357260854; https://github.com/y-aplus/JibunKit/actions/runs/35365770330",
+      "observation": "Two normal lifetime UI methods passed 33.151s/15.376s at the original source. Later shared443 normal regression and combined native87/UI6 passed after management, launch registration and scene-resource integration changes.",
+      "review": "The original individual pass markers were reviewed from the full log. Later aggregate runs are used only for the subsequent shared runtime/management integration; no new physical behavior is inferred.",
+      "reuse_reason": "Runtime/management code changed after the original P0 run, so unchanged-source reuse alone is insufficient. CI35357260854 and CI35365770330 provide the later normal/shared and combined-host regression corresponding to those changes. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P0-2.presentation",
+      "kind": "simulator",
+      "source": "7906bd9b774c76cf24e19daf6fc0e4710b3b394f",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/34746211458/job/103694516186",
+      "observation": "P0BPresentationUITests both owned presentation/external route and generation replacement/B preservation passed.",
+      "review": "Two XCTest pass markers and native presentation fixture assertions reviewed. Inbox interaction was corrected and verified in later source-scoped followup; no pending inbox check remains.",
+      "reuse_reason": "Historical source-specific evidence retained from docs/verification/2026-09-18-p2-identity-push-evidence.json. Original product-path claims refer to that historical boundary. This report does not claim all product code remained unchanged; later management/scene integration is additionally covered by CI35357260854 and CI35365770330. Physical observations retain their original source and scope. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P0-2.uikit",
+      "kind": "simulator",
+      "source": "7906bd9b774c76cf24e19daf6fc0e4710b3b394f",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/34746211458/job/103694516186",
+      "observation": "P0BPresentationUITests owned SwiftUI/UIKit presentation paths passed.",
+      "review": "Tests exercise presentation probe native UIViewController and ownership teardown, not OS share-sheet handoff.",
+      "reuse_reason": "Historical source-specific evidence retained from docs/verification/2026-09-18-p2-identity-push-evidence.json. Original product-path claims refer to that historical boundary. This report does not claim all product code remained unchanged; later management/scene integration is additionally covered by CI35357260854 and CI35365770330. Physical observations retain their original source and scope. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P0-3.failure",
+      "kind": "unit",
+      "source": "42bb373f54f6f52bfefe1b12ad4809c0327ac219",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35249566535",
+      "observation": "Unfiltered shared415 tests, 2 existing Keychain skips and zero failures. New identity9 and Push9 owner/lifetime/account/payload tests passed. Records11 passed independently.",
+      "review": "Full successful job log inspected, not workflow status alone. This is unit evidence; no real APNs/CloudKit communication inferred.",
+      "reuse_reason": "At the historical c4703a1 boundary, production sources matched42bb373. For this report, ExternalIdentity/RemotePush remain unchanged throughac29d5c; later shared management/scene changes are covered by CI35357260854 and CI35365770330. Do not interpret this as all Sources being unchanged since42bb373. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P0-3.integration",
+      "kind": "simulator",
+      "source": "7906bd9b774c76cf24e19daf6fc0e4710b3b394f",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/34746211458/job/103694516186",
+      "observation": "P0ARecordsUITests and P0ASQLiteUITests actual host maintenance passed.",
+      "review": "Records attachment restore/B preservation and native DB close/reopen/rollback/B preservation checked via actual probe assertions.",
+      "reuse_reason": "Historical source-specific evidence retained from docs/verification/2026-09-18-p2-identity-push-evidence.json. Original product-path claims refer to that historical boundary. This report does not claim all product code remained unchanged; later management/scene integration is additionally covered by CI35357260854 and CI35365770330. Physical observations retain their original source and scope. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P0-3.device",
+      "kind": "device",
+      "source": "baa041f2115d84ddb94ae4d8e6882c7eea29e9b7",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-13-0.7-device-check.md",
+      "observation": "User confirmed selected Counter restore, JSON/attachment and SQLite diagnostic expected strings, B preservation; normal IPA update retains changed Counter/Reminder.",
+      "review": "User reports on2026-09-13 refer to both verified baa041f IPAs. No Widget latency measured; Records/SQLite checks are expected-string observation, not independent internal analysis. Parent reconciled fixture assertions and CI evidence.",
+      "reuse_reason": "Historical source-specific evidence retained from docs/verification/2026-09-18-p2-identity-push-evidence.json. Original product-path claims refer to that historical boundary. This report does not claim all product code remained unchanged; later management/scene integration is additionally covered by CI35357260854 and CI35365770330. Physical observations retain their original source and scope. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P0-4.diagnostics",
+      "kind": "inspection",
+      "result": "passed",
+      "source": "1d13e55a05ecff9054944970ba2a6a9efc3f69f2",
+      "reference": "docs/guides/; docs/compatibility.md; docs/delivery/plan.json; docs/verification/2026-09-19-1.0-release.md",
+      "observation": "Current API/ownership/recovery documentation and adopted scope reviewed; actual evidence and unobserved conditions separate. See complete document inventory.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P0-4.onboarding",
+      "kind": "simulator",
+      "source": "baa041f2115d84ddb94ae4d8e6882c7eea29e9b7",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/34705653297",
+      "observation": "Notes standalone and host build/launch; v1 actual A/B files, A-source-only v2 update in same installed container, old defaults/write/relaunch/corrupt rejection/preservation/repair and unchanged B/resources pass.",
+      "review": "Parent reviewed actual full log, source invariants, downloaded native results and iOS v1/v2 A/B JSON bytes. docs/verification/2026-09-12-p0-c.md.",
+      "reuse_reason": "Historical source-specific evidence retained from docs/verification/2026-09-18-p2-identity-push-evidence.json. Original product-path claims refer to that historical boundary. This report does not claim all product code remained unchanged; later management/scene integration is additionally covered by CI35357260854 and CI35365770330. Physical observations retain their original source and scope. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P0-4.docs",
+      "kind": "inspection",
+      "result": "passed",
+      "source": "1d13e55a05ecff9054944970ba2a6a9efc3f69f2",
+      "reference": "docs/guides/; docs/compatibility.md; docs/delivery/plan.json; docs/verification/2026-09-19-1.0-release.md",
+      "observation": "Current API/ownership/recovery documentation and adopted scope reviewed; actual evidence and unobserved conditions separate. See complete document inventory.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P0-5.ownership",
+      "kind": "unit",
+      "source": "42bb373f54f6f52bfefe1b12ad4809c0327ac219",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35249566535",
+      "observation": "Unfiltered shared415 tests, 2 existing Keychain skips and zero failures. New identity9 and Push9 owner/lifetime/account/payload tests passed. Records11 passed independently.",
+      "review": "Full successful job log inspected, not workflow status alone. This is unit evidence; no real APNs/CloudKit communication inferred.",
+      "reuse_reason": "At the historical c4703a1 boundary, production sources matched42bb373. For this report, ExternalIdentity/RemotePush remain unchanged throughac29d5c; later shared management/scene changes are covered by CI35357260854 and CI35365770330. Do not interpret this as all Sources being unchanged since42bb373. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P0-5.ui",
+      "kind": "simulator",
+      "source": "4eb784d3f8f313eef9c6566f5729006e655af164",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/34979381516; docs/verification/2026-09-15-p2-widget-control.md",
+      "observation": "Normal combined passed: full shared290 with2 skipped/0failures, including all8 new management/shared-state tests; Records11, separate-process300 updates/interrupted writer, normal UI13 and separate Files selected-Counter JSON roundtrip1. Normal IPA/native metadata/signatures passed.",
+      "review": "Inspected complete log and individual8 management pass markers, suite summaries13+1, process result and successful normal job steps. Interactive compilation failures are separate and not reported as integration success.",
+      "reuse_reason": "Historical source-specific evidence retained from docs/verification/2026-09-18-p2-identity-push-evidence.json. Original product-path claims refer to that historical boundary. This report does not claim all product code remained unchanged; later management/scene integration is additionally covered by CI35357260854 and CI35365770330. Physical observations retain their original source and scope. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P0-5.device",
+      "kind": "device",
+      "source": "baa041f2115d84ddb94ae4d8e6882c7eea29e9b7",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-13-0.7-device-check.md",
+      "observation": "User confirmed consent rejection, disable/enable with Widget/Shortcut status, cancel/delete/failure/retry/reregister and other Feature preservation; presentation external URL and lifetime failure/restart also confirmed.",
+      "review": "User reports on2026-09-13 refer to both verified baa041f IPAs. No Widget latency measured; Records/SQLite checks are expected-string observation, not independent internal analysis. Parent reconciled fixture assertions and CI evidence.",
+      "reuse_reason": "Historical source-specific evidence retained from docs/verification/2026-09-18-p2-identity-push-evidence.json. Original product-path claims refer to that historical boundary. This report does not claim all product code remained unchanged; later management/scene integration is additionally covered by CI35357260854 and CI35365770330. Physical observations retain their original source and scope. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P0-6.diagnostics",
+      "kind": "unit",
+      "source": "42bb373f54f6f52bfefe1b12ad4809c0327ac219",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35249566535",
+      "observation": "Unfiltered shared415 tests, 2 existing Keychain skips and zero failures. New identity9 and Push9 owner/lifetime/account/payload tests passed. Records11 passed independently.",
+      "review": "Full successful job log inspected, not workflow status alone. This is unit evidence; no real APNs/CloudKit communication inferred.",
+      "reuse_reason": "At the historical c4703a1 boundary, production sources matched42bb373. For this report, ExternalIdentity/RemotePush remain unchanged throughac29d5c; later shared management/scene changes are covered by CI35357260854 and CI35365770330. Do not interpret this as all Sources being unchanged since42bb373. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P0-6.local",
+      "kind": "inspection",
+      "result": "passed",
+      "source": "1d13e55a05ecff9054944970ba2a6a9efc3f69f2",
+      "reference": "docs/guides/; docs/compatibility.md; docs/delivery/plan.json; docs/verification/2026-09-19-1.0-release.md",
+      "observation": "Current API/ownership/recovery documentation and adopted scope reviewed; actual evidence and unobserved conditions separate. See complete document inventory.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P1-1.os",
+      "kind": "device",
+      "source": "4e6a3f4b1358ea4859aa70cc119fc9d58f2d6dac",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-14-0.8-device-check.md",
+      "observation": "Earlier6beb877 OS discovery/positive-negative add/owner entity candidates/saved workflow/relaunch/management were successful.4e6a3f4 adds real20sec-delay cancellation old A/B retention, injected save error old values and next identical run A-only Amount increment.",
+      "review": "User reports received stepwise; unreported intermediate states/absolute values are not invented. Canonical record separates old candidate and4e6a3f4 results.",
+      "reuse_reason": "Historical source-specific evidence retained from docs/verification/2026-09-18-p2-identity-push-evidence.json. Original product-path claims refer to that historical boundary. This report does not claim all product code remained unchanged; later management/scene integration is additionally covered by CI35357260854 and CI35365770330. Physical observations retain their original source and scope. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P1-1.metadata",
+      "kind": "inspection",
+      "result": "passed",
+      "source": "1d13e55a05ecff9054944970ba2a6a9efc3f69f2",
+      "reference": "docs/guides/; docs/compatibility.md; docs/delivery/plan.json; docs/verification/2026-09-19-1.0-release.md",
+      "observation": "Current API/ownership/recovery documentation and adopted scope reviewed; actual evidence and unobserved conditions separate. See complete document inventory.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P1-2.widget",
+      "kind": "device",
+      "source": "4e6a3f4b1358ea4859aa70cc119fc9d58f2d6dac",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-14-0.8-device-check.md",
+      "observation": "Both Widget kinds added and match app values, A/B changes render; A disable hides/re-enable retains, removal/reregister empty with B retained. No precise latency measurement. App update/Refresh reopens preserve A-empty/B values.",
+      "review": "User reports received stepwise; unreported intermediate states/absolute values are not invented. Canonical record separates old candidate and4e6a3f4 results.",
+      "reuse_reason": "Historical source-specific evidence retained from docs/verification/2026-09-18-p2-identity-push-evidence.json. Original product-path claims refer to that historical boundary. This report does not claim all product code remained unchanged; later management/scene integration is additionally covered by CI35357260854 and CI35365770330. Physical observations retain their original source and scope. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P1-2.device",
+      "kind": "device",
+      "source": "4e6a3f4b1358ea4859aa70cc119fc9d58f2d6dac",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-14-0.8-device-check.md",
+      "observation": "Same diagnosticIPA overwrite and Refresh retain Widget A-empty/B; return to normal retains CounterWidget matching/tap and CounterShortcut. Diagnostic home widgets retain old display and tap top; binary normal has no diagnostic kind/resource, cache cause unproven.",
+      "review": "User reports received stepwise; unreported intermediate states/absolute values are not invented. Canonical record separates old candidate and4e6a3f4 results.",
+      "reuse_reason": "Historical source-specific evidence retained from docs/verification/2026-09-18-p2-identity-push-evidence.json. Original product-path claims refer to that historical boundary. This report does not claim all product code remained unchanged; later management/scene integration is additionally covered by CI35357260854 and CI35365770330. Physical observations retain their original source and scope. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P1-3.routing",
+      "kind": "unit",
+      "source": "42bb373f54f6f52bfefe1b12ad4809c0327ac219",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35249566535",
+      "observation": "Unfiltered shared415 tests, 2 existing Keychain skips and zero failures. New identity9 and Push9 owner/lifetime/account/payload tests passed. Records11 passed independently.",
+      "review": "Full successful job log inspected, not workflow status alone. This is unit evidence; no real APNs/CloudKit communication inferred.",
+      "reuse_reason": "At the historical c4703a1 boundary, production sources matched42bb373. For this report, ExternalIdentity/RemotePush remain unchanged throughac29d5c; later shared management/scene changes are covered by CI35357260854 and CI35365770330. Do not interpret this as all Sources being unchanged since42bb373. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P1-3.os",
+      "kind": "device",
+      "source": "4e6a3f4b1358ea4859aa70cc119fc9d58f2d6dac",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-14-0.8-device-check.md",
+      "observation": "Text/URL/file share saved then imported A1->3, B imported; destination-before-selection cancel no extra pending; after injected post-save failure/retry A4/B unchanged and no pending; force relaunch and overwrite/Refresh retained. Files direct-open cancel no extra, direct import A5/B unchanged. Intermediate failed pending row not explicitly observed separately; full-host CI34958712557 covers failure/retry assertions.",
+      "review": "User reports received stepwise; unreported intermediate states/absolute values are not invented. Canonical record separates old candidate and4e6a3f4 results.",
+      "reuse_reason": "Historical source-specific evidence retained from docs/verification/2026-09-18-p2-identity-push-evidence.json. Original product-path claims refer to that historical boundary. This report does not claim all product code remained unchanged; later management/scene integration is additionally covered by CI35357260854 and CI35365770330. Physical observations retain their original source and scope. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P1-4.ownership",
+      "kind": "unit",
+      "source": "42bb373f54f6f52bfefe1b12ad4809c0327ac219",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35249566535",
+      "observation": "Unfiltered shared415 tests, 2 existing Keychain skips and zero failures. New identity9 and Push9 owner/lifetime/account/payload tests passed. Records11 passed independently.",
+      "review": "Full successful job log inspected, not workflow status alone. This is unit evidence; no real APNs/CloudKit communication inferred.",
+      "reuse_reason": "At the historical c4703a1 boundary, production sources matched42bb373. For this report, ExternalIdentity/RemotePush remain unchanged throughac29d5c; later shared management/scene changes are covered by CI35357260854 and CI35365770330. Do not interpret this as all Sources being unchanged since42bb373. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P1-4.os",
+      "kind": "device",
+      "source": "6beb87760ffbd0dedd7aab9f98dee3dcde6b8604",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-14-0.8-device-check.md",
+      "observation": "At6beb877: delivered attachment, mark/reply, A unregister/removal preserves B delivered notification card, A/B foreground silent/banner policies. Focus-mode delivery was unconfirmed and excluded.",
+      "review": "User reports received stepwise; unreported intermediate states/absolute values are not invented. Canonical record separates old candidate and4e6a3f4 results.",
+      "reuse_reason": "Historical source-specific evidence retained from docs/verification/2026-09-18-p2-identity-push-evidence.json. Original product-path claims refer to that historical boundary. This report does not claim all product code remained unchanged; later management/scene integration is additionally covered by CI35357260854 and CI35365770330. Physical observations retain their original source and scope. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P1-5.http",
+      "kind": "unit",
+      "source": "42bb373f54f6f52bfefe1b12ad4809c0327ac219",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35249566535",
+      "observation": "Unfiltered shared415 tests, 2 existing Keychain skips and zero failures. New identity9 and Push9 owner/lifetime/account/payload tests passed. Records11 passed independently.",
+      "review": "Full successful job log inspected, not workflow status alone. This is unit evidence; no real APNs/CloudKit communication inferred.",
+      "reuse_reason": "At the historical c4703a1 boundary, production sources matched42bb373. For this report, ExternalIdentity/RemotePush remain unchanged throughac29d5c; later shared management/scene changes are covered by CI35357260854 and CI35365770330. Do not interpret this as all Sources being unchanged since42bb373. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P1-5.device",
+      "kind": "device",
+      "source": "6beb87760ffbd0dedd7aab9f98dee3dcde6b8604",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-14-0.8-device-check.md",
+      "observation": "At6beb877: local HTTP login/cache, relaunch Cookie/password retention, cancellation/logout/B preservation, same diagnosticIPA overwrite and Refresh credentials retention. Precommit fault injection is CI evidence; no independent device failure-injection claim. URLCache durability across relaunch is not required.",
+      "review": "User reports received stepwise; unreported intermediate states/absolute values are not invented. Canonical record separates old candidate and4e6a3f4 results.",
+      "reuse_reason": "Historical source-specific evidence retained from docs/verification/2026-09-18-p2-identity-push-evidence.json. Original product-path claims refer to that historical boundary. This report does not claim all product code remained unchanged; later management/scene integration is additionally covered by CI35357260854 and CI35365770330. Physical observations retain their original source and scope. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P1-6.storage",
+      "kind": "simulator",
+      "source": "b62a2e635993900b47cf3738570b3f1d2825893b",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/34819734774/job/103898309278; docs/verification/2026-09-14-p1-b.md",
+      "observation": "Actual embedded-loopback WKWebView storage/restart/removal219.107s, held-writer cancellation136.873s and management drain/removal152.546s passed. Separate disable205.202s passed on0a3fb21/run34823801940. Other owner preserved.",
+      "review": "Individual pass lines and assertions checked. The failed run9 disable is retained; run11 first disable passed without prewarming and auth succeeded. Native cleanup delay remains unexplained, physical result at6beb877 recorded separately.",
+      "reuse_reason": "Historical source-specific evidence retained from docs/verification/2026-09-18-p2-identity-push-evidence.json. Original product-path claims refer to that historical boundary. This report does not claim all product code remained unchanged; later management/scene integration is additionally covered by CI35357260854 and CI35365770330. Physical observations retain their original source and scope. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P1-6.auth",
+      "kind": "simulator",
+      "source": "0a3fb2148986070b4f7311ae9351e655564891d4",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/34823801940/job/103911167894; docs/verification/2026-09-14-p1-b.md",
+      "observation": "Normal host A/B real ASWebAuthenticationSession callback, OS B cancellation and retained A completed result passed128.630s. Prior independent native5 proof retained separately.",
+      "review": "Selected normal-host method passed; callbacks require Return to App link and proper owner; B uses OS close control. Authentication preparation did not fail this run.",
+      "reuse_reason": "Historical source-specific evidence retained from docs/verification/2026-09-18-p2-identity-push-evidence.json. Original product-path claims refer to that historical boundary. This report does not claim all product code remained unchanged; later management/scene integration is additionally covered by CI35357260854 and CI35365770330. Physical observations retain their original source and scope. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P2-1.ownership",
+      "kind": "unit",
+      "source": "a14210815b4c312ab28ade2fddcfc7eec11360fb",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35102558612",
+      "observation": "Shared359 tests, knownKeychain2skip, failure0. Audio14/Capture19 owner regressions passed; Core unchanged but rerun with host fix.",
+      "review": "Reviewed shared test counts and new source; native/UI results recorded separately.",
+      "reuse_reason": "Prior source evidence retained, not a rerun. Core Audio/Capture, storage/schema/Feature management/backup/widgets/intents/network unchanged from306874f. Host scene registration and scanner presentation anchor changed; fullScreen/re-presentation/scene disconnect native regressions and normal notification routing UI passed in repair run35102558612. Existing physical recording/video success is scoped to306874f. Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-16-p2-media-evidence.json"
+    },
+    {
+      "criterion": "P2-1.integration",
+      "kind": "simulator",
+      "source": "a14210815b4c312ab28ade2fddcfc7eec11360fb",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35102558612/artifacts/10449625989",
+      "observation": "All28MediaNativeTests passed once,0failed/skip. Actual UIKit fullScreen hides host then re-presents twice while keeping capture owner/selected scene. Scene disconnection/reactivation/root teardown and unrelated-scene notification filtering passed. Existing audio/capture/bridge cases retained. Actual VisionKit document scan still requires device.",
+      "review": "Downloaded result.json, structured test-summary/test-tests and timings; local require_test_passes validated exact28methods. Fullscreen2.130s, scene-connection0.009s. Release diagnostic IPA/signatures/CRC passed.",
+      "reuse_reason": " Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-16-p2-media-evidence.json"
+    },
+    {
+      "criterion": "P2-1.device",
+      "kind": "device",
+      "source": "a14210815b4c312ab28ade2fddcfc7eec11360fb",
+      "additional_sources": [
+        "306874f232849fa81de20985f3e2f90bf2da5a09"
+      ],
+      "result": "passed",
+      "reference": "docs/verification/2026-09-16-p2-media-device.md",
+      "observation": "306874f playback/background/lock commands/Siri explicit replay/record-playback-release; a142108 headphone removal stops playback and normal return retains Counter/Reminder.",
+      "review": "Sequential user OK receipts, including final combined2points. Host scene/anchor repair does not alter audio/capture producers or stored data. Automated actual Feature tests cover failure/cancel/generation/other-owner combinations; unchanged Refresh and full manual matrix were not repeated under approved burden reduction.",
+      "reuse_reason": " Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-16-p2-media-evidence.json"
+    },
+    {
+      "criterion": "P2-1.docs",
+      "kind": "inspection",
+      "result": "passed",
+      "source": "1d13e55a05ecff9054944970ba2a6a9efc3f69f2",
+      "reference": "docs/guides/; docs/compatibility.md; docs/delivery/plan.json; docs/verification/2026-09-19-1.0-release.md",
+      "observation": "Current API/ownership/recovery documentation and adopted scope reviewed; actual evidence and unobserved conditions separate. See complete document inventory.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-2.ownership",
+      "kind": "unit",
+      "source": "a14210815b4c312ab28ade2fddcfc7eec11360fb",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35102558612",
+      "observation": "Shared359 tests, knownKeychain2skip, failure0. Audio14/Capture19 owner regressions passed; Core unchanged but rerun with host fix.",
+      "review": "Reviewed shared test counts and new source; native/UI results recorded separately.",
+      "reuse_reason": "Prior source evidence retained, not a rerun. Core Audio/Capture, storage/schema/Feature management/backup/widgets/intents/network unchanged from306874f. Host scene registration and scanner presentation anchor changed; fullScreen/re-presentation/scene disconnect native regressions and normal notification routing UI passed in repair run35102558612. Existing physical recording/video success is scoped to306874f. Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-16-p2-media-evidence.json"
+    },
+    {
+      "criterion": "P2-2.integration",
+      "kind": "simulator",
+      "source": "a14210815b4c312ab28ade2fddcfc7eec11360fb",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35102558612/artifacts/10449625989",
+      "observation": "All28MediaNativeTests passed once,0failed/skip. Actual UIKit fullScreen hides host then re-presents twice while keeping capture owner/selected scene. Scene disconnection/reactivation/root teardown and unrelated-scene notification filtering passed. Existing audio/capture/bridge cases retained. Actual VisionKit document scan still requires device.",
+      "review": "Downloaded result.json, structured test-summary/test-tests and timings; local require_test_passes validated exact28methods. Fullscreen2.130s, scene-connection0.009s. Release diagnostic IPA/signatures/CRC passed.",
+      "reuse_reason": " Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-16-p2-media-evidence.json"
+    },
+    {
+      "criterion": "P2-2.device",
+      "kind": "device",
+      "source": "a14210815b4c312ab28ade2fddcfc7eec11360fb",
+      "additional_sources": [
+        "306874f232849fa81de20985f3e2f90bf2da5a09"
+      ],
+      "result": "passed",
+      "reference": "docs/verification/2026-09-16-p2-media-device.md",
+      "observation": "306874f photo/audio-video/Home-stop/saved audio; a142108 document save/image/count/reopen/cancel, QR and normal return. Initial document failure repaired; uncertain first-photo report retained.",
+      "review": "User OK receipts mapped to requested steps, final combined2points included. No physical claim for all models/OS/AR or concurrent second-player video; automated owner/bridge tests remain source-scoped.",
+      "reuse_reason": " Release candidate runtime/tests/package identical to a142108; only3bundle versions/build and workflow expectations plus documentation changed. Original evidence source preserved; no physical rerun claim. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-16-p2-media-evidence.json"
+    },
+    {
+      "criterion": "P2-2.docs",
+      "kind": "inspection",
+      "result": "passed",
+      "source": "1d13e55a05ecff9054944970ba2a6a9efc3f69f2",
+      "reference": "docs/guides/; docs/compatibility.md; docs/delivery/plan.json; docs/verification/2026-09-19-1.0-release.md",
+      "observation": "Current API/ownership/recovery documentation and adopted scope reviewed; actual evidence and unobserved conditions separate. See complete document inventory.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-3.ownership",
+      "kind": "unit",
+      "result": "passed",
+      "source": "82f61bb8d59bd74a5a6a3513b4fa3c68b2f48b08",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35235454126",
+      "observation": "SDK26.6 shared397 (existing Keychain2skip)/Records11/Search44.924s/normal IPA; SDK27 Swift6.4 native24 no skip/runtime warnings and diagnostic IPA passed. Async callback races and location journal persistence/corrupt preservation exercised using injected scheduling/app state, not actual OS-start/cold-event proof.",
+      "review": "Parent checked per-method structured xcresult against pinned source, compiler/SDK provenance, normal/diagnostic markers, new submission selector in diagnostic binary, 3bundle identifiers/version/signature resources, public GET/hash/CRC. Physical results still pending on this source.",
+      "reuse_reason": "Only Tests/P2Background diagnostic fixtures and docs changed after82f61bb. Production Sources, Project.swift, Package.swift and build workflow unchanged. Reuse previous production shared397/Records/Search/normal IPA and existing location coverage; new direct-control regressions and full native26/diagnostic build passed separately at daa49cd/run35238784459. No physical success inferred. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-17-p2-background-location-evidence.json"
+    },
+    {
+      "criterion": "P2-3.integration",
+      "kind": "simulator",
+      "result": "passed",
+      "source": "0daaeb9d333e306b5f6335146c7a3a27b146ad3a",
+      "reference": "docs/verification/2026-09-19-final-observation-boundary.md; https://github.com/y-aplus/JibunKit/actions/runs/35371803883",
+      "observation": "Actual terminated-process Region enter/exit delivered to distinct background processes and persisted owner log; one pass/zero skips/86.643s. Earlier foreground device and background Simulator observations retained; not physical radio.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-3.docs",
+      "kind": "inspection",
+      "result": "passed",
+      "source": "1d13e55a05ecff9054944970ba2a6a9efc3f69f2",
+      "reference": "docs/guides/; docs/compatibility.md; docs/delivery/plan.json; docs/verification/2026-09-19-1.0-release.md",
+      "observation": "Current API/ownership/recovery documentation and adopted scope reviewed; actual evidence and unobserved conditions separate. See complete document inventory.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-4.ownership",
+      "kind": "unit",
+      "result": "passed",
+      "source": "82f61bb8d59bd74a5a6a3513b4fa3c68b2f48b08",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35235454126",
+      "observation": "SDK26.6 shared397 (existing Keychain2skip)/Records11/Search44.924s/normal IPA; SDK27 Swift6.4 native24 no skip/runtime warnings and diagnostic IPA passed. Async callback races and location journal persistence/corrupt preservation exercised using injected scheduling/app state, not actual OS-start/cold-event proof.",
+      "review": "Parent checked per-method structured xcresult against pinned source, compiler/SDK provenance, normal/diagnostic markers, new submission selector in diagnostic binary, 3bundle identifiers/version/signature resources, public GET/hash/CRC. Physical results still pending on this source.",
+      "reuse_reason": "Only Tests/P2Background diagnostic fixtures and docs changed after82f61bb. Production Sources, Project.swift, Package.swift and build workflow unchanged. Reuse previous production shared397/Records/Search/normal IPA and existing location coverage; new direct-control regressions and full native26/diagnostic build passed separately at daa49cd/run35238784459. No physical success inferred. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-17-p2-background-location-evidence.json"
+    },
+    {
+      "criterion": "P2-4.integration",
+      "kind": "device",
+      "result": "passed",
+      "source": "4a1340ab3cedfe10fded79fa975d4a4bd65d160c",
+      "reference": "docs/verification/2026-09-19-background-http-device.md",
+      "observation": "Different process, same run78450873/task1, native URLSession callback, owner restoration,10-byte save/SHA and completion chain observed. OS start cause unknown; BGTasks launch/expiry explicitly excluded.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-4.docs",
+      "kind": "inspection",
+      "result": "passed",
+      "source": "1d13e55a05ecff9054944970ba2a6a9efc3f69f2",
+      "reference": "docs/guides/; docs/compatibility.md; docs/delivery/plan.json; docs/verification/2026-09-19-1.0-release.md",
+      "observation": "Current API/ownership/recovery documentation and adopted scope reviewed; actual evidence and unobserved conditions separate. See complete document inventory.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-5.ownership",
+      "kind": "unit",
+      "source": "b1d379bf5179564230299d02295d3c130efd7866",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35046699862 ; complete shared test log; docs/verification/2026-09-16-p2-continuing-surfaces.md",
+      "observation": "Complete macOS shared suite326 declarations, skip2 existing Keychain, failures0. New common continuing10, Live10, Alarm16 passed. Unit ownership/admission/lifecycle assertions only; no native OS behavior claim. Additional31478f2/35075825942 native real four Feature state regression passed (one method,0.984s), checking all other payload bytes+generation after A disable/delete/JSON restore. See state_regression for source and log artifact limitation.",
+      "review": "Source and actual suite counts/assertions matched. New ownership tests cover old/foreign identity refusal, pending/partial native failure, cleanup/recovery/B retention, observer and gate lifecycle. SDK and physical checks remain separate.",
+      "reuse_reason": "Only diagnostic host factory type, Live native assertion helper, CI job selection and docs changed. No Sources, normal host, Package, Alarm fixture, pure tests or schemas changed; passed shared/normal/Alarm retained at original source. 0.8.2 candidate31478f2: production Sources/Feature logic unchanged from device5678a41; Project changes only bundle version/build. Added state regression/test target and CI selection do not enter normal IPA. Reuse original source; do not claim new test passed. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-16-p2-continuing-surfaces-evidence.json"
+    },
+    {
+      "criterion": "P2-5.integration",
+      "kind": "device",
+      "source": "5678a41d504a0b3c97117ef833653a30f0d670a7",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-16-p2-continuing-surfaces-device.md",
+      "observation": "User confirmed real Live start/update and OS Intent, A end/management/selected restore, Alarm timer/pause/resume/native stop callback/fixed+weekly registrations and A management/restore, normal IPA return. See per-step observation limits.",
+      "review": "This proves exercised OS entrypoints and integration, not universal durability: Live B later showed200 instead of expected230 before overwrite. Cause unknown; subsequent210 retained across restart and Alarm A management/restore. P2-5.device remains unclosed and unit remains partial; no further repetitive manual requests scheduled.",
+      "reuse_reason": "Candidate31478f2 changes production bundle version only; no Feature/Core runtime change. Same device source retained; new native state regression is pending and is not this evidence. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-16-p2-continuing-surfaces-evidence.json"
+    },
+    {
+      "criterion": "P2-5.device",
+      "kind": "device",
+      "result": "passed",
+      "source": "5678a41d504a0b3c97117ef833653a30f0d670a7",
+      "reference": "docs/verification/2026-09-16-p2-continuing-surfaces-device.md; docs/verification/2026-09-18-ar-followup.md",
+      "observation": "Live/Alarm OS operations, management, overwrite/Refresh/restart and normal return observed. Live B=200 remains unexplained; focused repeats held210. Real-feature nondefault-state regression31478f2/35075825942 supports completion without claiming cause fixed.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-5.docs",
+      "kind": "inspection",
+      "result": "passed",
+      "source": "1d13e55a05ecff9054944970ba2a6a9efc3f69f2",
+      "reference": "docs/guides/; docs/compatibility.md; docs/delivery/plan.json; docs/verification/2026-09-19-1.0-release.md",
+      "observation": "Current API/ownership/recovery documentation and adopted scope reviewed; actual evidence and unobserved conditions separate. See complete document inventory.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-6.scope",
+      "kind": "inspection",
+      "result": "passed",
+      "source": "1d13e55a05ecff9054944970ba2a6a9efc3f69f2",
+      "reference": "docs/guides/; docs/compatibility.md; docs/delivery/plan.json; docs/verification/2026-09-19-1.0-release.md",
+      "observation": "Current API/ownership/recovery documentation and adopted scope reviewed; actual evidence and unobserved conditions separate. See complete document inventory.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-6.ownership",
+      "kind": "unit",
+      "result": "passed",
+      "source": "18a94bd50dc19052501ba883db29ba01e587abc8",
+      "reference": "docs/verification/2026-09-18-p2-ar-action.md; docs/verification/2026-09-18-ar-followup.md",
+      "observation": "Native80 including actual-window appearance, idle ownership and built widget locale checks; prior Spotlight owner cleanup retained in shared tests.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-6.integration",
+      "kind": "simulator",
+      "result": "passed",
+      "source": "18a94bd50dc19052501ba883db29ba01e587abc8",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35347692100",
+      "observation": "Actual SpringBoard English Widget gallery/home and camera permission dialog OS UI2 passed/no skips. Native window containment and built en/ja checked; not every language/permission combination.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-6.device",
+      "kind": "device",
+      "result": "passed",
+      "source": "c66b624419b23470881a926d197118293d9bc1b2",
+      "reference": "docs/verification/2026-09-18-p2-combined-device.md",
+      "observation": "Device appearance A/B and idle effective lease kept screen on beyond normal auto-lock; leaving selection restored sleep. Normal overwrite/other-owner state in shared checkpoint; no exhaustive locale claim.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-6.docs",
+      "kind": "inspection",
+      "result": "passed",
+      "source": "1d13e55a05ecff9054944970ba2a6a9efc3f69f2",
+      "reference": "docs/guides/; docs/compatibility.md; docs/delivery/plan.json; docs/verification/2026-09-19-1.0-release.md",
+      "observation": "Current API/ownership/recovery documentation and adopted scope reviewed; actual evidence and unobserved conditions separate. See complete document inventory.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-7.ownership",
+      "kind": "unit",
+      "source": "e984d44fbae1946720f2d43f3ee776e2f25c20f1",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35027469173; docs/verification/2026-09-15-p2-widget-control.md",
+      "observation": "Four native contract tests pass: selected owner/item query and update, Widget/Control configuration/deleted item rejection, actual Definition disable/enable/restore/remove and stale generations, failed/cancelled intent preservation. Builds and metadata10 compare independent A/B vs combined and host/extension. SharedState17 and real multiprocess300-update/interruption evidence reused from unchanged Core at4eb784d. Real OS taps remain a separate integration/device gate.",
+      "review": "Inspected all test method pass lines, logs, result.json source, metadata comparisons and archive. Normal Core paths have no changes since successful34979381516.",
+      "consolidated_from": "docs/verification/2026-09-15-p2-widget-control-evidence.json",
+      "reuse_reason": " Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-7.integration",
+      "kind": "device",
+      "source": "e984d44fbae1946720f2d43f3ee776e2f25c20f1",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-15-p2-widget-control-device.md",
+      "observation": "User confirmed full grouped OS Widget/Control configuration/taps, app/device restart, same-IPA overwrite/SideStore Refresh, selected item removal, disabled update rejection/B operation, full remove/reregister stale rejection, A-only JSON restore/B retention, normal4eb784d return. Foreground values reflected without manual reread; physical disable almost immediate.",
+      "review": "Each expected-value sequence explicitly confirmed in this conversation. Control configuration opened after entering edit mode; no product repair needed. Device OS last reported27.0, not re-queried this session. Normal return checked Counter/Reminder, existing Widget/Shortcut and backup export/import; no invented OS-share repeat.",
+      "consolidated_from": "docs/verification/2026-09-15-p2-widget-control-evidence.json",
+      "reuse_reason": " Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-7.device",
+      "kind": "device",
+      "source": "e984d44fbae1946720f2d43f3ee776e2f25c20f1",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-15-p2-widget-control-device.md",
+      "observation": "User confirmed full grouped OS Widget/Control configuration/taps, app/device restart, same-IPA overwrite/SideStore Refresh, selected item removal, disabled update rejection/B operation, full remove/reregister stale rejection, A-only JSON restore/B retention, normal4eb784d return. Foreground values reflected without manual reread; physical disable almost immediate.",
+      "review": "Each expected-value sequence explicitly confirmed in this conversation. Control configuration opened after entering edit mode; no product repair needed. Device OS last reported27.0, not re-queried this session. Normal return checked Counter/Reminder, existing Widget/Shortcut and backup export/import; no invented OS-share repeat.",
+      "consolidated_from": "docs/verification/2026-09-15-p2-widget-control-evidence.json",
+      "reuse_reason": " Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-7.docs",
+      "kind": "inspection",
+      "result": "passed",
+      "source": "1d13e55a05ecff9054944970ba2a6a9efc3f69f2",
+      "reference": "docs/guides/; docs/compatibility.md; docs/delivery/plan.json; docs/verification/2026-09-19-1.0-release.md",
+      "observation": "Current API/ownership/recovery documentation and adopted scope reviewed; actual evidence and unobserved conditions separate. See complete document inventory.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-8.ownership",
+      "kind": "unit",
+      "source": "42bb373f54f6f52bfefe1b12ad4809c0327ac219",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35249566535",
+      "observation": "Unfiltered shared415 tests, 2 existing Keychain skips and zero failures. New identity9 and Push9 owner/lifetime/account/payload tests passed. Records11 passed independently.",
+      "review": "Full successful job log inspected, not workflow status alone. This is unit evidence; no real APNs/CloudKit communication inferred.",
+      "reuse_reason": "At the historical c4703a1 boundary, production sources matched42bb373. For this report, ExternalIdentity/RemotePush remain unchanged throughac29d5c; later shared management/scene changes are covered by CI35357260854 and CI35365770330. Do not interpret this as all Sources being unchanged since42bb373. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P2-8.integration",
+      "kind": "simulator",
+      "source": "c4703a1b6b2b1b9efbdc1e3755c6db47ecead0d2",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35253192466; https://github.com/y-aplus/JibunKit/actions/runs/34816553410; https://github.com/y-aplus/JibunKit/actions/runs/35365770330",
+      "observation": "Identity native methods exercised two-owner local IDs, account replacement and late-result rejection, failure/recovery, real Feature management removal, restore/reconnect and B retention. The unchanged P1 normal-host HTTP fixture independently exercised real HTTP owner credentials/cookies/cache, restart, failure/cancellation, logout, removal/reregistration and B retention. No injected backend is presented as CloudKit communication.",
+      "review": "All identity/native method pass markers and the earlier embedded-HTTP pass were reviewed. Git diff confirms ExternalIdentity and its P2-I fixture paths are unchanged from c4703a1 to ac29d5c, while the HTTP implementation and fixture paths used at 6beb877 are unchanged through ac29d5c. Later combined native87/UI6 CI35365770330 covers the integrated registry/management host after scene-resource changes.",
+      "reuse_reason": "The criterion now separates signed CloudKit communication. Reuse combines unchanged identity lifecycle integration with independently verified real HTTP normal integration; it does not infer CloudKit network success. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P2-8.device",
+      "kind": "device",
+      "source": "6beb87760ffbd0dedd7aab9f98dee3dcde6b8604",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-14-0.8-device-check.md; https://github.com/y-aplus/JibunKit/actions/runs/35357260854",
+      "observation": "Physical normal HTTP covered login/cache, relaunch credential retention, cancellation/logout with B preserved, and diagnostic IPA overwrite/Refresh retention. This is the required representative external-sync/owner boundary, not signed CloudKit service evidence.",
+      "review": "The stepwise physical record was reviewed without adding unreported states. Git diff from 6beb877 to ac29d5c shows no changes in the HTTP Core/normal fixture paths. Later normal shared443 and candidate UI/build CI35357260854 cover subsequent shared management/runtime integration without claiming a second physical run.",
+      "reuse_reason": "The signed CloudKit-only check is separately approved-unverified. The unchanged generic HTTP implementation remains mandatory and this existing physical run directly covers its normal device behavior. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P2-8.docs",
+      "kind": "inspection",
+      "result": "passed",
+      "source": "1d13e55a05ecff9054944970ba2a6a9efc3f69f2",
+      "reference": "docs/guides/; docs/compatibility.md; docs/delivery/plan.json; docs/verification/2026-09-19-1.0-release.md",
+      "observation": "Current API/ownership/recovery documentation and adopted scope reviewed; actual evidence and unobserved conditions separate. See complete document inventory.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-9.ownership",
+      "kind": "unit",
+      "source": "b2f9a04749b51a9f674c3b7c3d4cf34e109205e7",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35295505063",
+      "observation": "BLE14 shared tests cover owner leases, cancellation joins, reconnect overlap, restored ticket delivery after runtime admission and rollback; fake native boundary only.",
+      "review": "Compared all24 shared method results to expected classes; zero failures. Native13 results cover actual UIKit window interaction separately. No radio/cold-device inference.",
+      "consolidated_from": "docs/verification/2026-09-18-p2-ble-scenes-evidence.json",
+      "reuse_reason": " Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-9.integration",
+      "kind": "device",
+      "result": "passed",
+      "source": "59f7081b2830f48691d4cc2c41891f54ce9460d2",
+      "reference": "docs/verification/2026-09-18-ar-followup.md; docs/verification/2026-09-18-p2-combined-device.md",
+      "observation": "New process willRestoreState/restoredConnected and same-generation two-byte Notify observed. Earlier fe1a6e5 read/write/Notify, both owners and A stopped/B retained succeeded. OS launch trigger unknown.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-9.device",
+      "kind": "device",
+      "result": "passed",
+      "source": "59f7081b2830f48691d4cc2c41891f54ce9460d2",
+      "reference": "docs/verification/2026-09-18-p2-combined-device.md; docs/verification/2026-09-18-ar-followup.md",
+      "observation": "Android GATT: single/both-owner reception, stop-scan without disconnect, explicit reconnect/resubscribe; subsequent new-process same-generation restore Notify. Reports remain bound to original sources.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-9.docs",
+      "kind": "inspection",
+      "result": "passed",
+      "source": "1d13e55a05ecff9054944970ba2a6a9efc3f69f2",
+      "reference": "docs/guides/; docs/compatibility.md; docs/delivery/plan.json; docs/verification/2026-09-19-1.0-release.md",
+      "observation": "Current API/ownership/recovery documentation and adopted scope reviewed; actual evidence and unobserved conditions separate. See complete document inventory.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-10.ownership",
+      "kind": "unit",
+      "source": "42bb373f54f6f52bfefe1b12ad4809c0327ac219",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35249566535",
+      "observation": "Unfiltered shared415 tests, 2 existing Keychain skips and zero failures. New identity9 and Push9 owner/lifetime/account/payload tests passed. Records11 passed independently.",
+      "review": "Full successful job log inspected, not workflow status alone. This is unit evidence; no real APNs/CloudKit communication inferred.",
+      "reuse_reason": "At the historical c4703a1 boundary, production sources matched42bb373. For this report, ExternalIdentity/RemotePush remain unchanged throughac29d5c; later shared management/scene changes are covered by CI35357260854 and CI35365770330. Do not interpret this as all Sources being unchanged since42bb373. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P2-10.integration",
+      "kind": "simulator",
+      "source": "c4703a1b6b2b1b9efbdc1e3755c6db47ecead0d2",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35253192466; https://github.com/y-aplus/JibunKit/actions/runs/35365770330",
+      "observation": "Push native methods exercised same-local-account server identity separation, owner routing and unregister/B retention. Host methods traversed the actual UIApplicationDelegate to coordinator and Feature, forwarding tokens, rejecting unowned/disabled payloads, and starting a dormant owner without opening its screen. No callback fixture is presented as APNs provider delivery.",
+      "review": "All 12 P2-I native methods were matched to source and passed without skips. Git diff confirms RemotePush, NotificationAppDelegate and the P2-I host/native fixture paths are unchanged from c4703a1 to ac29d5c. Later combined native87/UI6 CI35365770330 covers the integrated host after registry/management changes.",
+      "reuse_reason": "The criterion now separates signed APNs registration/provider delivery. The production delegate routing and owner lifecycle paths are unchanged and have direct native host evidence. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P2-10.device",
+      "kind": "device",
+      "source": "6beb87760ffbd0dedd7aab9f98dee3dcde6b8604",
+      "result": "passed",
+      "reference": "docs/verification/2026-09-14-0.8-device-check.md; https://github.com/y-aplus/JibunKit/actions/runs/35357260854",
+      "observation": "Physical ordinary notification use covered attachment delivery, mark/reply actions, A unregister/removal with B notification retained, and separate foreground policies. This is representative normal notification ownership/management evidence, not APNs registration or provider delivery.",
+      "review": "The physical report was reviewed stepwise. Notification ownership/presentation/action/removal Core and normal fixture paths are unchanged from 6beb877 to ac29d5c. NotificationAppDelegate later gained additive remote-push/background routing; normal shared443/UI/build CI35357260854 covers the later integrated host without inventing APNs delivery.",
+      "reuse_reason": "The signed APNs-only check is separately approved-unverified. Existing physical local-notification evidence remains valid for the required normal owner/management/device boundary. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI.",
+      "consolidated_from": "docs/verification/2026-09-19-p2-identity-push-final-evidence.json"
+    },
+    {
+      "criterion": "P2-10.docs",
+      "kind": "inspection",
+      "result": "passed",
+      "source": "1d13e55a05ecff9054944970ba2a6a9efc3f69f2",
+      "reference": "docs/guides/; docs/compatibility.md; docs/delivery/plan.json; docs/verification/2026-09-19-1.0-release.md",
+      "observation": "Current API/ownership/recovery documentation and adopted scope reviewed; actual evidence and unobserved conditions separate. See complete document inventory.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-11.ownership",
+      "kind": "unit",
+      "source": "b2f9a04749b51a9f674c3b7c3d4cf34e109205e7",
+      "result": "passed",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35295505063",
+      "observation": "Scene10 shared tests cover two owner/session state, reentrant cleanup, detached join and disabled admission; formerly deadlocked test now passes with actual cleanup join retained.",
+      "review": "Compared all24 shared method results to expected classes; zero failures. Native13 results cover actual UIKit window interaction separately. No radio/cold-device inference.",
+      "consolidated_from": "docs/verification/2026-09-18-p2-ble-scenes-evidence.json",
+      "reuse_reason": " Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-11.integration",
+      "kind": "simulator",
+      "result": "passed",
+      "source": "99632e3e489be015acddb5858214b290da14e22d",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35355170934; docs/verification/2026-09-18-0.8.5-release.md",
+      "observation": "Original two OS sessions with distinct owner/count restored after termination; reactivate archived existing session rather than replace; destroy one retains other. Invalid saved owner cleared. Native82/OS UI5 pass/no skips.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-11.docs",
+      "kind": "inspection",
+      "result": "passed",
+      "source": "1d13e55a05ecff9054944970ba2a6a9efc3f69f2",
+      "reference": "docs/guides/; docs/compatibility.md; docs/delivery/plan.json; docs/verification/2026-09-19-1.0-release.md",
+      "observation": "Current API/ownership/recovery documentation and adopted scope reviewed; actual evidence and unobserved conditions separate. See complete document inventory.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-12.scope",
+      "kind": "inspection",
+      "result": "passed",
+      "source": "1d13e55a05ecff9054944970ba2a6a9efc3f69f2",
+      "reference": "docs/guides/; docs/compatibility.md; docs/delivery/plan.json; docs/verification/2026-09-19-1.0-release.md",
+      "observation": "Current API/ownership/recovery documentation and adopted scope reviewed; actual evidence and unobserved conditions separate. See complete document inventory.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-12.ownership",
+      "kind": "unit",
+      "result": "passed",
+      "source": "4a1340ab3cedfe10fded79fa975d4a4bd65d160c",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35336219498; https://github.com/y-aplus/JibunKit/actions/runs/35365770330",
+      "observation": "AR ownership/run/generation/stop/cleanup/interruption-correlation contracts in combined native87. Earlier native17/camera contention retained; injected interruption is not actual OS interruption.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-12.integration",
+      "kind": "device",
+      "result": "passed",
+      "source": "ddb0f83840fc28427316a72570c43feb32645b93",
+      "reference": "docs/verification/2026-09-18-ar-followup.md",
+      "observation": "Device1–5: AR frames; contender reject preserves A; stopCurrent stops A/starts B; B stop does not resume A; explicit A restart resumes frames. OS interruption remains unobserved.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-12.docs",
+      "kind": "inspection",
+      "result": "passed",
+      "source": "1d13e55a05ecff9054944970ba2a6a9efc3f69f2",
+      "reference": "docs/guides/; docs/compatibility.md; docs/delivery/plan.json; docs/verification/2026-09-19-1.0-release.md",
+      "observation": "Current API/ownership/recovery documentation and adopted scope reviewed; actual evidence and unobserved conditions separate. See complete document inventory.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-13.scope",
+      "kind": "inspection",
+      "result": "passed",
+      "source": "1d13e55a05ecff9054944970ba2a6a9efc3f69f2",
+      "reference": "docs/guides/; docs/compatibility.md; docs/delivery/plan.json; docs/verification/2026-09-19-1.0-release.md",
+      "observation": "Current API/ownership/recovery documentation and adopted scope reviewed; actual evidence and unobserved conditions separate. See complete document inventory.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-13.ownership",
+      "kind": "unit",
+      "result": "passed",
+      "source": "5a978579ededfe83ddd6ce87573b753d27548537",
+      "reference": "https://github.com/y-aplus/JibunKit/actions/runs/35343811711; docs/verification/2026-09-18-ar-followup.md",
+      "observation": "Persistent store recreated without registration then re-registered; text delivery/ACK/B preservation.21 related native tests passed. Not OS reinstall.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-13.integration",
+      "kind": "device",
+      "result": "passed",
+      "source": "c66b624419b23470881a926d197118293d9bc1b2",
+      "reference": "docs/verification/2026-09-18-p2-combined-device.md; docs/verification/2026-09-18-ar-followup.md",
+      "observation": "Save-only Action OS entry, URL/file delivery, cancellation, disabled A/B preservation. Shared text loader/store native and prior Share device text reused separately; Action plain-text-only physical observation not claimed.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-13.device",
+      "kind": "device",
+      "result": "passed",
+      "source": "c66b624419b23470881a926d197118293d9bc1b2",
+      "reference": "docs/verification/2026-09-18-p2-combined-device.md; docs/verification/2026-09-18-ar-followup.md",
+      "observation": "User reports cover Action URL/file/cancellation/owner admission. Normal return/Counter/Reminder preservation in0.8.4/0.8.5. Inbox re-registration preservation automatic, not device reinstall.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    },
+    {
+      "criterion": "P2-13.docs",
+      "kind": "inspection",
+      "result": "passed",
+      "source": "1d13e55a05ecff9054944970ba2a6a9efc3f69f2",
+      "reference": "docs/guides/; docs/compatibility.md; docs/delivery/plan.json; docs/verification/2026-09-19-1.0-release.md",
+      "observation": "Current API/ownership/recovery documentation and adopted scope reviewed; actual evidence and unobserved conditions separate. See complete document inventory.",
+      "review": "Reviewed source-specific record against adopted criterion; actual observation limits remain separate.",
+      "reuse_reason": "Retained original tested source. Candidate Sources/Package match normal feab170; later changes are fixtures/docs/version. Integrated shared443 and native87 retain regression coverage. Final consolidation retains source/observation. Candidate shared443/Module11, standalone Counter/harness and filtered URL regression succeeded; unchanged product paths reuse earlier evidence, not a rerun of every UI."
+    }
+  ],
+  "deferred_device": {},
+  "approved_unverified": [
+    {
+      "criterion": "P2-3.device",
+      "result": "unverified-approved-exclusion",
+      "scope": "Physical iBeacon radio, background boundary movement and reboot/unlock delivery; existing foreground device and Simulator OS evidence are retained.",
+      "reason": "Owner accepted v1 criteria on 2026-09-19 with these observation limits disclosed. This is not a device pass or final publication approval. See docs/verification/2026-09-19-final-observation-boundary.md."
+    },
+    {
+      "criterion": "P2-4.device",
+      "result": "unverified-approved-exclusion",
+      "scope": "Actual BackgroundTasks OS launch/expiration and continued-processing start; verified device background HTTP restoration remains separate.",
+      "reason": "Owner accepted v1 criteria on 2026-09-19 with these observation limits disclosed. This is not a device pass or final publication approval. See docs/verification/2026-09-19-final-observation-boundary.md."
+    },
+    {
+      "criterion": "P2-8.signed-service",
+      "result": "unverified-approved-exclusion",
+      "scope": "有料署名・container設定を要するCloudKit実通信とそのOS復帰",
+      "reason": "2026-09-19ユーザー確定。無料署名での通常利用にそぐわないため任意条件付き提供とし、1.0必須の実通信検証から外す。実通信未検証を維持する。"
+    },
+    {
+      "criterion": "P2-10.signed-service",
+      "result": "unverified-approved-exclusion",
+      "scope": "有料署名・provider設定を要するAPNs実登録・実配信とその背景入口",
+      "reason": "2026-09-19ユーザー確定。無料署名での通常利用にそぐわないため任意条件付き提供とし、1.0必須の実通信検証から外す。実通信未検証を維持する。"
+    },
+    {
+      "criterion": "P2-11.device",
+      "result": "unverified-approved-exclusion",
+      "scope": "Physical iPad multiwindow operation; actual Simulator session creation/restoration/isolation evidence is retained.",
+      "reason": "Owner accepted v1 criteria on 2026-09-19 with these observation limits disclosed. This is not a device pass or final publication approval. See docs/verification/2026-09-19-final-observation-boundary.md."
+    },
+    {
+      "criterion": "P2-12.device",
+      "result": "unverified-approved-exclusion",
+      "scope": "Actual OS AR interruption began/ended and same-run frame recovery; device frames, explicit lifecycle and camera contention remain verified.",
+      "reason": "Owner accepted v1 criteria on 2026-09-19 with these observation limits disclosed. This is not a device pass or final publication approval. See docs/verification/2026-09-19-final-observation-boundary.md."
+    }
+  ],
+  "documents": [
+    {
+      "path": "CHANGELOG.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "CONTRIBUTING.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "Modules/Records/README.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "README.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "SECURITY.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "THIRD_PARTY_NOTICES.md",
+      "outcome": "reviewed-unchanged"
+    },
+    {
+      "path": "docs/background-refresh-coordination.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/build.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/ci-boundaries.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/coexistence-boundaries.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/coexistence-ledger.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/compatibility.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/delivery/P0-A-contract.md",
+      "outcome": "reviewed-unchanged"
+    },
+    {
+      "path": "docs/delivery/P0-B-contract.md",
+      "outcome": "reviewed-unchanged"
+    },
+    {
+      "path": "docs/delivery/P0-C-contract.md",
+      "outcome": "reviewed-unchanged"
+    },
+    {
+      "path": "docs/delivery/P1-A-contract.md",
+      "outcome": "reviewed-unchanged"
+    },
+    {
+      "path": "docs/delivery/P1-B-contract.md",
+      "outcome": "reviewed-unchanged"
+    },
+    {
+      "path": "docs/delivery/P2-adoption-contract.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/delivery/P2-alarm-design.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/delivery/P2-ar-contract.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/delivery/P2-background-location-contract.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/delivery/P2-background-proposal.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/delivery/P2-ble-scenes-contract.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/delivery/P2-bluetooth-submission.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/delivery/P2-continuing-surfaces-contract.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/delivery/P2-continuing-surfaces-review.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/delivery/P2-identity-push-contract.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/delivery/P2-identity-submission.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/delivery/P2-live-activity-design.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/delivery/P2-location-proposal.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/delivery/P2-media-audio-proposal.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/delivery/P2-media-capture-proposal.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/delivery/P2-media-contract.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/delivery/P2-push-submission.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/delivery/P2-scenes-submission.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/delivery/P2-widget-control-contract.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/action-extension.md",
+      "outcome": "reviewed-unchanged"
+    },
+    {
+      "path": "docs/guides/alarms.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/audio.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/augmented-reality.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/background-continued-processing.md",
+      "outcome": "reviewed-unchanged"
+    },
+    {
+      "path": "docs/guides/background-execution-ownership.md",
+      "outcome": "reviewed-unchanged"
+    },
+    {
+      "path": "docs/guides/background-urlsession-reconnect.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/bluetooth-ownership.md",
+      "outcome": "reviewed-unchanged"
+    },
+    {
+      "path": "docs/guides/capture.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/database-files.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/external-data-identity.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/feature-app-shortcuts.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/feature-appearance.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/feature-build-requirements.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/feature-consent.md",
+      "outcome": "reviewed-unchanged"
+    },
+    {
+      "path": "docs/guides/feature-data-removal.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/feature-http.md",
+      "outcome": "reviewed-unchanged"
+    },
+    {
+      "path": "docs/guides/feature-incoming.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/feature-lifetime.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/feature-management.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/feature-owned-presentations.md",
+      "outcome": "reviewed-unchanged"
+    },
+    {
+      "path": "docs/guides/feature-privacy-manifests.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/feature-url-routing.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/interactive-widgets.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/keychain-access-control.md",
+      "outcome": "reviewed-unchanged"
+    },
+    {
+      "path": "docs/guides/live-activities.md",
+      "outcome": "reviewed-unchanged"
+    },
+    {
+      "path": "docs/guides/location.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/management-removal-failure-fixture.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/notification-attachments.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/notification-request-snapshots.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/owned-notification-observations.md",
+      "outcome": "reviewed-unchanged"
+    },
+    {
+      "path": "docs/guides/package-app-intents.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/package-sdk-module-aliases.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/package-static-widgets.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/remote-push.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/runtime-shutdown-progress.md",
+      "outcome": "reviewed-unchanged"
+    },
+    {
+      "path": "docs/guides/scene-feature-activity.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/scene-idle-timer.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/spotlight-ownership.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/store-access-coordination.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/guides/web-authentication-ownership.md",
+      "outcome": "reviewed-unchanged"
+    },
+    {
+      "path": "docs/guides/web-storage-ownership.md",
+      "outcome": "reviewed-unchanged"
+    },
+    {
+      "path": "docs/guides/widget-localization.md",
+      "outcome": "reviewed-unchanged"
+    },
+    {
+      "path": "docs/guides/window-scene-ownership.md",
+      "outcome": "reviewed-unchanged"
+    },
+    {
+      "path": "docs/implementation-priorities.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/mini-apps.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/network-integration.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/parallel-implementation.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/releases/release-notes-1.0.0.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/releasing.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/runtime-restore-integration.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/scene-navigation.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/sidestore.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/status.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/superpowers/plans/2026-09-08-jibunkit-1.0.md",
+      "outcome": "updated"
+    },
+    {
+      "path": "docs/updating.md",
+      "outcome": "updated"
+    }
+  ],
+  "document_review": {
+    "source": "6c14e55f0be7f43551df47a78f63c4ef56e65c5a",
+    "summary": "Full current inventory read by assigned document workers and parent; entry sample corrected against template, package diagnostic restored, current accepted scope/publication approval synchronized, paths checked. Detailed grouped responsibilities/reasons in2026-09-19-1.0-release.md.",
+    "unresolved": [
+      "Six explicitly approved unverified OS/device/signed-service scopes remain in approved_unverified; not passes.",
+      "Japanese historical and supplementary maintainer/reference prose retained; English current user/API entry is primary.",
+      "Six remote heads with unique ancestry and28 attached-worktree heads retained; no destructive patch-equivalence inference."
+    ]
+  },
+  "release": {
+    "candidate_ipa": "35409750733/82553cfe2c81cd83111cd2a247c90f87bd1015ac;1.0.0/build16;4747918bytes;sha2566d077f2caf52f9a1151e0e00cdb02332536baaed922e977b1ac0e7afe3e84d3f;44 entries CRC pass.",
+    "normal_regression": "Candidate shared443(skip2)/Module11; selected cold/warm URL test49.368s; standalone Counter/backup harness build. Prior Files success35298791125 separate from later independent OS FileProvider failures.",
+    "generated_host": "Source-specific P0/P1 generated evidence in2026-09-15-0.8-evidence.json retained; standalone Counter/harness rebuilt. Template/Modules unchanged apart from Records README. P2 combined native87/OS UI6 at4a1340a validates composed host. Not all-filter generated rerun.",
+    "metadata": "Candidate CI checks app/Widget/Share arm64/native App Intents metadata/IDs/AppGroup/ad-hoc deep strict codesign/IPA.3 bundles1.0.0/build16; diagnostic Action absent.",
+    "compatibility": "No normal Sources/Package changes from feab170; Project version/build only. Ignored Zaiko excluded; stable owner IDs and schemas retained. Docs do not change product.",
+    "physical_review": "Original source-specific results retained; latest normal0.8.5 overwrite Counter/Reminder and reentry passed, candidate version-only. Four approved OS/device exclusions plus optional signed CloudKit/APNs remain unverified."
+  },
+  "metrics": {
+    "review_rounds": 0,
+    "parent_messages": 0,
+    "ci_job_minutes": 0
+  },
+  "acceptance": {
+    "P0-1.lifetime": "開始・非選択・取消・終了・再開、購読/HTTP/採用DB解放とB継続",
+    "P0-1.integration": "通常Feature経路でA終了/失敗/再開、Bの処理と保存を保持",
+    "P0-2.presentation": "画面切替・戻る・提示中外部遷移・取消で所有先と保持状態が一貫",
+    "P0-2.uikit": "UIKit提示/終了を同じ所有契約へ接続、A終了時のB保持",
+    "P0-3.failure": "破損・取消・stop/apply/resume失敗、移行/リセット、通常アクセス競合とB保持",
+    "P0-3.integration": "JSON/添付とSQLiteの実接続で保存・復元・移行・リセットを通す",
+    "P0-3.device": "候補IPAで選択復元/リセットの通常操作と他Feature保持をまとめて確認",
+    "P0-4.diagnostics": "欠けた依存/登録・異値設定の拒否と解消手順、互換更新",
+    "P0-4.onboarding": "手順だけで独立Featureを追加・単独/host build・更新。二Packageの資源保持",
+    "P0-4.docs": "READMEから追加・更新・復旧・衝突解消まで辿れる",
+    "P0-5.ownership": "所有登録/処理/データの後始末、失敗/再試行、他owner保持",
+    "P0-5.ui": "アプリ内の同意説明、無効化/再有効化/削除確認・取消・失敗を通常経路で操作",
+    "P0-5.device": "候補IPAで同意拒否・無効化・削除・他Feature保持を一括確認",
+    "P0-6.diagnostics": "終了待ちが続く所有処理を識別、虚偽の完了や他owner取消なし",
+    "P0-6.local": "global/登録/外部資源のない具体的な局所処理を比較し補完不要の根拠を残す",
+    "P1-1.os": "OS Shortcutsの発見/候補/引数/実行/戻り値と他owner保持。直接performのみ不可",
+    "P1-1.metadata": "独立A/Bと統合の識別子・参照・削除後保持",
+    "P1-2.widget": "二静的Widgetの追加・描画・A更新/削除後B保持、出荷構成の接続",
+    "P1-2.device": "候補IPAでWidgetの通常追加/更新/他方保持",
+    "P1-3.routing": "所有先・曖昧/未知/取消・権限解放・一時ファイル寿命とB保持",
+    "P1-3.os": "OS外部ファイル/共有シートから受信先選択・成功/取消/失敗と再起動保持",
+    "P1-4.ownership": "foreground方針/添付削除寿命/予約と取消の交差でB保持",
+    "P1-4.os": "通知action/文字入力/foreground表示/添付・他方通知と画面の保持",
+    "P1-5.http": "実HTTPの認証/Cookie/cache、終了後logout、取消/失敗とB保持",
+    "P1-5.device": "候補IPAの再起動・上書き更新/署名更新で資格情報/状態保持とlogout",
+    "P1-6.storage": "通常Webデータの再起動保持と片側削除、書込中・取消・失敗時B保持",
+    "P1-6.auth": "OS Web認証の開始/取消/返却先と他ownerの要求・状態保持",
+    "P2-1.ownership": "録音/再生・背景・通話/経路中断/復帰・互換/非互換AudioSession要求とremote commandを通常Featureへ接続。独立時との差分と通常同時要求・片側失敗/取消・終了の所有を検証",
+    "P2-1.integration": "通常Featureと実OS入口で録音/再生・背景・通話/経路中断/復帰・互換/非互換AudioSession要求とremote commandを通常Featureへ接続",
+    "P2-1.device": "宣言した署名/OS/機器構成で通常入口・必要な背景/中断/復帰・上書き/Refresh・片側管理とB保持をまとめて実機確認",
+    "P2-1.docs": "独立/統合の接続手順、対象source別証拠、未対応と署名/OS制約、互換性と回復手順を同期",
+    "P2-2.ownership": "権限拒否・撮影/文書/コードscan提示・取消・解放・通常中断/復帰・切替時B保持。独立時との差分と通常同時要求・片側失敗/取消・終了の所有を検証",
+    "P2-2.integration": "通常Featureと実OS入口で権限拒否・撮影/文書/コードscan提示・取消・解放・通常中断/復帰・切替時B保持",
+    "P2-2.device": "宣言した署名/OS/機器構成で通常入口・必要な背景/中断/復帰・上書き/Refresh・片側管理とB保持をまとめて実機確認",
+    "P2-2.docs": "独立/統合の接続手順、対象source別証拠、未対応と署名/OS制約、互換性と回復手順を同期",
+    "P2-3.ownership": "前景/背景位置と通常geofence/iBeacon、権限変更/復帰、owner別登録/解除、枠不足の説明とB保持。独立時との差分と通常同時要求・片側失敗/取消・終了の所有を検証",
+    "P2-3.integration": "通常Featureと実OS入口で前景/背景位置と通常geofence/iBeacon、権限変更/復帰、owner別登録/解除、枠不足の説明とB保持",
+    "P2-3.docs": "独立/統合の接続手順、対象source別証拠、未対応と署名/OS制約、互換性と回復手順を同期",
+    "P2-4.ownership": "実OS受付/launch/期限/取消/completion、cold launchと転送再接続、重複配送・再起動の他owner保持。独立時との差分と通常同時要求・片側失敗/取消・終了の所有を検証",
+    "P2-4.integration": "通常Featureと実OS入口で実OS受付/launch/期限/取消/completion、cold launchと転送再接続、重複配送・再起動の他owner保持",
+    "P2-4.docs": "独立/統合の接続手順、対象source別証拠、未対応と署名/OS制約、互換性と回復手順を同期",
+    "P2-5.ownership": "開始/更新/停止、再起動照合、所有Featureへの操作配送、片側取消/削除とB保持。独立時との差分と通常同時要求・片側失敗/取消・終了の所有を検証",
+    "P2-5.integration": "通常Featureと実OS入口で開始/更新/停止、再起動照合、所有Featureへの操作配送、片側取消/削除とB保持",
+    "P2-5.device": "宣言した署名/OS/機器構成で通常入口・必要な背景/中断/復帰・上書き/Refresh・片側管理とB保持をまとめて実機確認",
+    "P2-5.docs": "独立/統合の接続手順、対象source別証拠、未対応と署名/OS制約、互換性と回復手順を同期",
+    "P2-6.scope": "既存成果・残負荷・主機能への影響から採否と採用範囲を明記。除外は低需要だけで決めず、他P2の必要部分を除外しない",
+    "P2-6.ownership": "idle実機/外観分離/Spotlight/Widget翻訳/権限dialogを関連P2と評価し採用範囲を検証。独立時との差分と通常同時要求・片側失敗/取消・終了の所有を検証",
+    "P2-6.integration": "通常Featureと実OS入口でidle実機/外観分離/Spotlight/Widget翻訳/権限dialogを関連P2と評価し採用範囲を検証",
+    "P2-6.device": "宣言した署名/OS/機器構成で通常入口・必要な背景/中断/復帰・上書き/Refresh・片側管理とB保持をまとめて実機確認",
+    "P2-6.docs": "独立/統合の接続手順、対象source別証拠、未対応と署名/OS制約、互換性と回復手順を同期",
+    "P2-7.ownership": "設定対象保持、OS Widget/Control操作、本体/extensionの更新/削除競合・世代・B保持、通常接続とmetadata比較。独立時との差分と通常同時要求・片側失敗/取消・終了の所有を検証",
+    "P2-7.integration": "通常Featureと実OS入口で設定対象保持、OS Widget/Control操作、本体/extensionの更新/削除競合・世代・B保持、通常接続とmetadata比較",
+    "P2-7.device": "宣言した署名/OS/機器構成で通常入口・必要な背景/中断/復帰・上書き/Refresh・片側管理とB保持をまとめて実機確認",
+    "P2-7.docs": "独立/統合の接続手順、対象source別証拠、未対応と署名/OS制約、互換性と回復手順を同期",
+    "P2-8.ownership": "利用可能な署名構成でcontainer/account/data所有、同期中の削除/復帰・B保持。条件の根拠を明示。独立時との差分と通常同時要求・片側失敗/取消・終了の所有を検証",
+    "P2-8.integration": "通常Featureの外部同期におけるowner/container/account/data所有、取消・復帰・B保持。CloudKit実通信はsigned-serviceに分離し、汎用HTTP等の必須範囲を維持",
+    "P2-8.device": "無料署名の通常構成における入口・復帰・既存データ保持・片側管理とB保持を代表実機証拠で確認。署名専用実通信はsigned-serviceに分離し、未検証を合格にしない",
+    "P2-8.docs": "独立/統合の接続手順、対象source別証拠、未対応と署名/OS制約、互換性と回復手順を同期",
+    "P2-9.ownership": "scan/connect/disconnect、ON/OFF、read/write/subscribe、宣言した背景利用のstate restorationとB維持。独立時との差分と通常同時要求・片側失敗/取消・終了の所有を検証",
+    "P2-9.integration": "通常Featureと実OS入口でscan/connect/disconnect、ON/OFF、read/write/subscribe、宣言した背景利用のstate restorationとB維持",
+    "P2-9.device": "宣言した署名/OS/機器構成で通常入口・必要な背景/中断/復帰・上書き/Refresh・片側管理とB保持をまとめて実機確認",
+    "P2-9.docs": "独立/統合の接続手順、対象source別証拠、未対応と署名/OS制約、互換性と回復手順を同期",
+    "P2-10.ownership": "app tokenとFeature/server identity、正しい配送・必要extension、失敗/取消/再登録のB維持、署名/server条件説明。独立時との差分と通常同時要求・片側失敗/取消・終了の所有を検証",
+    "P2-10.integration": "通常Featureの通知所有者・server identity・delegate配送・失敗/取消/再登録時B保持を検証。注入callbackと実APNs配信を区別し、後者はsigned-serviceに分離",
+    "P2-10.device": "無料署名の通常構成における入口・復帰・既存データ保持・片側管理とB保持を代表実機証拠で確認。署名専用実通信はsigned-serviceに分離し、未検証を合格にしない",
+    "P2-10.docs": "独立/統合の接続手順、対象source別証拠、未対応と署名/OS制約、互換性と回復手順を同期",
+    "P2-11.ownership": "実OSの二window独立状態、生成/破棄/復帰、指定sceneへの配送と他window/Feature保持。独立時との差分と通常同時要求・片側失敗/取消・終了の所有を検証",
+    "P2-11.integration": "通常Featureと実OS入口で実OSの二window独立状態、生成/破棄/復帰、指定sceneへの配送と他window/Feature保持",
+    "P2-11.docs": "独立/統合の接続手順、対象source別証拠、未対応と署名/OS制約、互換性と回復手順を同期",
+    "P2-12.scope": "既存成果・残負荷・主機能への影響から採否と採用範囲を明記。除外は低需要だけで決めず、他P2の必要部分を除外しない",
+    "P2-12.ownership": "単一前景sessionの開始/停止/中断復帰が比較的低負荷に成立する範囲を採用・検証。独立時との差分と通常同時要求・片側失敗/取消・終了の所有を検証",
+    "P2-12.integration": "通常Featureと実OS入口で単一前景sessionの開始/停止/中断復帰が比較的低負荷に成立する範囲を採用・検証",
+    "P2-12.docs": "独立/統合の接続手順、対象source別証拠、未対応と署名/OS制約、互換性と回復手順を同期",
+    "P2-13.scope": "既存成果・残負荷・主機能への影響から採否と採用範囲を明記。除外は低需要だけで決めず、他P2の必要部分を除外しない",
+    "P2-13.ownership": "種類別に採否評価して通常接続/所有/終了/他owner維持を検証。P2主機能の必要extensionは除外不可。独立時との差分と通常同時要求・片側失敗/取消・終了の所有を検証",
+    "P2-13.integration": "通常Featureと実OS入口で種類別に採否評価して通常接続/所有/終了/他owner維持を検証。P2主機能の必要extensionは除外不可",
+    "P2-13.device": "宣言した署名/OS/機器構成で通常入口・必要な背景/中断/復帰・上書き/Refresh・片側管理とB保持をまとめて実機確認",
+    "P2-13.docs": "独立/統合の接続手順、対象source別証拠、未対応と署名/OS制約、互換性と回復手順を同期"
+  },
+  "ci_execution": [
+    {
+      "id": "v1-normal",
+      "inputs_and_filters": "build-ios.yml simulator_tests=true feature_validation=false records_validation=false ui_test_filter=MigrationUITests/MigrationUITests/testMiniAppLinksOpenColdAndSwitchWarm",
+      "estimate_basis": "Prior normal boundary; reuse unchanged generated/Records and native surface evidence. See 2026-09-19-1.0-release.md before-run plan.",
+      "expected_elapsed_minutes": 25
+    }
+  ]
+}
