@@ -1,7 +1,8 @@
+#if os(iOS)
 import SwiftUI
 
 public struct SpotAliasRootView: View {
-    @Bindable var store: SpotAliasStore
+    @ObservedObject var store: SpotAliasStore
     @Environment(\.openURL) private var openURL
     @State private var editingItem: AppAliasItem?
     @State private var isAddingNew = false
@@ -393,3 +394,4 @@ struct AppAliasPresetsView: View {
         }
     }
 }
+#endif

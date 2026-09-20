@@ -1,5 +1,7 @@
+#if os(iOS)
 import Foundation
-import Observation
+import Combine
+import SwiftUI
 #if canImport(CoreSpotlight)
 import CoreSpotlight
 #endif
@@ -29,12 +31,11 @@ public struct SpotAliasSpotlightAdapter: Sendable {
 }
 
 @MainActor
-@Observable
-public final class SpotAliasStore {
-    public private(set) var items: [AppAliasItem] = []
-    public var searchQuery: String = ""
-    public var statusMessage: String?
-    public var isIndexing: Bool = false
+public final class SpotAliasStore: ObservableObject {
+    @Published public private(set) var items: [AppAliasItem] = []
+    @Published public var searchQuery: String = ""
+    @Published public var statusMessage: String?
+    @Published public var isIndexing: Bool = false
 
     private let defaults: UserDefaults?
     private let keys: SpotAliasStorageKeys
@@ -223,3 +224,4 @@ public final class SpotAliasStore {
         }
     }
 }
+#endif
