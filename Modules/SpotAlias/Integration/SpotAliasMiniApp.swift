@@ -1,6 +1,7 @@
 #if os(iOS)
 import Foundation
 import UIKit
+import SwiftUI
 import CoreSpotlight
 import JibunKitCore
 import SpotAliasFeature
@@ -104,11 +105,12 @@ public enum SpotAliasMiniApp {
     )
 
     /// Launch external app immediately when routed from Spotlight
-    private static func handleDestination(_ destination: String) {
+    private static func handleDestination(_ destination: String) -> Bool {
         guard let uuid = UUID(uuidString: destination),
               let item = store.items.first(where: { $0.id == uuid }),
-              let url = URL(string: item.urlScheme) else { return }
+              let url = URL(string: item.urlScheme) else { return false }
         UIApplication.shared.open(url)
+        return true
     }
 
     public static let definition = MiniAppDefinition(
@@ -118,7 +120,7 @@ public enum SpotAliasMiniApp {
         backup: backup,
         lifetime: lifetime,
         removal: removal,
-        appendDestination: { destination in
+        appendDestination: { destination, _ in
             handleDestination(destination)
         }
     ) { _ in
