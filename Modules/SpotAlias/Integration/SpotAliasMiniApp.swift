@@ -42,11 +42,11 @@ public enum SpotAliasMiniApp {
                 var searchableItems: [CSSearchableItem] = []
                 for item in items {
                     let attributes = CSSearchableItemAttributeSet(contentType: .text)
-                    attributes.title = item.title
-                    attributes.displayName = item.title
+                    attributes.title = item.spotlightTitle
+                    attributes.displayName = item.spotlightTitle
                     attributes.alternateNames = item.aliases
                     attributes.keywords = item.allKeywords
-                    attributes.textContent = "\(item.title) \(item.aliases.joined(separator: " ")) JibunKit ジブンキット \(item.note)"
+                    attributes.textContent = "\(item.spotlightTitle) \(item.aliases.joined(separator: " ")) JibunKit ジブンキット \(item.note)"
                     attributes.contentDescription = "JibunKit: \(item.title) を起動"
                     attributes.containerTitle = "JibunKit"
                     attributes.containerDisplayName = "JibunKit"

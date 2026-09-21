@@ -135,10 +135,10 @@ public final class SpotAliasStore: ObservableObject {
         lastSyncResult = "✓ 登録成功: \(activeItems.count)件"
     }
 
-    /// Register a dedicated test item to verify Core Spotlight integration
+    /// Register a dedicated test item along with all active items to verify Core Spotlight integration
     public func testSpotlightSync() {
         isIndexing = true
-        statusMessage = "疎通テスト項目をSpotlightに登録中..."
+        statusMessage = "疎通テスト項目と全アプリをSpotlightに登録中..."
         let testItem = AppAliasItem.makeDiagnosticTestItem()
 
         // Add or update test item in store so user can see it in the list
@@ -150,20 +150,21 @@ public final class SpotAliasStore: ObservableObject {
         save()
 
         let adapter = spotlight
+        let activeItems = items.filter(\.isEnabled)
         Task {
             do {
-                try await adapter.indexItems([testItem])
+                try await adapter.indexItems(activeItems)
                 await MainActor.run {
                     self.isIndexing = false
                     self.lastSyncDate = Date()
-                    self.lastSyncResult = "✓ 疎通テスト成功 (OS登録完了)"
-                    self.statusMessage = "「\(testItem.title)」を登録しました。Spotlightで「jibunkit」と検索してください。"
+                    self.lastSyncResult = "✓ 登録成功: \(activeItems.count)件 (テスト含む)"
+                    self.statusMessage = "\(activeItems.count)件を登録完了。Spotlightで「マック」または「jibunkit」と検索してください。"
                 }
             } catch {
                 await MainActor.run {
                     self.isIndexing = false
                     self.lastSyncDate = Date()
-                    self.lastSyncResult = "✗ 疎通テスト失敗: \(error.localizedDescription)"
+                    self.lastSyncResult = "✗ 登録失敗: \(error.localizedDescription)"
                     self.statusMessage = "エラー: \(error.localizedDescription)"
                 }
             }
@@ -245,12 +246,18 @@ public final class SpotAliasStore: ObservableObject {
             } else {
                 // Apply migrations to existing stored data:
                 // 1. Remove obsolete items (e.g. Lopia)
-                // 2. Fix known outdated URL schemes (e.g. mcdonalds:// -> mcdonaldsjp://)
+                // 2. Fix known outdated URL schemes and sync optimized alias order (e.g. McDonald's)
                 var migrated = decoded.filter { item in
                     item.title != "ロピア" && !item.urlScheme.hasPrefix("lopia://")
                 }
                 for i in 0..<migrated.count {
-                    if migrated[i].urlScheme == "mcdonalds://" {
+                    if migrated[i].title == "マクドナルド" {
+                        if let mcd = SpotAliasPresets.builtin.first(where: { $0.title == "マクドナルド" }) {
+                            migrated[i].aliases = mcd.aliases
+                            migrated[i].urlScheme = mcd.urlScheme
+                            migrated[i].updatedAt = Date()
+                        }
+                    } else if migrated[i].urlScheme == "mcdonalds://" {
                         migrated[i].urlScheme = "mcdonaldsjp://"
                         migrated[i].updatedAt = Date()
                     }

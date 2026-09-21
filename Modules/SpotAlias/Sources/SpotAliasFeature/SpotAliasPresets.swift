@@ -38,28 +38,28 @@ public enum SpotAliasPresets {
     public static let builtin: [AppAliasPreset] = [
         AppAliasPreset(
             title: "マクドナルド",
-            aliases: ["mcdonalds", "mcd", "mac", "マック", "マクド", "まくどなるど", "ハンバーガー"],
+            aliases: ["マック", "mac", "マクド", "mcdonalds", "mcd", "まくどなるど", "ハンバーガー"],
             urlScheme: "mcdonaldsjp://",
             symbolName: "takeoutbag.and.cup.and.straw.fill",
             note: "マクドナルド公式モバイルオーダー"
         ),
         AppAliasPreset(
             title: "スターバックス",
-            aliases: ["starbucks", "sbux", "スタバ", "すたば", "すたーばっくす", "コーヒー"],
+            aliases: ["スタバ", "sbux", "starbucks", "すたば", "すたーばっくす", "コーヒー"],
             urlScheme: "starbucks://",
             symbolName: "cup.and.saucer.fill",
             note: "スターバックス公式アプリ"
         ),
         AppAliasPreset(
             title: "PayPay",
-            aliases: ["paypay", "ぺいぺい", "ペイペイ", "QR決済", "コード決済"],
+            aliases: ["ペイペイ", "paypay", "ぺいぺい", "QR決済", "コード決済"],
             urlScheme: "paypay://",
             symbolName: "qrcode.viewfinder",
             note: "PayPay決済"
         ),
         AppAliasPreset(
             title: "LINE",
-            aliases: ["line", "ライン", "らいん", "トーク", "メッセージ"],
+            aliases: ["ライン", "line", "らいん", "トーク", "メッセージ"],
             urlScheme: "line://",
             symbolName: "bubble.left.and.bubble.right.fill",
             note: "LINEコミュニケーション"

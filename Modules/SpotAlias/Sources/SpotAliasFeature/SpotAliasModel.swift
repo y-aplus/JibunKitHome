@@ -33,6 +33,18 @@ public struct AppAliasItem: Identifiable, Codable, Sendable, Equatable, Hashable
         self.updatedAt = updatedAt
     }
 
+    /// Formatted title incorporating top aliases so Spotlight title matching catches shorthand names directly
+    public var spotlightTitle: String {
+        let topAliases = aliases
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+        if topAliases.isEmpty {
+            return title
+        }
+        let joined = topAliases.prefix(4).joined(separator: " / ")
+        return "\(title) (\(joined))"
+    }
+
     /// All searchable terms including title, aliases, and JibunKit context
     public var allKeywords: [String] {
         var terms: Set<String> = [

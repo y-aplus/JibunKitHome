@@ -25,6 +25,19 @@ struct SpotAliasTests {
         #expect(decoded.isEnabled == item.isEnabled)
     }
 
+    @Test("spotlightTitle includes primary aliases for title matching")
+    func spotlightTitleFormatting() {
+        let item = AppAliasItem(
+            title: "マクドナルド",
+            aliases: ["マック", "mac", "マクド", "mcdonalds"],
+            urlScheme: "mcdonaldsjp://"
+        )
+        let sTitle = item.spotlightTitle
+        #expect(sTitle.contains("マクドナルド"))
+        #expect(sTitle.contains("マック"))
+        #expect(sTitle.contains("mac"))
+    }
+
     @Test("allKeywords includes title and aliases normalized")
     func keywordsNormalization() {
         let item = AppAliasItem(
