@@ -33,9 +33,15 @@ public struct AppAliasItem: Identifiable, Codable, Sendable, Equatable, Hashable
         self.updatedAt = updatedAt
     }
 
-    /// All searchable terms including title and cleaned aliases
+    /// All searchable terms including title, aliases, and JibunKit context
     public var allKeywords: [String] {
-        var terms: Set<String> = []
+        var terms: Set<String> = [
+            "JibunKit",
+            "jibunkit",
+            "ジブンキット",
+            "SpotAlias",
+            "ショートカット"
+        ]
         let cleanTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
         if !cleanTitle.isEmpty {
             terms.insert(cleanTitle)
@@ -49,6 +55,19 @@ public struct AppAliasItem: Identifiable, Codable, Sendable, Equatable, Hashable
             }
         }
         return Array(terms)
+    }
+
+    /// Diagnostic item for verifying Spotlight connectivity
+    public static func makeDiagnosticTestItem() -> AppAliasItem {
+        AppAliasItem(
+            id: UUID(),
+            title: "JibunKit 疎通テスト",
+            aliases: ["jibunkit", "ジブンキット", "テスト", "test", "spotlight"],
+            urlScheme: "jibunkit://",
+            symbolName: "checkmark.shield.fill",
+            note: "Spotlight インデックス疎通確認用のテストアイテムです",
+            isEnabled: true
+        )
     }
 
     /// Checks if this item matches a search query

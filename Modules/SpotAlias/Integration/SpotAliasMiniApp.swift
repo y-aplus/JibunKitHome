@@ -30,8 +30,13 @@ public enum SpotAliasMiniApp {
         let adapter = SpotAliasSpotlightAdapter(
             indexItems: { items in
                 guard CSSearchableIndex.isIndexingAvailable() else {
-                    logger.warning("Core Spotlight indexing is not available on this device.")
-                    return
+                    let err = NSError(
+                        domain: "SpotAlias",
+                        code: -1005,
+                        userInfo: [NSLocalizedDescriptionKey: "この端末環境では Core Spotlight インデックスがサポートされていません"]
+                    )
+                    logger.warning("\(err.localizedDescription)")
+                    throw err
                 }
                 let index = CSSearchableIndex.default()
                 var searchableItems: [CSSearchableItem] = []
@@ -41,8 +46,11 @@ public enum SpotAliasMiniApp {
                     attributes.displayName = item.title
                     attributes.alternateNames = item.aliases
                     attributes.keywords = item.allKeywords
-                    attributes.textContent = "\(item.title) \(item.aliases.joined(separator: " ")) \(item.note)"
-                    attributes.contentDescription = "\(item.title) を起動"
+                    attributes.textContent = "\(item.title) \(item.aliases.joined(separator: " ")) JibunKit ジブンキット \(item.note)"
+                    attributes.contentDescription = "JibunKit: \(item.title) を起動"
+                    attributes.containerTitle = "JibunKit"
+                    attributes.containerDisplayName = "JibunKit"
+                    attributes.rankingHint = 1.0
                     if !item.note.isEmpty {
                         attributes.comment = item.note
                     }

@@ -70,7 +70,7 @@ struct SpotAliasTests {
     @Test("Backup JSON roundtrip preserves items")
     func backupRoundtrip() throws {
         let items = [
-            AppAliasItem(title: "ロピア", aliases: ["lopia"], urlScheme: "lopia://"),
+            AppAliasItem(title: "マクドナルド", aliases: ["mac"], urlScheme: "mcdonaldsjp://"),
             AppAliasItem(title: "LINE", aliases: ["ライン"], urlScheme: "line://"),
         ]
         let encoder = JSONEncoder()
@@ -79,26 +79,28 @@ struct SpotAliasTests {
 
         let decoded = try JSONDecoder().decode([AppAliasItem].self, from: data)
         #expect(decoded.count == 2)
-        #expect(decoded[0].title == "ロピア")
+        #expect(decoded[0].title == "マクドナルド")
         #expect(decoded[1].title == "LINE")
     }
 
-    @Test("Lopia preset contains ropia and lopia in aliases")
-    func lopiaPresetAliases() {
-        let lopia = SpotAliasPresets.builtin.first { $0.title == "ロピア" }
-        #expect(lopia != nil)
-        guard let lopia else { return }
-        #expect(lopia.aliases.contains("ropia"))
-        #expect(lopia.aliases.contains("lopia"))
-        let item = lopia.toItem()
-        #expect(item.allKeywords.contains("ropia"))
-        #expect(item.allKeywords.contains("lopia"))
-        #expect(item.matches(query: "ropia"))
-        #expect(item.matches(query: "lopia"))
+    @Test("McDonalds preset contains correct URL scheme and aliases")
+    func mcdonaldsPresetValidation() {
+        let mcd = SpotAliasPresets.builtin.first { $0.title == "マクドナルド" }
+        #expect(mcd != nil)
+        guard let mcd else { return }
+        #expect(mcd.urlScheme == "mcdonaldsjp://")
+        #expect(mcd.aliases.contains("mac"))
+        #expect(mcd.aliases.contains("マック"))
+        let item = mcd.toItem()
+        #expect(item.allKeywords.contains("JibunKit"))
+        #expect(item.allKeywords.contains("jibunkit"))
+        #expect(item.allKeywords.contains("mac"))
+        #expect(item.matches(query: "mac"))
+        #expect(item.matches(query: "マック"))
     }
 
     #if os(iOS)
-    @Test("SpotAliasStore initializes with all builtin presets on first launch")
+    @Test("SpotAliasStore initializes with all builtin presets and migrates obsolete items")
     @MainActor
     func storeInitialPresets() async throws {
         let suiteName = "test.spotalias.\(UUID().uuidString)"
@@ -120,12 +122,41 @@ struct SpotAliasTests {
 
         #expect(store.items.count == SpotAliasPresets.builtin.count)
         let titles = Set(store.items.map(\.title))
-        #expect(titles.contains("ロピア"))
+        #expect(!titles.contains("ロピア"))
         #expect(titles.contains("PayPay"))
         #expect(titles.contains("マクドナルド"))
 
         try await store.syncAllSpotlightImmediately()
         #expect(!indexedItems.isEmpty)
+        #expect(store.lastSyncResult?.contains("✓") == true)
+    }
+
+    @Test("testSpotlightSync registers diagnostic item successfully")
+    @MainActor
+    func diagnosticSyncTest() async throws {
+        let suiteName = "test.spotalias.diag.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defer { defaults.removePersistentDomain(forName: suiteName) }
+
+        var indexedItems: [AppAliasItem] = []
+        let adapter = SpotAliasSpotlightAdapter(
+            indexItems: { items in
+                indexedItems.append(contentsOf: items)
+            }
+        )
+
+        let store = SpotAliasStore(
+            defaults: defaults,
+            keys: SpotAliasStorageKeys(items: "test.items"),
+            spotlight: adapter
+        )
+
+        store.testSpotlightSync()
+        // Wait a tick for Task to finish
+        try await Task.sleep(nanoseconds: 50_000_000)
+
+        #expect(store.items.contains { $0.title == "JibunKit 疎通テスト" })
+        #expect(store.lastSyncResult?.contains("✓") == true)
     }
     #endif
 }

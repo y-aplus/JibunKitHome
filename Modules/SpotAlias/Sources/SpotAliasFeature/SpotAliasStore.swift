@@ -35,6 +35,8 @@ public final class SpotAliasStore: ObservableObject {
     @Published public private(set) var items: [AppAliasItem] = []
     @Published public var searchQuery: String = ""
     @Published public var statusMessage: String?
+    @Published public var lastSyncResult: String?
+    @Published public var lastSyncDate: Date?
     @Published public var isIndexing: Bool = false
 
     private let defaults: UserDefaults
@@ -123,17 +125,54 @@ public final class SpotAliasStore: ObservableObject {
         add(preset.toItem())
     }
 
-    // MARK: - Spotlight Sync
+    // MARK: - Spotlight Sync & Diagnostics
 
     public func syncAllSpotlightImmediately() async throws {
         let activeItems = items.filter(\.isEnabled)
         guard !activeItems.isEmpty else { return }
         try await spotlight.indexItems(activeItems)
+        lastSyncDate = Date()
+        lastSyncResult = "✓ 登録成功: \(activeItems.count)件"
+    }
+
+    /// Register a dedicated test item to verify Core Spotlight integration
+    public func testSpotlightSync() {
+        isIndexing = true
+        statusMessage = "疎通テスト項目をSpotlightに登録中..."
+        let testItem = AppAliasItem.makeDiagnosticTestItem()
+
+        // Add or update test item in store so user can see it in the list
+        if let idx = items.firstIndex(where: { $0.title == testItem.title }) {
+            items[idx] = testItem
+        } else {
+            items.insert(testItem, at: 0)
+        }
+        save()
+
+        let adapter = spotlight
+        Task {
+            do {
+                try await adapter.indexItems([testItem])
+                await MainActor.run {
+                    self.isIndexing = false
+                    self.lastSyncDate = Date()
+                    self.lastSyncResult = "✓ 疎通テスト成功 (OS登録完了)"
+                    self.statusMessage = "「\(testItem.title)」を登録しました。Spotlightで「jibunkit」と検索してください。"
+                }
+            } catch {
+                await MainActor.run {
+                    self.isIndexing = false
+                    self.lastSyncDate = Date()
+                    self.lastSyncResult = "✗ 疎通テスト失敗: \(error.localizedDescription)"
+                    self.statusMessage = "エラー: \(error.localizedDescription)"
+                }
+            }
+        }
     }
 
     public func resyncAllSpotlight() {
         isIndexing = true
-        statusMessage = "Spotlight インデックスを同期中..."
+        statusMessage = "Spotlight インデックスを全再同期中..."
         let adapter = spotlight
         let activeItems = items.filter(\.isEnabled)
         Task {
@@ -142,11 +181,15 @@ public final class SpotAliasStore: ObservableObject {
                 try await adapter.indexItems(activeItems)
                 await MainActor.run {
                     self.isIndexing = false
-                    self.statusMessage = "\(activeItems.count)件のアプリをSpotlightに登録しました"
+                    self.lastSyncDate = Date()
+                    self.lastSyncResult = "✓ 全同期成功: \(activeItems.count)件"
+                    self.statusMessage = "\(activeItems.count)件のアプリをSpotlightに再登録しました"
                 }
             } catch {
                 await MainActor.run {
                     self.isIndexing = false
+                    self.lastSyncDate = Date()
+                    self.lastSyncResult = "✗ 全同期失敗: \(error.localizedDescription)"
                     self.statusMessage = "同期失敗: \(error.localizedDescription)"
                 }
             }
@@ -158,7 +201,18 @@ public final class SpotAliasStore: ObservableObject {
         guard !activeItems.isEmpty else { return }
         let adapter = spotlight
         Task {
-            try? await adapter.indexItems(activeItems)
+            do {
+                try await adapter.indexItems(activeItems)
+                await MainActor.run {
+                    self.lastSyncDate = Date()
+                    self.lastSyncResult = "✓ 登録成功: \(activeItems.count)件"
+                }
+            } catch {
+                await MainActor.run {
+                    self.lastSyncDate = Date()
+                    self.lastSyncResult = "✗ 登録失敗: \(error.localizedDescription)"
+                }
+            }
         }
     }
 
@@ -170,7 +224,7 @@ public final class SpotAliasStore: ObservableObject {
         }
     }
 
-    // MARK: - Persistence
+    // MARK: - Persistence & Migration
 
     private func load() {
         guard let data = defaults.data(forKey: keys.items) else {
@@ -185,12 +239,24 @@ public final class SpotAliasStore: ObservableObject {
         do {
             let decoded = try JSONDecoder().decode([AppAliasItem].self, from: data)
             if decoded.isEmpty {
-                // Populate builtins if stored data was empty
                 self.items = SpotAliasPresets.builtin.map { $0.toItem() }
                 save()
                 syncSpotlight(items: items)
             } else {
-                self.items = decoded
+                // Apply migrations to existing stored data:
+                // 1. Remove obsolete items (e.g. Lopia)
+                // 2. Fix known outdated URL schemes (e.g. mcdonalds:// -> mcdonaldsjp://)
+                var migrated = decoded.filter { item in
+                    item.title != "ロピア" && !item.urlScheme.hasPrefix("lopia://")
+                }
+                for i in 0..<migrated.count {
+                    if migrated[i].urlScheme == "mcdonalds://" {
+                        migrated[i].urlScheme = "mcdonaldsjp://"
+                        migrated[i].updatedAt = Date()
+                    }
+                }
+                self.items = migrated
+                save()
             }
         } catch {
             self.items = SpotAliasPresets.builtin.map { $0.toItem() }

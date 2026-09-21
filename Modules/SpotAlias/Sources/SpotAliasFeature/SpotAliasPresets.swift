@@ -37,16 +37,9 @@ public struct AppAliasPreset: Identifiable, Sendable, Equatable {
 public enum SpotAliasPresets {
     public static let builtin: [AppAliasPreset] = [
         AppAliasPreset(
-            title: "ロピア",
-            aliases: ["lopia", "ropia", "ろぴあ", "ロピアアプリ", "スーパー"],
-            urlScheme: "lopia://",
-            symbolName: "cart.fill",
-            note: "食生活♥♥ロピア公式アプリ"
-        ),
-        AppAliasPreset(
             title: "マクドナルド",
             aliases: ["mcdonalds", "mcd", "mac", "マック", "マクド", "まくどなるど", "ハンバーガー"],
-            urlScheme: "mcdonalds://",
+            urlScheme: "mcdonaldsjp://",
             symbolName: "takeoutbag.and.cup.and.straw.fill",
             note: "マクドナルド公式モバイルオーダー"
         ),

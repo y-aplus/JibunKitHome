@@ -14,12 +14,71 @@ public struct SpotAliasRootView: View {
 
     public var body: some View {
         List {
-            // Search & test section
+            // Spotlight Diagnostics section
+            Section {
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Image(systemName: "antenna.radiowaves.left.and.right")
+                            .foregroundColor(.accentColor)
+                            .font(.headline)
+                        Text("Spotlight 疎通診断")
+                            .font(.headline)
+                        Spacer()
+                        if store.isIndexing {
+                            ProgressView()
+                                .controlSize(.small)
+                        }
+                    }
+
+                    if let result = store.lastSyncResult {
+                        Text(result)
+                            .font(.subheadline.bold())
+                            .foregroundColor(result.hasPrefix("✓") ? .green : .red)
+                    } else {
+                        Text("未診断（下のボタンを押してテストしてください）")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                    }
+
+                    if let date = store.lastSyncDate {
+                        Text("最終登録: \(date.formatted(date: .omitted, time: .standard))")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Divider()
+
+                    HStack(spacing: 12) {
+                        Button {
+                            store.testSpotlightSync()
+                        } label: {
+                            Label("疎通テスト実行", systemImage: "play.circle.fill")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(store.isIndexing)
+
+                        Button {
+                            store.resyncAllSpotlight()
+                        } label: {
+                            Label("全再登録", systemImage: "arrow.clockwise")
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(store.isIndexing)
+                    }
+                }
+                .padding(.vertical, 4)
+            } header: {
+                Text("インデックス診断")
+            } footer: {
+                Text("「疎通テスト実行」を押すと「JibunKit 疎通テスト」項目が登録されます。登録後にホーム画面の Spotlight で「jibunkit」と検索して確認してください。")
+            }
+
+            // Search in-app section
             Section {
                 HStack {
                     Image(systemName: "magnifyingglass")
                         .foregroundColor(.secondary)
-                    TextField("検索テスト (例: lopia, スタバ)", text: $store.searchQuery)
+                    TextField("アプリ内絞り込み (例: paypay, マック)", text: $store.searchQuery)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                     if !store.searchQuery.isEmpty {
@@ -32,28 +91,7 @@ public struct SpotAliasRootView: View {
                     }
                 }
             } header: {
-                Text("Spotlight 検索テスト")
-            } footer: {
-                Text("登録した英字名・略称・表記揺れで検索できます。タップでアプリ起動をテストできます。")
-            }
-
-            // Sync status
-            if let status = store.statusMessage {
-                Section {
-                    HStack {
-                        if store.isIndexing {
-                            ProgressView()
-                                .controlSize(.small)
-                                .padding(.trailing, 4)
-                        } else {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(.green)
-                        }
-                        Text(status)
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                    }
-                }
+                Text("登録アプリの絞り込み")
             }
 
             // Registered aliases section
@@ -91,11 +129,6 @@ public struct SpotAliasRootView: View {
                 HStack {
                     Text("登録アプリ (\(store.items.count))")
                     Spacer()
-                    Button("再同期") {
-                        store.resyncAllSpotlight()
-                    }
-                    .font(.caption)
-                    .disabled(store.isIndexing)
                 }
             }
         }
@@ -167,54 +200,66 @@ struct AppAliasRow: View {
     let onEdit: () -> Void
 
     var body: some View {
-        Button(action: onEdit) {
-            HStack(spacing: 12) {
-                Image(systemName: item.symbolName.isEmpty ? "app.fill" : item.symbolName)
-                    .font(.title2)
-                    .foregroundColor(item.isEnabled ? .accentColor : .secondary)
-                    .frame(width: 36, height: 36)
-                    .background(Color.secondary.opacity(0.12))
-                    .clipShape(RoundedRectangle(cornerRadius: 8))
+        HStack(spacing: 12) {
+            Button(action: onEdit) {
+                HStack(spacing: 12) {
+                    Image(systemName: item.symbolName.isEmpty ? "app.fill" : item.symbolName)
+                        .font(.title2)
+                        .foregroundColor(item.isEnabled ? .accentColor : .secondary)
+                        .frame(width: 36, height: 36)
+                        .background(Color.secondary.opacity(0.12))
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
 
-                VStack(alignment: .leading, spacing: 4) {
-                    HStack {
-                        Text(item.title)
-                            .font(.headline)
-                            .foregroundColor(item.isEnabled ? .primary : .secondary)
-                        if !item.isEnabled {
-                            Text("無効")
-                                .font(.caption2)
-                                .padding(.horizontal, 4)
-                                .padding(.vertical, 1)
-                                .background(Color.secondary.opacity(0.2))
-                                .cornerRadius(4)
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack {
+                            Text(item.title)
+                                .font(.headline)
+                                .foregroundColor(item.isEnabled ? .primary : .secondary)
+                            if !item.isEnabled {
+                                Text("無効")
+                                    .font(.caption2)
+                                    .padding(.horizontal, 4)
+                                    .padding(.vertical, 1)
+                                    .background(Color.secondary.opacity(0.2))
+                                    .cornerRadius(4)
+                            }
                         }
+
+                        if !item.aliases.isEmpty {
+                            Text(item.aliases.joined(separator: ", "))
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                                .lineLimit(1)
+                        }
+
+                        Text(item.urlScheme)
+                            .font(.caption2)
+                            .foregroundColor(.secondary.opacity(0.8))
                     }
-
-                    if !item.aliases.isEmpty {
-                        Text(item.aliases.joined(separator: ", "))
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .lineLimit(1)
-                    }
-
-                    Text(item.urlScheme)
-                        .font(.caption2)
-                        .foregroundColor(.secondary.opacity(0.8))
                 }
-
-                Spacer()
-
-                Button(action: onLaunch) {
-                    Image(systemName: "arrow.up.forward.app")
-                        .font(.body)
-                        .foregroundColor(.accentColor)
-                }
-                .buttonStyle(.borderless)
             }
-            .contentShape(Rectangle())
+            .buttonStyle(.plain)
+
+            Spacer()
+
+            // Launch test button
+            Button(action: onLaunch) {
+                Image(systemName: "arrow.up.forward.app")
+                    .font(.subheadline)
+                    .foregroundColor(.accentColor)
+                    .padding(8)
+                    .background(Color.accentColor.opacity(0.1))
+                    .clipShape(Circle())
+            }
+            .buttonStyle(.borderless)
+
+            // Enable/disable toggle
+            Toggle("", isOn: Binding(
+                get: { item.isEnabled },
+                set: { _ in onToggle() }
+            ))
+            .labelsHidden()
         }
-        .buttonStyle(.plain)
     }
 }
 
