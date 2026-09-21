@@ -3,7 +3,6 @@ import CounterIntegration
 import JibunKitCore
 import ReminderIntegration
 import ZaikoIntegration
-import SpotAliasIntegration
 import Foundation
 import CoreSpotlight
 import WidgetKit
@@ -22,7 +21,6 @@ enum MiniAppRegistry {
         CounterMiniApp.definition,
         ReminderMiniApp.definition,
         ZaikoMiniApp.definition,
-        SpotAliasMiniApp.definition,
     ])
 
     static let consents = MiniAppConsentStore(defaults: .standard)

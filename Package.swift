@@ -15,7 +15,6 @@ let package = Package(
         .library(name: "CounterIntegration", targets: ["CounterIntegration"]),
         .library(name: "ReminderIntegration", targets: ["ReminderIntegration"]),
         .library(name: "ZaikoIntegration", targets: ["ZaikoIntegration"]),
-        .library(name: "SpotAliasIntegration", targets: ["SpotAliasIntegration"]),
         .library(name: "JibunKitCore", targets: ["JibunKitCore"]),
         .library(name: "CounterFeature", targets: ["CounterFeature"]),
         .library(name: "ReminderFeature", targets: ["ReminderFeature"]),
@@ -23,7 +22,6 @@ let package = Package(
     dependencies: [
         .package(path: "Modules/Records"),
         .package(path: "Modules/Zaiko"),
-        .package(path: "Modules/SpotAlias"),
         .package(url: "https://github.com/weichsel/ZIPFoundation.git", exact: "0.9.20"),
     ],
     targets: [
@@ -51,11 +49,6 @@ let package = Package(
             name: "ZaikoIntegration",
             dependencies: ["JibunKitCore", .product(name: "ZaikoFeature", package: "Zaiko")],
             path: "Modules/Zaiko/Integration"
-        ),
-        .target(
-            name: "SpotAliasIntegration",
-            dependencies: ["JibunKitCore", .product(name: "SpotAliasFeature", package: "SpotAlias")],
-            path: "Modules/SpotAlias/Integration"
         ),
         .target(
             name: "JibunKitCore"
