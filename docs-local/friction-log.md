@@ -79,3 +79,10 @@
 - **症状**: Feature から他のアプリ（URL Scheme）を起動する際、Feature 側で直接 `UIApplication.shared.open` を呼ぶ必要があり、JibunKit 共通での URL Scheme 遷移確認や安全性チェック（不正な URL の排除）の仕組みがない。
 - **派生側での対処**: Feature 側の `appendDestination` で対象の URL Scheme を安全にパースして起動。
 
+## F-012 Actions ArtifactがZIP形式でしか取得できず、実機導入時に手動展開またはRelease添付を強いられる
+
+- **症状**: `.github/workflows/build-ios.yml` で生成される成果物 `JibunKit-ad-hoc` は GitHub Actions の Artifact 仕様により、ブラウザや iPhone (Safari) からダウンロードする際に必ず単一の `.zip` にまとめられる。そのため、iPhone 実機で SideStore 等を用いてインストールする際、「ZIPをダウンロード → ファイルアプリ等で展開 → 中の `.ipa` を取り出す」という余分な手動ステップを強いられる。
+- **基盤ルールの制約**: `docs/updating.md` によると `workflows` は foundation-owned（基盤所有）であり、派生側で `.github/workflows/build-ios.yml` を直接編集して Release への自動アップロード等を組み込むことは、今後の upstream マージ時の継続的な競合原因となるため推奨されない（Integration points に含まれない）。
+- **派生側での対処**: 必要なビルドごとに、手元から GitHub CLI（`gh release create <tag> JibunKit.ipa --prerelease`）を使ってプレリリースを作成し、生の `.ipa` ファイルを直接ダウンロードできるダイレクトリンクを提供する運用とした。
+- **不足**: 基盤公式の workflow または配布手順において、SideStore 等での実機インストールを想定した「生の `.ipa` をワンアクションで取得できる推奨手順（例: 派生ホスト向けのオプショナルな Release 配置手順の明記、または独立した配布ワークフローの案内）」が不足している。
+
