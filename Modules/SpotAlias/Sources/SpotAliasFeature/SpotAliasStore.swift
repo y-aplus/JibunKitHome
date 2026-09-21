@@ -38,6 +38,7 @@ public final class SpotAliasStore: ObservableObject {
     @Published public var lastSyncResult: String?
     @Published public var lastSyncDate: Date?
     @Published public var isIndexing: Bool = false
+    @Published public var pendingLaunchItem: AppAliasItem?
 
     private let defaults: UserDefaults
     private let keys: SpotAliasStorageKeys
@@ -61,6 +62,14 @@ public final class SpotAliasStore: ObservableObject {
         return items
             .filter { $0.matches(query: searchQuery) }
             .sorted { $0.title < $1.title }
+    }
+
+    public func setPendingLaunchItem(_ item: AppAliasItem) {
+        self.pendingLaunchItem = item
+    }
+
+    public func clearPendingLaunchItem() {
+        self.pendingLaunchItem = nil
     }
 
     // MARK: - CRUD

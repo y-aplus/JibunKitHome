@@ -14,6 +14,31 @@ public struct SpotAliasRootView: View {
 
     public var body: some View {
         List {
+            // Pending launch feedback
+            if let pending = store.pendingLaunchItem {
+                Section {
+                    HStack {
+                        Image(systemName: "arrow.up.forward.app.fill")
+                            .foregroundColor(.accentColor)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("「\(pending.title)」を起動中...")
+                                .font(.headline)
+                            Text("自動で開かない場合は右のボタンをタップ")
+                                .font(.caption2)
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        Button("開く") {
+                            launch(pending)
+                            store.clearPendingLaunchItem()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
+                    }
+                    .padding(.vertical, 4)
+                }
+            }
+
             // Spotlight Diagnostics section
             Section {
                 VStack(alignment: .leading, spacing: 10) {

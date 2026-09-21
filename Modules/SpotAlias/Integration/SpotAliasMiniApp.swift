@@ -126,7 +126,21 @@ public enum SpotAliasMiniApp {
         guard let uuid = UUID(uuidString: destination),
               let item = store.items.first(where: { $0.id == uuid }),
               let url = URL(string: item.urlScheme) else { return false }
-        UIApplication.shared.open(url)
+        
+        store.setPendingLaunchItem(item)
+
+        // Wait for iOS scene to become fully active before requesting openURL
+        Task { @MainActor in
+            try? await Task.sleep(nanoseconds: 350_000_000) // 0.35s delay for scene stabilization
+            UIApplication.shared.open(url, options: [:]) { success in
+                if success {
+                    logger.notice("Successfully opened URL from Spotlight: \(url.absoluteString)")
+                    store.clearPendingLaunchItem()
+                } else {
+                    logger.error("Failed to open URL from Spotlight: \(url.absoluteString)")
+                }
+            }
+        }
         return true
     }
 
